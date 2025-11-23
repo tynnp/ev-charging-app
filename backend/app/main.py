@@ -4,10 +4,10 @@ import asyncio
 import json
 from math import asin, cos, radians, sin, sqrt
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from .db import get_sessions_collection, get_sensors_collection, get_stations_collection
 from .etl import get_default_data_dir, get_property_value, import_session_entity
-from .models import StationBase
+from .models import StationBase, SessionBase, StationRealtime
 
 app = FastAPI()
 
@@ -37,7 +37,7 @@ manager = ConnectionManager()
 REALTIME_SLEEP_SECONDS = 2.0
 REALTIME_CONTEXT: Any | None = None
 
-@app.get("/health")
+@app.get("/health", tags=["System"], summary="Health check")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
 
@@ -192,7 +192,12 @@ async def websocket_realtime(websocket: WebSocket) -> None:
     except Exception:
         manager.disconnect(websocket)
 
-@app.get("/stations", response_model=List[StationBase])
+@app.get(
+    "/stations",
+    response_model=List[StationBase],
+    tags=["Stations"],
+    summary="List charging stations",
+)
 def list_stations(
     status: str | None = Query(None),
     network: str | None = Query(None),
@@ -216,7 +221,12 @@ def list_stations(
     cursor = collection.find(query).skip(offset).limit(limit)
     return [StationBase(**doc) for doc in cursor]
 
-@app.get("/stations/near", response_model=List[StationBase])
+@app.get(
+    "/stations/near",
+    response_model=List[StationBase],
+    tags=["Stations"],
+    summary="Find nearby charging stations",
+)
 def get_stations_near(
     lat: float = Query(..., description="Latitude of reference point"),
     lng: float = Query(..., description="Longitude of reference point"),
@@ -239,13 +249,56 @@ def get_stations_near(
 
     return [StationBase(**doc) for doc in candidates[:limit]]
 
-@app.get("/stations/{station_id}", response_model=StationBase)
+@app.get(
+    "/stations/{station_id}",
+    response_model=StationBase,
+    tags=["Stations"],
+    summary="Get details of a charging station",
+)
 def get_station(station_id: str) -> StationBase:
     collection = get_stations_collection()
     doc = collection.find_one({"_id": station_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Station not found")
     return StationBase(**doc)
+
+@app.get(
+    "/stations/{station_id}/realtime",
+    response_model=StationRealtime,
+    tags=["Stations"],
+    summary="Get realtime status of a charging station",
+)
+def get_station_realtime(station_id: str) -> StationRealtime:
+    collection = get_stations_collection()
+    doc = collection.find_one({"_id": station_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Station not found")
+    return StationRealtime(
+        id=doc.get("id", station_id),
+        status=doc.get("status"),
+        available_capacity=doc.get("available_capacity"),
+        instantaneous_power=doc.get("instantaneous_power"),
+        queue_length=doc.get("queue_length"),
+    )
+
+@app.get(
+    "/stations/{station_id}/sessions",
+    response_model=List[SessionBase],
+    tags=["Sessions", "Stations"],
+    summary="List charging sessions for a station",
+)
+def list_station_sessions(
+    station_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[SessionBase]:
+    sessions_collection = get_sessions_collection()
+    cursor = (
+        sessions_collection.find({"station_id": station_id})
+        .skip(offset)
+        .limit(limit)
+    )
+    return [SessionBase(**doc) for doc in cursor]
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
@@ -258,7 +311,12 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * asin(sqrt(a))
     return r * c
 
-@app.get("/ngsi-ld/v1/entities", response_class=JSONResponse)
+@app.get(
+    "/ngsi-ld/v1/entities",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="List NGSI-LD entities",
+)
 def ngsi_list_entities(
     entity_type: str = Query(..., alias="type"),
     entity_id: str | None = Query(None, alias="id"),
@@ -282,7 +340,12 @@ def ngsi_list_entities(
     entities = [_doc_to_ngsi_entity(doc) for doc in cursor]
     return JSONResponse(content=entities, media_type="application/ld+json")
 
-@app.get("/ngsi-ld/v1/entities/{entity_id}", response_class=JSONResponse)
+@app.get(
+    "/ngsi-ld/v1/entities/{entity_id}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get a NGSI-LD entity by id",
+)
 def ngsi_get_entity(entity_id: str) -> JSONResponse:
     collections = [
         get_stations_collection(),
@@ -296,3 +359,25 @@ def ngsi_get_entity(entity_id: str) -> JSONResponse:
             return JSONResponse(content=entity, media_type="application/ld+json")
 
     raise HTTPException(status_code=404, detail="Entity not found")
+
+@app.get(
+    "/datasets/stations.jsonld",
+    response_class=FileResponse,
+    tags=["Datasets"],
+    summary="Download stations dataset (JSON-LD)",
+)
+def get_stations_dataset() -> FileResponse:
+    data_dir = get_default_data_dir()
+    path = data_dir / "stations.jsonld"
+    return FileResponse(path, media_type="application/ld+json", filename="stations.jsonld")
+
+@app.get(
+    "/datasets/observations.jsonld",
+    response_class=FileResponse,
+    tags=["Datasets"],
+    summary="Download observations dataset (JSON-LD)",
+)
+def get_observations_dataset() -> FileResponse:
+    data_dir = get_default_data_dir()
+    path = data_dir / "observations.jsonld"
+    return FileResponse(path, media_type="application/ld+json", filename="observations.jsonld")

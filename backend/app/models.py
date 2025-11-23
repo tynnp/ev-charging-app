@@ -40,6 +40,13 @@ class StationInDB(StationBase):
     updated_at: Optional[datetime] = None
     raw: Any
 
+class StationRealtime(BaseModel):
+    id: str
+    status: Optional[str] = None
+    available_capacity: Optional[int] = None
+    instantaneous_power: Optional[float] = None
+    queue_length: Optional[int] = None
+
 class SessionBase(BaseModel):
     id: str
     station_id: str
