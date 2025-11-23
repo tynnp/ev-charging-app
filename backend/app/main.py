@@ -430,6 +430,31 @@ async def ngsi_update_entity_attrs(
     return JSONResponse(content=entity, media_type="application/ld+json")
 
 @app.get(
+    "/datasets",
+    response_class=JSONResponse,
+    tags=["Datasets"],
+    summary="List available datasets",
+)
+def list_datasets() -> JSONResponse:
+    datasets = [
+        {
+            "id": "stations",
+            "title": "EV charging stations dataset (JSON-LD)",
+            "description": "Danh sách trạm sạc xe điện tại Thành phố X",
+            "path": "/datasets/stations.jsonld",
+            "mediaType": "application/ld+json",
+        },
+        {
+            "id": "observations",
+            "title": "EV charging observations dataset (JSON-LD)",
+            "description": "Các phiên sạc (EVChargingSession) và cảm biến (Sensor)",
+            "path": "/datasets/observations.jsonld",
+            "mediaType": "application/ld+json",
+        },
+    ]
+    return JSONResponse(content=datasets)
+
+@app.get(
     "/datasets/stations.jsonld",
     response_class=FileResponse,
     tags=["Datasets"],
