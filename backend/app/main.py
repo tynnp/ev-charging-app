@@ -256,6 +256,55 @@ def get_stations_near(
     return [StationBase(**doc) for doc in candidates[:limit]]
 
 @app.get(
+    "/stations/search",
+    response_model=List[StationBase],
+    tags=["Stations"],
+    summary="Advanced search for charging stations",
+)
+def search_stations(
+    status: str | None = Query(None),
+    network: str | None = Query(None),
+    vehicle_type: str | None = Query(None),
+    charge_type: str | None = Query(None),
+    payment_method: str | None = Query(None),
+    socket_type: str | None = Query(None),
+    min_capacity: int | None = Query(None, ge=0),
+    max_capacity: int | None = Query(None, ge=0),
+    min_available_capacity: int | None = Query(None, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[StationBase]:
+    collection = get_stations_collection()
+    query: Dict[str, Any] = {}
+
+    if status is not None:
+        query["status"] = status
+    if network is not None:
+        query["network"] = network
+    if vehicle_type is not None:
+        query["allowed_vehicle_types"] = vehicle_type
+    if charge_type is not None:
+        query["charge_types"] = charge_type
+    if payment_method is not None:
+        query["accepted_payment_methods"] = payment_method
+    if socket_type is not None:
+        query["socket_types"] = socket_type
+
+    if min_available_capacity is not None:
+        query["available_capacity"] = {"$gte": min_available_capacity}
+
+    capacity_range: Dict[str, Any] = {}
+    if min_capacity is not None:
+        capacity_range["$gte"] = min_capacity
+    if max_capacity is not None:
+        capacity_range["$lte"] = max_capacity
+    if capacity_range:
+        query["capacity"] = capacity_range
+
+    cursor = collection.find(query).skip(offset).limit(limit)
+    return [StationBase(**doc) for doc in cursor]
+
+@app.get(
     "/stations/{station_id}",
     response_model=StationBase,
     tags=["Stations"],
@@ -305,6 +354,120 @@ def list_station_sessions(
         .limit(limit)
     )
     return [SessionBase(**doc) for doc in cursor]
+
+@app.get(
+    "/analytics/overview",
+    tags=["Analytics"],
+    summary="Get global EV charging analytics",
+)
+def analytics_overview() -> Dict[str, Any]:
+    sessions_collection = get_sessions_collection()
+    stations_collection = get_stations_collection()
+
+    total_sessions = 0
+    total_energy_kwh = 0.0
+    total_amount_vnd = 0.0
+    total_tax_vnd = 0.0
+
+    sessions_by_station: Dict[str, int] = {}
+
+    for doc in sessions_collection.find({}):
+        total_sessions += 1
+        energy = doc.get("power_consumption_kwh") or 0.0
+        amount = doc.get("amount_collected_vnd") or 0.0
+        tax = doc.get("tax_amount_collected_vnd") or 0.0
+        total_energy_kwh += float(energy)
+        total_amount_vnd += float(amount)
+        total_tax_vnd += float(tax)
+
+        station_id = doc.get("station_id")
+        if station_id:
+            sessions_by_station[station_id] = sessions_by_station.get(station_id, 0) + 1
+
+    stations_count = stations_collection.count_documents({})
+
+    top_stations = sorted(
+        [
+            {"station_id": sid, "session_count": count}
+            for sid, count in sessions_by_station.items()
+        ],
+        key=lambda x: x["session_count"],
+        reverse=True,
+    )[:5]
+
+    return {
+        "total_sessions": total_sessions,
+        "total_energy_kwh": total_energy_kwh,
+        "total_amount_vnd": total_amount_vnd,
+        "total_tax_vnd": total_tax_vnd,
+        "stations_count": stations_count,
+        "top_stations_by_sessions": top_stations,
+    }
+
+@app.get(
+    "/analytics/stations/{station_id}",
+    tags=["Analytics", "Stations"],
+    summary="Get analytics for a specific station",
+)
+def analytics_station(station_id: str) -> Dict[str, Any]:
+    sessions_collection = get_sessions_collection()
+    stations_collection = get_stations_collection()
+
+    station_doc = stations_collection.find_one({"_id": station_id})
+    if not station_doc:
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    sessions = list(sessions_collection.find({"station_id": station_id}))
+
+    total_sessions = len(sessions)
+    total_energy_kwh = 0.0
+    total_amount_vnd = 0.0
+    total_tax_vnd = 0.0
+    total_duration_minutes = 0.0
+    vehicle_stats: Dict[str, Dict[str, Any]] = {}
+
+    for doc in sessions:
+        energy = doc.get("power_consumption_kwh") or 0.0
+        amount = doc.get("amount_collected_vnd") or 0.0
+        tax = doc.get("tax_amount_collected_vnd") or 0.0
+        total_energy_kwh += float(energy)
+        total_amount_vnd += float(amount)
+        total_tax_vnd += float(tax)
+
+        start = doc.get("start_date_time")
+        end = doc.get("end_date_time")
+        if start and end:
+            duration = (end - start).total_seconds() / 60.0
+            total_duration_minutes += duration
+
+        vtype = doc.get("vehicle_type") or "unknown"
+        stats = vehicle_stats.get(vtype)
+        if stats is None:
+            stats = {
+                "vehicle_type": vtype,
+                "session_count": 0,
+                "total_energy_kwh": 0.0,
+            }
+            vehicle_stats[vtype] = stats
+        stats["session_count"] += 1
+        stats["total_energy_kwh"] += float(energy)
+
+    average_session_duration_minutes = (
+        total_duration_minutes / total_sessions if total_sessions > 0 else 0.0
+    )
+    average_energy_kwh = total_energy_kwh / total_sessions if total_sessions > 0 else 0.0
+
+    return {
+        "station_id": station_id,
+        "station_name": station_doc.get("name"),
+        "total_sessions": total_sessions,
+        "total_energy_kwh": total_energy_kwh,
+        "total_amount_vnd": total_amount_vnd,
+        "total_tax_vnd": total_tax_vnd,
+        "average_session_duration_minutes": average_session_duration_minutes,
+        "average_energy_kwh": average_energy_kwh,
+        "vehicle_type_breakdown": list(vehicle_stats.values()),
+    }
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
