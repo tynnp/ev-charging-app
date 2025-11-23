@@ -32,62 +32,63 @@ def import_stations(path: Path) -> None:
     collection = get_stations_collection()
 
     for e in entities:
-        station_id = e["id"]
-        name = get_property_value(e, "name")
-        status = get_property_value(e, "status")
+        import_station_entity(e, collection)
 
-        address_value = e.get("address", {}).get("value")
-        address = Address(**address_value) if isinstance(address_value, dict) else None
+def import_station_entity(entity: Dict[str, Any], collection) -> None:
+    station_id = entity["id"]
+    name = get_property_value(entity, "name")
+    status = get_property_value(entity, "status")
 
-        location_value = e.get("location", {}).get("value", {})
-        location = GeoPoint(
-            type=location_value.get("type", "Point"),
-            coordinates=location_value.get("coordinates", []),
-        )
+    address_value = entity.get("address", {}).get("value")
+    address = Address(**address_value) if isinstance(address_value, dict) else None
 
-        capacity = get_property_value(e, "capacity")
-        socket_number = get_property_value(e, "socketNumber")
-        available_capacity = get_property_value(e, "availableCapacity")
-        allowed_vehicle_types = get_property_value(e, "allowedVehicleType", []) or []
-        network = get_property_value(e, "network")
-        operator = get_property_value(e, "operator")
-        amperage = get_property_value(e, "amperage")
-        voltage = get_property_value(e, "voltage")
-        charge_types = get_property_value(e, "chargeType", []) or []
-        accepted_payment_methods = get_property_value(
-            e, "acceptedPaymentMethod", []
-        ) or []
-        opening_hours = get_property_value(e, "openingHours")
-        socket_types = get_property_value(e, "socketType", []) or []
+    location_value = entity.get("location", {}).get("value", {})
+    location = GeoPoint(
+        type=location_value.get("type", "Point"),
+        coordinates=location_value.get("coordinates", []),
+    )
 
-        station = StationInDB(
-            id=station_id,
-            name=name,
-            status=status,
-            address=address,
-            location=location,
-            capacity=capacity,
-            socket_number=socket_number,
-            available_capacity=available_capacity,
-            allowed_vehicle_types=allowed_vehicle_types,
-            network=network,
-            operator=operator,
-            amperage=amperage,
-            voltage=voltage,
-            charge_types=charge_types,
-            accepted_payment_methods=accepted_payment_methods,
-            opening_hours=opening_hours,
-            socket_types=socket_types,
-            instantaneous_power=None,
-            queue_length=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            raw=e,
-        )
+    capacity = get_property_value(entity, "capacity")
+    socket_number = get_property_value(entity, "socketNumber")
+    available_capacity = get_property_value(entity, "availableCapacity")
+    allowed_vehicle_types = get_property_value(entity, "allowedVehicleType", []) or []
+    network = get_property_value(entity, "network")
+    operator = get_property_value(entity, "operator")
+    amperage = get_property_value(entity, "amperage")
+    voltage = get_property_value(entity, "voltage")
+    charge_types = get_property_value(entity, "chargeType", []) or []
+    accepted_payment_methods = get_property_value(entity, "acceptedPaymentMethod", []) or []
+    opening_hours = get_property_value(entity, "openingHours")
+    socket_types = get_property_value(entity, "socketType", []) or []
 
-        doc = station.model_dump()
-        doc["_id"] = station_id
-        collection.replace_one({"_id": station_id}, doc, upsert=True)
+    station = StationInDB(
+        id=station_id,
+        name=name,
+        status=status,
+        address=address,
+        location=location,
+        capacity=capacity,
+        socket_number=socket_number,
+        available_capacity=available_capacity,
+        allowed_vehicle_types=allowed_vehicle_types,
+        network=network,
+        operator=operator,
+        amperage=amperage,
+        voltage=voltage,
+        charge_types=charge_types,
+        accepted_payment_methods=accepted_payment_methods,
+        opening_hours=opening_hours,
+        socket_types=socket_types,
+        instantaneous_power=None,
+        queue_length=None,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+        raw=entity,
+    )
+
+    doc = station.model_dump()
+    doc["_id"] = station_id
+    collection.replace_one({"_id": station_id}, doc, upsert=True)
 
 def import_observations(path: Path) -> None:
     data = load_jsonld(path)

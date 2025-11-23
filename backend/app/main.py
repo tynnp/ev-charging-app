@@ -6,7 +6,13 @@ from math import asin, cos, radians, sin, sqrt
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, FileResponse
 from .db import get_sessions_collection, get_sensors_collection, get_stations_collection
-from .etl import get_default_data_dir, get_property_value, import_session_entity
+from .etl import (
+    get_default_data_dir,
+    get_property_value,
+    import_session_entity,
+    import_station_entity,
+    import_sensor_entity,
+)
 from .models import StationBase, SessionBase, StationRealtime
 
 app = FastAPI()
@@ -311,6 +317,42 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * asin(sqrt(a))
     return r * c
 
+@app.post(
+    "/ngsi-ld/v1/entities",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Create or upsert a NGSI-LD entity",
+)
+def ngsi_upsert_entity(entity: Dict[str, Any]) -> JSONResponse:
+    entity_type = entity.get("type")
+    if not entity_type:
+        raise HTTPException(status_code=400, detail="Missing 'type' in entity")
+    entity_id = entity.get("id")
+    if not entity_id:
+        raise HTTPException(status_code=400, detail="Missing 'id' in entity")
+
+    if entity_type == "EVChargingStation":
+        collection = get_stations_collection()
+        import_station_entity(entity, collection)
+    elif entity_type == "EVChargingSession":
+        collection = get_sessions_collection()
+        import_session_entity(entity, collection)
+    elif entity_type == "Sensor":
+        collection = get_sensors_collection()
+        import_sensor_entity(entity, collection)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported entity type")
+
+    doc = collection.find_one({"_id": entity_id})
+    if not doc:
+        raise HTTPException(status_code=500, detail="Failed to upsert entity")
+    ngsi_entity = _doc_to_ngsi_entity(doc)
+    return JSONResponse(
+        content=ngsi_entity,
+        media_type="application/ld+json",
+        status_code=201,
+    )
+
 @app.get(
     "/ngsi-ld/v1/entities",
     response_class=JSONResponse,
@@ -359,6 +401,33 @@ def ngsi_get_entity(entity_id: str) -> JSONResponse:
             return JSONResponse(content=entity, media_type="application/ld+json")
 
     raise HTTPException(status_code=404, detail="Entity not found")
+
+@app.patch(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Update attributes of a NGSI-LD entity",
+)
+async def ngsi_update_entity_attrs(
+    entity_id: str,
+    attrs: Dict[str, Any],
+) -> JSONResponse:
+    event = {
+        "operation": "update",
+        "entity": {
+            "id": entity_id,
+            "type": "EVChargingStation",
+            **attrs,
+        },
+    }
+    await apply_realtime_event(event)
+
+    collection = get_stations_collection()
+    doc = collection.find_one({"_id": entity_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    entity = _doc_to_ngsi_entity(doc)
+    return JSONResponse(content=entity, media_type="application/ld+json")
 
 @app.get(
     "/datasets/stations.jsonld",
