@@ -216,25 +216,6 @@ def list_stations(
     cursor = collection.find(query).skip(offset).limit(limit)
     return [StationBase(**doc) for doc in cursor]
 
-@app.get("/stations/{station_id}", response_model=StationBase)
-def get_station(station_id: str) -> StationBase:
-    collection = get_stations_collection()
-    doc = collection.find_one({"_id": station_id})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Station not found")
-    return StationBase(**doc)
-
-def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    r = 6371.0
-    dlat = radians(lat2 - lat1)
-    dlon = radians(lon2 - lon1)
-    a = (
-        sin(dlat / 2) ** 2
-        + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
-    )
-    c = 2 * asin(sqrt(a))
-    return r * c
-
 @app.get("/stations/near", response_model=List[StationBase])
 def get_stations_near(
     lat: float = Query(..., description="Latitude of reference point"),
@@ -257,6 +238,25 @@ def get_stations_near(
             candidates.append(doc)
 
     return [StationBase(**doc) for doc in candidates[:limit]]
+
+@app.get("/stations/{station_id}", response_model=StationBase)
+def get_station(station_id: str) -> StationBase:
+    collection = get_stations_collection()
+    doc = collection.find_one({"_id": station_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Station not found")
+    return StationBase(**doc)
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = (
+        sin(dlat / 2) ** 2
+        + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    )
+    c = 2 * asin(sqrt(a))
+    return r * c
 
 @app.get("/ngsi-ld/v1/entities", response_class=JSONResponse)
 def ngsi_list_entities(
