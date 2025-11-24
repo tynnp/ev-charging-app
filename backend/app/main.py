@@ -7,6 +7,7 @@ import asyncio
 import json
 from math import asin, cos, radians, sin, sqrt
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from .db import get_sessions_collection, get_sensors_collection, get_stations_collection
 from .etl import (
@@ -19,6 +20,19 @@ from .etl import (
 from .models import StationBase, SessionBase, StationRealtime
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ConnectionManager:
     def __init__(self) -> None:
