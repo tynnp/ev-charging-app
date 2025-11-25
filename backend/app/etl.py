@@ -54,6 +54,8 @@ def import_station_entity(entity: Dict[str, Any], collection) -> None:
     capacity = get_property_value(entity, "capacity")
     socket_number = get_property_value(entity, "socketNumber")
     available_capacity = get_property_value(entity, "availableCapacity")
+    instantaneous_power = get_property_value(entity, "instantaneousPower")
+    queue_length = get_property_value(entity, "queueLength")
     allowed_vehicle_types = get_property_value(entity, "allowedVehicleType", []) or []
     network = get_property_value(entity, "network")
     operator = get_property_value(entity, "operator")
@@ -82,8 +84,8 @@ def import_station_entity(entity: Dict[str, Any], collection) -> None:
         accepted_payment_methods=accepted_payment_methods,
         opening_hours=opening_hours,
         socket_types=socket_types,
-        instantaneous_power=None,
-        queue_length=None,
+        instantaneous_power=instantaneous_power,
+        queue_length=queue_length,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
         raw=entity,
