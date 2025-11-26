@@ -37,17 +37,20 @@ export function StationList({
         ].filter(Boolean)
         const addressText = addressParts.join(', ')
 
-        let statusColorClass = 'text-slate-600'
+        let statusClasses =
+          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium '
         if (station.status === 'operational') {
-          statusColorClass = 'text-emerald-600'
+          statusClasses += 'bg-emerald-50 text-emerald-700'
         } else if (station.status === 'outOfService') {
-          statusColorClass = 'text-red-600'
+          statusClasses += 'bg-red-50 text-red-700'
         } else if (station.status === 'maintenance') {
-          statusColorClass = 'text-amber-600'
+          statusClasses += 'bg-amber-50 text-amber-700'
+        } else {
+          statusClasses += 'bg-slate-100 text-slate-700'
         }
 
         const baseClasses =
-          'cursor-pointer rounded-lg border px-3 py-3 text-sm transition hover:bg-slate-50'
+          'cursor-pointer rounded-lg border px-3 py-3 text-sm transition hover:bg-slate-50 hover:shadow-sm'
         const stateClasses = isSelected
           ? ' border-indigo-500 bg-indigo-50'
           : ' border-slate-200 bg-white'
@@ -60,28 +63,35 @@ export function StationList({
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <div className="font-semibold text-slate-900">{station.name}</div>
-              <div className={`text-sm font-medium ${statusColorClass}`}>
-                {station.status || 'unknown'}
-              </div>
+              <span className={statusClasses}>{station.status || 'unknown'}</span>
             </div>
             <div className="mb-1 text-sm text-slate-500">
               {addressText || 'Không có địa chỉ'}
             </div>
-            <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-600">
-              {station.network && <span>Network: {station.network}</span>}
-              {station.available_capacity != null && (
-                <span>Còn trống: {station.available_capacity}</span>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+              {station.network && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5">
+                  Network: {station.network}
+                </span>
               )}
-              {station.capacity != null && <span>Công suất: {station.capacity}</span>}
-              {station.allowed_vehicle_types &&
-                station.allowed_vehicle_types.length > 0 && (
-                  <span>
-                    Loại xe:{' '}
-                    {station.allowed_vehicle_types
-                      .map((value) => value.replace('electric', ''))
-                      .join(', ')}
-                  </span>
-                )}
+              {station.available_capacity != null && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5">
+                  Còn trống: {station.available_capacity}
+                </span>
+              )}
+              {station.capacity != null && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5">
+                  Công suất: {station.capacity}
+                </span>
+              )}
+              {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0 && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5">
+                  Loại xe:{' '}
+                  {station.allowed_vehicle_types
+                    .map((value) => value.replace('electric', ''))
+                    .join(', ')}
+                </span>
+              )}
             </div>
           </li>
         )

@@ -36,75 +36,92 @@ export function AnalyticsOverviewPanel({ overview, loading }: AnalyticsOverviewP
 
   return (
     <section className="space-y-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+        <div className="flex-1 rounded-xl bg-[#124874] px-5 py-4 text-white shadow-sm">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-100/80">
+            Doanh thu toàn hệ thống
+          </p>
+          <p className="mt-1 text-2xl font-semibold">
+            {formatCurrency(overview.total_amount_vnd)}
+          </p>
+          <p className="mt-1 text-xs text-slate-100/80">
+            Tổng doanh thu thu được từ tất cả các phiên sạc.
+          </p>
+        </div>
+        <div className="flex-1 rounded-xl bg-[#CF373D] px-5 py-4 text-white shadow-sm">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-100/80">
+            Thuế thu được
+          </p>
+          <p className="mt-1 text-2xl font-semibold">
+            {formatCurrency(overview.total_tax_vnd)}
+          </p>
+          <p className="mt-1 text-xs text-slate-100/80">
+            Số thuế ước tính đã thu từ doanh thu trạm sạc.
+          </p>
+        </div>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold text-slate-900">Tổng quan hệ thống</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Ảnh tổng quan nhanh về tải hệ thống, năng lượng, doanh thu và số lượng trạm sạc.
+          Một số chỉ số chính về tải hệ thống, năng lượng và số lượng trạm sạc đang hoạt động.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             Tổng số phiên sạc
-          </div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">
+          </p>
+          <p className="mt-1 text-xl font-semibold text-slate-900">
             {overview.total_sessions.toLocaleString('vi-VN')}
-          </div>
+          </p>
           <p className="mt-0.5 text-xs text-slate-500">
-            Tổng số phiên sạc đã ghi nhận trong hệ thống.
+            Số phiên sạc đã ghi nhận trong hệ thống.
           </p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             Tổng năng lượng (kWh)
-          </div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">
+          </p>
+          <p className="mt-1 text-xl font-semibold text-slate-900">
             {formatNumber(overview.total_energy_kwh)}
-          </div>
+          </p>
           <p className="mt-0.5 text-xs text-slate-500">
             Tổng kWh đã cung cấp cho các phiên sạc.
           </p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            Doanh thu
-          </div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">
-            {formatCurrency(overview.total_amount_vnd)}
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Tổng doanh thu thu được từ các phiên sạc.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            Thuế thu được
-          </div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">
-            {formatCurrency(overview.total_tax_vnd)}
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Tổng số thuế đã thu từ doanh thu trạm sạc.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 md:col-span-2 lg:col-span-1">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             Số trạm sạc
-          </div>
-          <div className="mt-1 text-xl font-semibold text-slate-900">
+          </p>
+          <p className="mt-1 text-xl font-semibold text-slate-900">
             {overview.stations_count.toLocaleString('vi-VN')}
-          </div>
+          </p>
           <p className="mt-0.5 text-xs text-slate-500">
             Số trạm sạc đang được hệ thống quản lý.
           </p>
         </div>
       </div>
+
       {overview.top_stations_by_sessions.length > 0 ? (
-        <div className="mt-2 text-base text-slate-600">
-          <strong>Top trạm theo số phiên sạc:</strong>{' '}
-          {overview.top_stations_by_sessions
-            .map((item) => `${item.station_id} (${item.session_count})`)
-            .join(', ')}
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Top trạm theo số phiên sạc
+          </p>
+          <ul className="mt-2 divide-y divide-slate-100">
+            {overview.top_stations_by_sessions.map((item) => (
+              <li
+                key={item.station_id}
+                className="flex items-center justify-between py-1.5 text-sm text-slate-800"
+              >
+                <span className="font-medium">{item.station_id}</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                  {item.session_count.toLocaleString('vi-VN')} phiên
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
     </section>

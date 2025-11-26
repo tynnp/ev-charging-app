@@ -63,7 +63,7 @@ export function StationDetails({
   const addressText = addressParts.join(', ')
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+    <section className="rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm">
       <h3 className="mb-0.5 text-base font-semibold text-slate-900">{station.name}</h3>
       <p className="m-0 text-xs text-slate-500">
         ID: <code>{station.id}</code>
@@ -86,7 +86,7 @@ export function StationDetails({
           </div>
         </div>
       ) : null}
-      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <div className="text-[11px] uppercase tracking-wide text-slate-500">Trạng thái</div>
           <div className="font-semibold text-slate-900">{station.status || 'unknown'}</div>
@@ -143,7 +143,7 @@ export function StationDetails({
         Tải lại thống kê
       </button>
 
-      <div className="mt-4">
+      <div className="mt-4 border-t border-slate-200 pt-3">
         <h4 className="m-0 text-sm font-semibold text-slate-900">Thống kê theo trạm</h4>
         {loadingAnalytics && !analytics ? (
           <p className="mt-1 text-sm text-slate-600">Đang tải thống kê cho trạm...</p>
@@ -155,7 +155,7 @@ export function StationDetails({
         ) : null}
         {analytics ? (
           <div className="mt-2 text-sm text-slate-700">
-            <div className="grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <div className="text-[11px] uppercase tracking-wide text-slate-500">
                   Tổng số phiên sạc
@@ -240,7 +240,7 @@ export function StationDetails({
         ) : null}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 border-t border-slate-200 pt-3">
         <h4 className="m-0 text-sm font-semibold text-slate-900">Lịch sử phiên sạc</h4>
         {loadingSessions && (!sessions || sessions.length === 0) ? (
           <p className="mt-1 text-sm text-slate-600">Đang tải danh sách phiên sạc...</p>
