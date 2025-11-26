@@ -12,11 +12,11 @@ type PageHeaderProps = {
 export function PageHeader({ title, subtitle }: PageHeaderProps) {
   return (
     <header className="mb-6">
-      <h1 className="m-0 text-2xl font-semibold leading-tight text-slate-900">
+      <h1 className="m-0 text-2xl font-semibold leading-tight text-[#124874]">
         {title}
       </h1>
       {subtitle ? (
-        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        <p className="mt-1 text-base text-slate-600">{subtitle}</p>
       ) : null}
     </header>
   )

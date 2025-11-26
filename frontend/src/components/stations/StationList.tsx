@@ -60,14 +60,14 @@ export function StationList({
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <div className="font-semibold text-slate-900">{station.name}</div>
-              <div className={`text-xs font-medium ${statusColorClass}`}>
+              <div className={`text-sm font-medium ${statusColorClass}`}>
                 {station.status || 'unknown'}
               </div>
             </div>
             <div className="mb-1 text-sm text-slate-500">
               {addressText || 'Không có địa chỉ'}
             </div>
-            <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+            <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-600">
               {station.network && <span>Network: {station.network}</span>}
               {station.available_capacity != null && (
                 <span>Còn trống: {station.available_capacity}</span>

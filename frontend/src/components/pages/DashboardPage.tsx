@@ -17,6 +17,8 @@ import { StationDetails } from '../stations/StationDetails'
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
 
+const DEFAULT_CENTER: [number, number] = [106.7009, 10.7769]
+
 function getWebSocketUrl() {
   try {
     const url = new URL(API_BASE_URL)
@@ -72,8 +74,8 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
     ? lats.reduce((sum, value) => sum + value, 0) / lats.length
     : 0
 
-  const centerLon = avgLon
-  const centerLat = avgLat
+  const centerLon = hasCoords ? avgLon : DEFAULT_CENTER[0]
+  const centerLat = hasCoords ? avgLat : DEFAULT_CENTER[1]
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -82,7 +84,7 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
   const stationsKey = stations.map((station) => station.id).join('|')
 
   useEffect(() => {
-    if (!mapContainerRef.current || !hasCoords) {
+    if (!mapContainerRef.current) {
       return
     }
 
@@ -109,7 +111,12 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
 
     stations.forEach((station) => {
       const coordinates = station.location?.coordinates
-      if (!Array.isArray(coordinates) || coordinates.length !== 2 || !mapRef.current) {
+      if (!Array.isArray(coordinates) || coordinates.length !== 2) {
+        return
+      }
+
+      const mapInstance = mapRef.current
+      if (!mapInstance) {
         return
       }
 
@@ -122,7 +129,7 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
         onSelectStation(station.id)
       })
 
-      marker.addTo(mapRef.current)
+      marker.addTo(mapInstance)
       markersRef.current.push(marker)
     })
 
@@ -143,18 +150,16 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
     }
   }, [])
 
-  if (stations.length === 0) {
-    return null
-  }
-
-  if (!hasCoords) {
-    return <p className="text-sm text-slate-500">Không có dữ liệu vị trí để vẽ bản đồ.</p>
-  }
-
-  return <div ref={mapContainerRef} className="h-60 w-full rounded-md" />
+  return <div ref={mapContainerRef} className="h-96 w-full rounded-md" />
 }
 
-export function DashboardPage() {
+type DashboardSection = 'overview' | 'realtime' | 'map' | 'stations'
+
+type DashboardPageProps = {
+  section: DashboardSection
+}
+
+export function DashboardPage({ section }: DashboardPageProps) {
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
   const [stations, setStations] = useState<Station[]>([])
   const [selectedStationId, setSelectedStationId] = useState<string | undefined>(undefined)
@@ -455,8 +460,12 @@ export function DashboardPage() {
       : null
 
   return (
-    <div className="flex flex-col gap-6">
-      <AnalyticsOverviewPanel overview={overview} loading={loadingOverview} />
+    <div className="flex flex-col gap-4">
+      {section === 'overview' ? (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <AnalyticsOverviewPanel overview={overview} loading={loadingOverview} />
+        </section>
+      ) : null}
 
       {error ? (
         <div
@@ -467,77 +476,80 @@ export function DashboardPage() {
         </div>
       ) : null}
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">
-          Phiên sạc realtime gần đây
-        </h2>
-        {recentSessions.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Chưa có phiên sạc realtime nào trong phiên làm việc này.
-          </p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr>
-                  <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                    Thời gian bắt đầu
-                  </th>
-                  <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                    Trạm
-                  </th>
-                  <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                    Loại phương tiện
-                  </th>
-                  <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
-                    kWh
-                  </th>
-                  <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
-                    Doanh thu (VND)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSessions.map((item) => (
-                  <tr
-                    key={item.session_id ?? `${item.station_id}-${item.start_date_time}`}
-                  >
-                    <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
-                      {formatDateTime(item.start_date_time)}
-                    </td>
-                    <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
-                      {item.station_id ?? '-'}
-                    </td>
-                    <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
-                      {item.vehicle_type ?? '-'}
-                    </td>
-                    <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
-                      {item.power_consumption_kwh != null
-                        ? item.power_consumption_kwh.toLocaleString('vi-VN', {
-                            maximumFractionDigits: 1,
-                          })
-                        : '-'}
-                    </td>
-                    <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
-                      {item.amount_collected_vnd != null
-                        ? item.amount_collected_vnd.toLocaleString('vi-VN')
-                        : '-'}
-                    </td>
+      {section === 'realtime' ? (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-2 text-lg font-semibold text-slate-900">
+            Phiên sạc realtime gần đây
+          </h2>
+          {recentSessions.length === 0 ? (
+            <p className="text-base text-slate-500">
+              Chưa có phiên sạc realtime nào trong phiên làm việc này.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
+                      Thời gian bắt đầu
+                    </th>
+                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
+                      Trạm
+                    </th>
+                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
+                      Loại phương tiện
+                    </th>
+                    <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
+                      kWh
+                    </th>
+                    <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
+                      Doanh thu (VND)
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+                </thead>
+                <tbody>
+                  {recentSessions.map((item) => (
+                    <tr
+                      key={item.session_id ?? `${item.station_id}-${item.start_date_time}`}
+                    >
+                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                        {formatDateTime(item.start_date_time)}
+                      </td>
+                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                        {item.station_id ?? '-'}
+                      </td>
+                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                        {item.vehicle_type ?? '-'}
+                      </td>
+                      <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
+                        {item.power_consumption_kwh != null
+                          ? item.power_consumption_kwh.toLocaleString('vi-VN', {
+                              maximumFractionDigits: 1,
+                            })
+                          : '-'}
+                      </td>
+                      <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
+                        {item.amount_collected_vnd != null
+                          ? item.amount_collected_vnd.toLocaleString('vi-VN')
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      ) : null}
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">
-          Bản đồ trạm sạc &amp; tìm gần toạ độ
-        </h2>
-        <div className="mb-2 flex flex-wrap items-end gap-3 text-sm">
+      {section === 'map' ? (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-2 text-lg font-semibold text-slate-900">
+            Bản đồ trạm sạc &amp; tìm gần toạ độ
+          </h2>
+          <div className="mb-2 flex flex-wrap items-end gap-3 text-base">
           <div>
-            <label className="mb-0.5 block text-xs font-medium text-slate-600">
+            <label className="mb-0.5 block text-sm font-medium text-slate-600">
               Vĩ độ (lat)
             </label>
             <input
@@ -545,11 +557,11 @@ export function DashboardPage() {
               step="0.0001"
               value={nearLat}
               onChange={(event) => setNearLat(event.target.value)}
-              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label className="mb-0.5 block text-xs font-medium text-slate-600">
+            <label className="mb-0.5 block text-sm font-medium text-slate-600">
               Kinh độ (lng)
             </label>
             <input
@@ -557,11 +569,11 @@ export function DashboardPage() {
               step="0.0001"
               value={nearLng}
               onChange={(event) => setNearLng(event.target.value)}
-              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label className="mb-0.5 block text-xs font-medium text-slate-600">
+            <label className="mb-0.5 block text-sm font-medium text-slate-600">
               Bán kính (km)
             </label>
             <input
@@ -570,7 +582,7 @@ export function DashboardPage() {
               step="0.5"
               value={nearRadiusKm}
               onChange={(event) => setNearRadiusKm(event.target.value)}
-              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <button
@@ -579,78 +591,80 @@ export function DashboardPage() {
               void loadNearbyStations()
             }}
             disabled={loadingNearby}
-            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingNearby ? 'Đang tìm...' : 'Tìm trạm gần đây'}
           </button>
         </div>
         {nearbyError ? (
-          <p className="mb-1 text-xs text-red-600">{nearbyError}</p>
+          <p className="mb-1 text-sm text-red-600">{nearbyError}</p>
         ) : null}
         {loadingNearby && nearbyStations.length === 0 ? (
           <p className="text-sm text-slate-500">Đang tìm trạm gần vị trí này...</p>
         ) : null}
         {!loadingNearby && nearbyStations.length === 0 ? (
           <p className="text-sm text-slate-500">
-            Nhập toạ độ và bấm &quot;Tìm trạm gần đây&quot; để xem kết quả trên bản đồ mini.
+            Nhập toạ độ và bấm &quot;Tìm trạm gần đây&quot; để xem các trạm sạc trên bản đồ bên dưới.
           </p>
         ) : null}
-        {nearbyStations.length > 0 ? (
-          <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2">
-            <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
-          </div>
-        ) : null}
-      </section>
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">Trạm sạc</h2>
-        <StationFilters
-          status={statusFilter}
-          vehicleType={vehicleTypeFilter}
-          minAvailable={minAvailableFilter}
-          network={networkFilter}
-          chargeType={chargeTypeFilter}
-          socketType={socketTypeFilter}
-          paymentMethod={paymentMethodFilter}
-          minCapacity={minCapacityFilter}
-          maxCapacity={maxCapacityFilter}
-          onStatusChange={setStatusFilter}
-          onVehicleTypeChange={setVehicleTypeFilter}
-          onMinAvailableChange={setMinAvailableFilter}
-          onNetworkChange={setNetworkFilter}
-          onChargeTypeChange={setChargeTypeFilter}
-          onSocketTypeChange={setSocketTypeFilter}
-          onPaymentMethodChange={setPaymentMethodFilter}
-          onMinCapacityChange={setMinCapacityFilter}
-          onMaxCapacityChange={setMaxCapacityFilter}
-          onApplyFilters={handleApplyFilters}
-        />
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div>
-            <StationList
-              stations={stations}
-              selectedStationId={selectedStationId}
-              loading={loadingStations}
-              onSelectStation={handleSelectStation}
-            />
-          </div>
-          <div>
-            <StationDetails
-              station={selectedStation}
-              analytics={stationAnalytics}
-              loadingAnalytics={loadingStationAnalytics}
-              sessions={stationSessions}
-              loadingSessions={loadingSessions}
-              onReloadAnalytics={() => {
-                if (selectedStationId) {
-                  void loadStationAnalytics(selectedStationId)
-                  void loadStationSessions(selectedStationId)
-                }
-              }}
-            />
-          </div>
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
         </div>
-      </section>
+        </section>
+      ) : null}
+
+      {section === 'stations' ? (
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-2 text-lg font-semibold text-slate-900">Trạm sạc</h2>
+          <StationFilters
+            status={statusFilter}
+            vehicleType={vehicleTypeFilter}
+            minAvailable={minAvailableFilter}
+            network={networkFilter}
+            chargeType={chargeTypeFilter}
+            socketType={socketTypeFilter}
+            paymentMethod={paymentMethodFilter}
+            minCapacity={minCapacityFilter}
+            maxCapacity={maxCapacityFilter}
+            onStatusChange={setStatusFilter}
+            onVehicleTypeChange={setVehicleTypeFilter}
+            onMinAvailableChange={setMinAvailableFilter}
+            onNetworkChange={setNetworkFilter}
+            onChargeTypeChange={setChargeTypeFilter}
+            onSocketTypeChange={setSocketTypeFilter}
+            onPaymentMethodChange={setPaymentMethodFilter}
+            onMinCapacityChange={setMinCapacityFilter}
+            onMaxCapacityChange={setMaxCapacityFilter}
+            onApplyFilters={handleApplyFilters}
+          />
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <div>
+              <StationList
+                stations={stations}
+                selectedStationId={selectedStationId}
+                loading={loadingStations}
+                onSelectStation={handleSelectStation}
+              />
+            </div>
+            <div>
+              <StationDetails
+                station={selectedStation}
+                analytics={stationAnalytics}
+                loadingAnalytics={loadingStationAnalytics}
+                sessions={stationSessions}
+                loadingSessions={loadingSessions}
+                onReloadAnalytics={() => {
+                  if (selectedStationId) {
+                    void loadStationAnalytics(selectedStationId)
+                    void loadStationSessions(selectedStationId)
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }
