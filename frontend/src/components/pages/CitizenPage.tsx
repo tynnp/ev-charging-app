@@ -479,7 +479,7 @@ export function CitizenPage() {
   }, [activeTab])
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Left Panel: Tabs for Search, Results & Route */}
       <div
         className={`flex flex-col border-r border-slate-200 bg-white min-h-0 transition-all duration-300 ${
@@ -934,18 +934,19 @@ export function CitizenPage() {
             </div>
           </>
         )}
-
-        {/* Toggle Sidebar Button */}
-        {!sidebarOpen && (
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="absolute left-4 top-4 z-10 rounded-lg bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors"
-          >
-            <ChevronRight className="h-5 w-5 text-slate-700" />
-          </button>
-        )}
       </div>
+
+      {/* Toggle Sidebar Button */}
+      {!sidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="absolute left-4 top-4 z-20 rounded-lg bg-white p-2 shadow-lg transition-colors hover:bg-slate-50"
+          aria-label="Mở lại bảng tìm kiếm"
+        >
+          <ChevronRight className="h-5 w-5 text-slate-700" />
+        </button>
+      )}
 
       {/* Map Area - Always visible on the right */}
       <div className="flex-1 min-w-0 bg-white relative">

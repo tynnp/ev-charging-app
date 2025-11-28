@@ -31,9 +31,9 @@ import {
   Ruler,
   Search,
   Loader2,
-  Lightbulb,
   CheckCircle2,
   Clock,
+  BarChart3,
 } from 'lucide-react'
 
 const API_BASE_URL =
@@ -148,6 +148,7 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
         .setPopup(new Popup({ offset: 12 }).setText(station.name))
 
       marker.getElement().addEventListener('click', () => {
+        marker.togglePopup()
         onSelectStation(station.id)
       })
 
@@ -535,8 +536,31 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const displayStation =
     selectedStation ??
     (selectedStationId != null
-      ? stations.find((station) => station.id === selectedStationId) ?? null
+      ? stations.find((station) => station.id === selectedStationId) ??
+        nearbyStations.find((station) => station.id === selectedStationId) ??
+        null
       : null)
+
+  const locationParts = displayStation
+    ? [
+        displayStation.address?.streetAddress,
+        displayStation.address?.addressLocality,
+        displayStation.address?.addressCountry,
+      ].filter((part): part is string => typeof part === 'string' && part.length > 0)
+    : []
+  const locationSummary = locationParts.length > 0 ? locationParts.join(', ') : null
+
+  const statusText = stationRealtime?.status ?? displayStation?.status ?? 'Không rõ'
+  const availableCapacityValue =
+    stationRealtime?.available_capacity ?? displayStation?.available_capacity ?? null
+  const instantaneousPowerValue =
+    stationRealtime?.instantaneous_power ?? displayStation?.instantaneous_power ?? null
+  const queueLengthValue =
+    stationRealtime?.queue_length ?? displayStation?.queue_length ?? null
+  const totalCapacityValue = displayStation?.capacity ?? null
+  const totalSessionsValue = stationAnalytics?.total_sessions ?? null
+  const totalEnergyValue = stationAnalytics?.total_energy_kwh ?? null
+  const totalAmountValue = stationAnalytics?.total_amount_vnd ?? null
 
   const totalStationPages = Math.max(1, Math.ceil(stations.length / STATIONS_PER_PAGE))
   const pageStartIndex = (stationPage - 1) * STATIONS_PER_PAGE
@@ -734,6 +758,131 @@ export function DashboardPage({ section }: DashboardPageProps) {
           <div className="mt-4 overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
             <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
           </div>
+
+          {selectedStationId ? (
+            <div className="mt-4 rounded-2xl border border-[#124874]/15 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 shadow-xl">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#124874]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#124874]">
+                    <Map className="h-3.5 w-3.5" />
+                    Trạm được chọn
+                  </div>
+                  <h3 className="mt-3 text-xl font-bold text-slate-900">
+                    {displayStation?.name ?? 'Đang tải thông tin trạm...'}
+                  </h3>
+                  <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-[#124874]/10 px-3 py-1 text-xs font-semibold text-[#124874]">
+                    <Plug className="h-3.5 w-3.5" />
+                    <span>{selectedStationId}</span>
+                  </p>
+                  {locationSummary ? (
+                    <p className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+                      <MapPin className="h-4 w-4 text-[#cf373d]" />
+                      <span>{locationSummary}</span>
+                    </p>
+                  ) : null}
+                  {totalCapacityValue != null ? (
+                    <p className="mt-2 text-xs font-semibold text-slate-500">
+                      Công suất thiết kế: {totalCapacityValue.toLocaleString('vi-VN')} kW
+                    </p>
+                  ) : null}
+                </div>
+                {(loadingStationDetails || loadingStationRealtime) && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#124874]/10 to-[#0f3a5a]/10 px-4 py-1.5 text-xs font-semibold text-[#124874]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Đang tải...</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-500/15 via-blue-400/10 to-blue-500/5 p-4 text-blue-800 shadow-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Trạng thái
+                  </div>
+                  <div className="mt-3 text-lg font-bold text-blue-900">{statusText}</div>
+                </div>
+                <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-emerald-500/5 p-4 text-emerald-800 shadow-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                    <Plug className="h-3 w-3" />
+                    Chỗ trống
+                  </div>
+                  <div className="mt-3 text-lg font-bold text-emerald-900">
+                    {availableCapacityValue != null
+                      ? availableCapacityValue.toLocaleString('vi-VN')
+                      : 'Không rõ'}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-amber-500/5 p-4 text-amber-800 shadow-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                    <Zap className="h-3 w-3" />
+                    Công suất tức thời (kW)
+                  </div>
+                  <div className="mt-3 text-lg font-bold text-amber-900">
+                    {instantaneousPowerValue != null
+                      ? instantaneousPowerValue.toLocaleString('vi-VN', {
+                          maximumFractionDigits: 1,
+                        })
+                      : 'Không rõ'}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-500/20 via-orange-400/10 to-orange-500/5 p-4 text-orange-800 shadow-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                    <Car className="h-3 w-3" />
+                    Xe đang chờ
+                  </div>
+                  <div className="mt-3 text-lg font-bold text-orange-900">
+                    {queueLengthValue != null
+                      ? queueLengthValue.toLocaleString('vi-VN')
+                      : 'Không rõ'}
+                  </div>
+                </div>
+              </div>
+
+              {stationAnalytics ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-500/15 via-indigo-400/10 to-indigo-500/5 p-4 text-indigo-800 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                      <BarChart3 className="h-3 w-3" />
+                      Tổng số phiên
+                    </div>
+                    <div className="mt-3 text-lg font-bold text-indigo-900">
+                      {totalSessionsValue != null
+                        ? totalSessionsValue.toLocaleString('vi-VN')
+                        : 'Không rõ'}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-500/15 via-purple-400/10 to-purple-500/5 p-4 text-purple-800 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                      <Zap className="h-3 w-3" />
+                      Tổng năng lượng (kWh)
+                    </div>
+                    <div className="mt-3 text-lg font-bold text-purple-900">
+                      {totalEnergyValue != null
+                        ? totalEnergyValue.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
+                        : 'Không rõ'}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-500/20 via-rose-400/10 to-rose-500/5 p-4 text-rose-800 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+                      <DollarSign className="h-3 w-3" />
+                      Doanh thu (VND)
+                    </div>
+                    <div className="mt-3 text-lg font-bold text-rose-900">
+                      {totalAmountValue != null
+                        ? totalAmountValue.toLocaleString('vi-VN')
+                        : 'Không rõ'}
+                    </div>
+                  </div>
+                </div>
+              ) : loadingStationAnalytics ? (
+                <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Đang tải thống kê cho trạm...</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       ) : null}
 
