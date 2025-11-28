@@ -782,6 +782,13 @@ def list_datasets() -> JSONResponse:
             "path": "/datasets/observations.jsonld",
             "mediaType": "application/ld+json",
         },
+        {
+            "id": "sessions",
+            "title": "Citizen charging history dataset (JSON-LD)",
+            "description": "Lịch sử sạc gắn người dùng (Person) và phiên sạc (EVChargingSession)",
+            "path": "/datasets/sessions.jsonld",
+            "mediaType": "application/ld+json",
+        },
     ]
     return JSONResponse(content=datasets)
 
@@ -806,6 +813,17 @@ def get_observations_dataset() -> FileResponse:
     data_dir = get_default_data_dir()
     path = data_dir / "observations.jsonld"
     return FileResponse(path, media_type="application/ld+json", filename="observations.jsonld")
+
+@app.get(
+    "/datasets/sessions.jsonld",
+    response_class=FileResponse,
+    tags=["Datasets"],
+    summary="Download sessions dataset (JSON-LD)",
+)
+def get_sessions_dataset() -> FileResponse:
+    data_dir = get_default_data_dir()
+    path = data_dir / "sessions.jsonld"
+    return FileResponse(path, media_type="application/ld+json", filename="sessions.jsonld")
 
 @app.post(
     "/citizen/favorites",

@@ -4,9 +4,17 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Dataset } from '../../types/ev'
-import { Download, FileText, Loader2, AlertTriangle, Database } from 'lucide-react'
+import {
+  Download,
+  FileText,
+  Loader2,
+  AlertTriangle,
+  Database,
+  Eye,
+  X,
+} from 'lucide-react'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -20,6 +28,16 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloading, setDownloading] = useState<Set<string>>(new Set())
+  const [previewing, setPreviewing] = useState<Set<string>>(new Set())
+  const [previewDataset, setPreviewDataset] = useState<Dataset | null>(null)
+  const [previewContent, setPreviewContent] = useState<string>('')
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
+  const prettyPreview = useMemo(() => {
+    if (!previewContent) return ''
+    if (previewContent.length <= 8000) return previewContent
+    return `${previewContent.slice(0, 8000)}\n… (đã rút gọn)`
+  }, [previewContent])
 
   useEffect(() => {
     void loadDatasets()
@@ -69,6 +87,45 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
         return next
       })
     }
+  }
+
+  async function handlePreview(dataset: Dataset) {
+    try {
+      setPreviewDataset(dataset)
+      setPreviewError(null)
+      setPreviewContent('')
+      setPreviewing((prev) => new Set(prev).add(dataset.id))
+
+      const res = await fetch(`${API_BASE_URL}${dataset.path}`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+
+      const text = await res.text()
+      let formatted = text
+      try {
+        const json = JSON.parse(text)
+        formatted = JSON.stringify(json, null, 2)
+      } catch {
+        // keep raw text if not valid JSON
+      }
+      setPreviewContent(formatted)
+    } catch (error) {
+      console.error(error)
+      setPreviewError('Không thể xem trước dataset. Vui lòng thử lại sau.')
+    } finally {
+      setPreviewing((prev) => {
+        const next = new Set(prev)
+        next.delete(dataset.id)
+        return next
+      })
+    }
+  }
+
+  function handleClosePreview() {
+    setPreviewDataset(null)
+    setPreviewContent('')
+    setPreviewError(null)
   }
 
   return (
@@ -144,9 +201,92 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
                     </>
                   )}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => void handlePreview(dataset)}
+                  disabled={previewing.has(dataset.id)}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#124874]/40 hover:text-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/40 focus:ring-offset-2 disabled:opacity-50"
+                >
+                  {previewing.has(dataset.id) ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Đang mở…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4" />
+                      <span>Xem nhanh</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {previewDataset ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
+          <div className="relative w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={handleClosePreview}
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Đóng"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#124874] to-[#0f3a5a] text-white shadow-md">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">{previewDataset.title}</h3>
+                <p className="text-sm text-slate-500">{previewDataset.description}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-2 py-1 font-mono">
+                    {previewDataset.mediaType}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-2 py-1 font-mono">
+                    {previewDataset.path}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {previewError ? (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <AlertTriangle className="h-4 w-4" />
+                <span>{previewError}</span>
+              </div>
+            ) : null}
+
+            {!previewError ? (
+              <div className="max-h-[65vh] overflow-auto rounded-xl border border-slate-200 bg-slate-900/95 p-4">
+                {previewing.has(previewDataset.id) && !previewContent ? (
+                  <div className="flex items-center justify-center py-16 text-slate-200">
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    <span>Đang tải nội dung dataset…</span>
+                  </div>
+                ) : (
+                  <pre className="whitespace-pre-wrap text-sm text-emerald-100">
+                    {prettyPreview || '— Không có dữ liệu để hiển thị —'}
+                  </pre>
+                )}
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={handleClosePreview}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#124874] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f3a5a]"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </section>
