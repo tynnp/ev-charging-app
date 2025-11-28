@@ -8,7 +8,6 @@ import 'leaflet/dist/leaflet.css'
 import './App.css'
 import { useState } from 'react'
 import { AppLayout } from './components/layout/AppLayout'
-import { PageHeader } from './components/layout/PageHeader'
 import { DashboardPage } from './components/pages/DashboardPage'
 import { CitizenPage } from './components/pages/CitizenPage'
 
@@ -52,25 +51,9 @@ function App() {
       section = 'stations'
     }
 
-    content = (
-      <>
-        <PageHeader
-          title="EV Charging - Thành phố X"
-          subtitle="Dashboard dữ liệu mở NGSI-LD cho trạm sạc xe điện (vai trò nhà quản lý)"
-        />
-        <DashboardPage section={section} />
-      </>
-    )
+    content = <DashboardPage section={section} />
   } else if (role === 'citizen' && normalizedActiveNavId === 'citizen-find') {
-    content = (
-      <>
-        <PageHeader
-          title="Tìm trạm sạc gần bạn"
-          subtitle="Tra cứu các trạm sạc xe điện xung quanh (vai trò người dân)"
-        />
-        <CitizenPage />
-      </>
-    )
+    content = <CitizenPage />
   }
 
   return (

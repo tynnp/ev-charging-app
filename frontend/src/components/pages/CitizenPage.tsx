@@ -10,6 +10,14 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Station } from '../../types/ev'
 import { MAP_STYLE } from '../../mapConfig'
 import { useEffect, useRef } from 'react'
+import {
+  Search,
+  MapPin,
+  Ruler,
+  AlertTriangle,
+  Lightbulb,
+  CheckCircle2,
+} from 'lucide-react'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -150,76 +158,97 @@ export function CitizenPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="space-y-3 text-base">
-          <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <label className="mb-0.5 block text-sm font-medium text-slate-600">
-                Vĩ độ (lat)
-              </label>
-              <input
-                type="number"
-                step="0.0001"
-                value={nearLat}
-                onChange={(event) => setNearLat(event.target.value)}
-                className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-[#124874] focus:outline-none focus:ring-1 focus:ring-[#124874]"
-              />
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg">
+        <div className="mb-4 flex items-center gap-2">
+          <Search className="h-6 w-6 text-[#CF373D]" />
+          <h3 className="text-lg font-bold text-slate-900">Tìm kiếm trạm sạc</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="rounded-xl bg-white p-4 border border-slate-200/50">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Vĩ độ (lat)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={nearLat}
+                  onChange={(event) => setNearLat(event.target.value)}
+                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Kinh độ (lng)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={nearLng}
+                  onChange={(event) => setNearLng(event.target.value)}
+                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <Ruler className="h-3.5 w-3.5" />
+                  Bán kính (km)
+                </label>
+                <input
+                  type="number"
+                  min={0.1}
+                  step={0.5}
+                  value={nearRadiusKm}
+                  onChange={(event) => setNearRadiusKm(event.target.value)}
+                  className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleSearch()
+                }}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+              >
+                <Search className="h-4 w-4" />
+                {loading ? 'Đang tìm...' : 'Tìm trạm gần đây'}
+              </button>
             </div>
-            <div>
-              <label className="mb-0.5 block text-sm font-medium text-slate-600">
-                Kinh độ (lng)
-              </label>
-              <input
-                type="number"
-                step="0.0001"
-                value={nearLng}
-                onChange={(event) => setNearLng(event.target.value)}
-                className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-[#124874] focus:outline-none focus:ring-1 focus:ring-[#124874]"
-              />
-            </div>
-            <div>
-              <label className="mb-0.5 block text-sm font-medium text-slate-600">
-                Bán kính (km)
-              </label>
-              <input
-                type="number"
-                min={0.1}
-                step={0.5}
-                value={nearRadiusKm}
-                onChange={(event) => setNearRadiusKm(event.target.value)}
-                className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-[#124874] focus:outline-none focus:ring-1 focus:ring-[#124874]"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                void handleSearch()
-              }}
-              disabled={loading}
-              className="inline-flex items-center rounded-md border border-transparent bg-[#124874] px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-[#0f3a5a] focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? 'Đang tìm...' : 'Tìm trạm gần đây'}
-            </button>
           </div>
 
-          {error ? <p className="text-sm text-[#CF373D]">{error}</p> : null}
+          {error ? (
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 border border-red-200">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          ) : null}
 
           {!error && stations.length === 0 && !loading ? (
-            <p className="text-sm text-slate-500">
-              Nhập toạ độ và bấm "Tìm trạm gần đây" để xem các trạm sạc gần vị trí của bạn.
-            </p>
+            <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
+              <p className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                <Lightbulb className="h-4 w-4" />
+                Nhập toạ độ và bấm "Tìm trạm gần đây" để xem các trạm sạc gần vị trí của bạn.
+              </p>
+            </div>
           ) : null}
 
           {stations.length > 0 ? (
-            <p className="text-sm text-slate-600">
-              Tìm thấy {stations.length} trạm phù hợp. Điểm màu đỏ trên bản đồ là các trạm sạc.
-            </p>
+            <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
+              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
+                <CheckCircle2 className="h-4 w-4" />
+                Tìm thấy {stations.length} trạm phù hợp. Điểm màu đỏ trên bản đồ là các trạm sạc.
+              </p>
+            </div>
           ) : null}
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
         <MiniStationsMap stations={stations} />
       </div>
     </div>

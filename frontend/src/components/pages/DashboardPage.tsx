@@ -7,12 +7,34 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl, { Map as MapLibreMap, Marker, Popup } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { Station, AnalyticsOverview, StationAnalytics, Session } from '../../types/ev'
+import type {
+  Station,
+  AnalyticsOverview,
+  StationAnalytics,
+  Session,
+  StationRealtime,
+} from '../../types/ev'
 import { MAP_STYLE } from '../../mapConfig'
 import { AnalyticsOverviewPanel } from '../analytics/AnalyticsOverviewPanel'
 import { StationFilters } from '../stations/StationFilters'
 import { StationList } from '../stations/StationList'
 import { StationDetails } from '../stations/StationDetails'
+import { DatasetsPanel } from '../datasets/DatasetsPanel'
+import {
+  AlertTriangle,
+  Zap,
+  Plug,
+  Car,
+  DollarSign,
+  Map,
+  MapPin,
+  Ruler,
+  Search,
+  Loader2,
+  Lightbulb,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -163,6 +185,8 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
   const [stations, setStations] = useState<Station[]>([])
   const [selectedStationId, setSelectedStationId] = useState<string | undefined>(undefined)
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null)
+  const [stationRealtime, setStationRealtime] = useState<StationRealtime | null>(null)
   const [stationAnalytics, setStationAnalytics] = useState<StationAnalytics | null>(null)
   const [stationSessions, setStationSessions] = useState<Session[]>([])
   const [recentSessions, setRecentSessions] = useState<RealtimeSessionSummary[]>([])
@@ -179,6 +203,8 @@ export function DashboardPage({ section }: DashboardPageProps) {
 
   const [loadingOverview, setLoadingOverview] = useState(false)
   const [loadingStations, setLoadingStations] = useState(false)
+  const [loadingStationDetails, setLoadingStationDetails] = useState(false)
+  const [loadingStationRealtime, setLoadingStationRealtime] = useState(false)
   const [loadingStationAnalytics, setLoadingStationAnalytics] = useState(false)
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -391,6 +417,44 @@ export function DashboardPage({ section }: DashboardPageProps) {
     }
   }
 
+  async function loadStationDetails(stationId: string) {
+    try {
+      setLoadingStationDetails(true)
+      setError(null)
+      const res = await fetch(`${API_BASE_URL}/stations/${encodeURIComponent(stationId)}`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as Station
+      setSelectedStation(data)
+    } catch (error) {
+      console.error(error)
+      setError('Không tải được chi tiết trạm sạc.')
+    } finally {
+      setLoadingStationDetails(false)
+    }
+  }
+
+  async function loadStationRealtime(stationId: string) {
+    try {
+      setLoadingStationRealtime(true)
+      setError(null)
+      const res = await fetch(
+        `${API_BASE_URL}/stations/${encodeURIComponent(stationId)}/realtime`,
+      )
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as StationRealtime
+      setStationRealtime(data)
+    } catch (error) {
+      console.error(error)
+      setError('Không tải được trạng thái realtime của trạm.')
+    } finally {
+      setLoadingStationRealtime(false)
+    }
+  }
+
   async function loadStationSessions(stationId: string) {
     try {
       setLoadingSessions(true)
@@ -450,85 +514,114 @@ export function DashboardPage({ section }: DashboardPageProps) {
 
   function handleSelectStation(stationId: string) {
     setSelectedStationId(stationId)
+    void loadStationDetails(stationId)
+    void loadStationRealtime(stationId)
     void loadStationAnalytics(stationId)
     void loadStationSessions(stationId)
   }
 
-  const selectedStation =
-    selectedStationId != null
+  // Use fetched station details if available, otherwise fall back to finding in list
+  const displayStation =
+    selectedStation ??
+    (selectedStationId != null
       ? stations.find((station) => station.id === selectedStationId) ?? null
-      : null
+      : null)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {section === 'overview' ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <AnalyticsOverviewPanel overview={overview} loading={loadingOverview} />
-        </section>
+        <>
+          <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
+            <AnalyticsOverviewPanel overview={overview} loading={loadingOverview} />
+          </section>
+          <DatasetsPanel />
+        </>
       ) : null}
 
       {error ? (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="flex items-center gap-3 rounded-xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-red-100 px-5 py-4 text-sm font-semibold text-red-800 shadow-md"
         >
-          {error}
+          <AlertTriangle className="h-5 w-5" />
+          <span>{error}</span>
         </div>
       ) : null}
 
       {section === 'realtime' ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">
-            Phiên sạc realtime gần đây
-          </h2>
+        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
+          <div className="mb-4 flex items-center gap-2">
+            <Zap className="h-6 w-6 text-[#124874]" />
+            <h2 className="text-xl font-bold text-slate-900">
+              Phiên sạc realtime gần đây
+            </h2>
+          </div>
           {recentSessions.length === 0 ? (
-            <p className="text-base text-slate-500">
-              Chưa có phiên sạc realtime nào trong phiên làm việc này.
-            </p>
+            <div className="rounded-xl bg-slate-50 p-6 text-center">
+              <p className="text-base font-medium text-slate-600">
+                Chưa có phiên sạc realtime nào trong phiên làm việc này.
+              </p>
+            </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
               <table className="w-full border-collapse text-sm">
-                <thead>
+                <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
                   <tr>
-                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                      Thời gian bắt đầu
+                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        Thời gian bắt đầu
+                      </span>
                     </th>
-                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                      Trạm
+                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Plug className="h-4 w-4" />
+                        Trạm
+                      </span>
                     </th>
-                    <th className="border-b border-slate-200 px-2 py-1 text-left font-medium text-slate-600">
-                      Loại phương tiện
+                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Car className="h-4 w-4" />
+                        Loại phương tiện
+                      </span>
                     </th>
-                    <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
-                      kWh
+                    <th className="border-b border-slate-200 px-4 py-3 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <Zap className="h-4 w-4" />
+                        kWh
+                      </span>
                     </th>
-                    <th className="border-b border-slate-200 px-2 py-1 text-right font-medium text-slate-600">
-                      Doanh thu (VND)
+                    <th className="border-b border-slate-200 px-4 py-3 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <DollarSign className="h-4 w-4" />
+                        Doanh thu (VND)
+                      </span>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSessions.map((item) => (
+                  {recentSessions.map((item, index) => (
                     <tr
                       key={item.session_id ?? `${item.station_id}-${item.start_date_time}`}
+                      className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}
                     >
-                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
                         {formatDateTime(item.start_date_time)}
                       </td>
-                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
                         {item.station_id ?? '-'}
                       </td>
-                      <td className="border-b border-slate-100 px-2 py-1 text-slate-700">
+                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
                         {item.vehicle_type ?? '-'}
                       </td>
-                      <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
+                      <td className="border-b border-slate-100 px-4 py-2.5 text-right font-semibold text-slate-700">
                         {item.power_consumption_kwh != null
                           ? item.power_consumption_kwh.toLocaleString('vi-VN', {
                               maximumFractionDigits: 1,
                             })
                           : '-'}
                       </td>
-                      <td className="border-b border-slate-100 px-2 py-1 text-right text-slate-700">
+                      <td className="border-b border-slate-100 px-4 py-2.5 text-right font-semibold text-slate-700">
                         {item.amount_collected_vnd != null
                           ? item.amount_collected_vnd.toLocaleString('vi-VN')
                           : '-'}
@@ -543,80 +636,98 @@ export function DashboardPage({ section }: DashboardPageProps) {
       ) : null}
 
       {section === 'map' ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">
-            Bản đồ trạm sạc &amp; tìm gần toạ độ
-          </h2>
-          <div className="mb-2 flex flex-wrap items-end gap-3 text-base">
-          <div>
-            <label className="mb-0.5 block text-sm font-medium text-slate-600">
-              Vĩ độ (lat)
-            </label>
-            <input
-              type="number"
-              step="0.0001"
-              value={nearLat}
-              onChange={(event) => setNearLat(event.target.value)}
-              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
+        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
+          <div className="mb-4 flex items-center gap-2">
+            <Map className="h-6 w-6 text-[#124874]" />
+            <h2 className="text-xl font-bold text-slate-900">
+              Bản đồ trạm sạc &amp; tìm gần toạ độ
+            </h2>
           </div>
-          <div>
-            <label className="mb-0.5 block text-sm font-medium text-slate-600">
-              Kinh độ (lng)
-            </label>
-            <input
-              type="number"
-              step="0.0001"
-              value={nearLng}
-              onChange={(event) => setNearLng(event.target.value)}
-              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
+          <div className="mb-4 rounded-xl bg-gradient-to-br from-slate-50 to-white p-4 border border-slate-200/50">
+            <div className="mb-3 flex flex-wrap items-end gap-3 text-base">
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Vĩ độ (lat)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={nearLat}
+                  onChange={(event) => setNearLat(event.target.value)}
+                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Kinh độ (lng)
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={nearLng}
+                  onChange={(event) => setNearLng(event.target.value)}
+                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <Ruler className="h-3.5 w-3.5" />
+                  Bán kính (km)
+                </label>
+                <input
+                  type="number"
+                  min={0.1}
+                  step="0.5"
+                  value={nearRadiusKm}
+                  onChange={(event) => setNearRadiusKm(event.target.value)}
+                  className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void loadNearbyStations()
+                }}
+                disabled={loadingNearby}
+                className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+              >
+                <Search className="h-4 w-4" />
+                {loadingNearby ? 'Đang tìm...' : 'Tìm trạm gần đây'}
+              </button>
+            </div>
+            {nearbyError ? (
+              <div className="mb-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 border border-red-200">
+                <AlertTriangle className="h-4 w-4" />
+                <span>{nearbyError}</span>
+              </div>
+            ) : null}
+            {loadingNearby && nearbyStations.length === 0 ? (
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Đang tìm trạm gần vị trí này...</span>
+              </div>
+            ) : null}
+            {!loadingNearby && nearbyStations.length === 0 ? (
+              <p className="text-sm font-medium text-slate-600">
+                Nhập toạ độ và bấm &quot;Tìm trạm gần đây&quot; để xem các trạm sạc trên bản đồ bên dưới.
+              </p>
+            ) : null}
           </div>
-          <div>
-            <label className="mb-0.5 block text-sm font-medium text-slate-600">
-              Bán kính (km)
-            </label>
-            <input
-              type="number"
-              min={0.1}
-              step="0.5"
-              value={nearRadiusKm}
-              onChange={(event) => setNearRadiusKm(event.target.value)}
-              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              void loadNearbyStations()
-            }}
-            disabled={loadingNearby}
-            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loadingNearby ? 'Đang tìm...' : 'Tìm trạm gần đây'}
-          </button>
-        </div>
-        {nearbyError ? (
-          <p className="mb-1 text-sm text-red-600">{nearbyError}</p>
-        ) : null}
-        {loadingNearby && nearbyStations.length === 0 ? (
-          <p className="text-sm text-slate-500">Đang tìm trạm gần vị trí này...</p>
-        ) : null}
-        {!loadingNearby && nearbyStations.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Nhập toạ độ và bấm &quot;Tìm trạm gần đây&quot; để xem các trạm sạc trên bản đồ bên dưới.
-          </p>
-        ) : null}
 
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
-          <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
-        </div>
+          <div className="mt-4 overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
+            <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
+          </div>
         </section>
       ) : null}
 
       {section === 'stations' ? (
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-slate-900">Trạm sạc</h2>
+        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
+          <div className="mb-4 flex items-center gap-2">
+            <Plug className="h-6 w-6 text-[#124874]" />
+            <h2 className="text-xl font-bold text-slate-900">Trạm sạc</h2>
+          </div>
           <StationFilters
             status={statusFilter}
             vehicleType={vehicleTypeFilter}
@@ -649,13 +760,17 @@ export function DashboardPage({ section }: DashboardPageProps) {
             </div>
             <div>
               <StationDetails
-                station={selectedStation}
+                station={displayStation}
+                realtime={stationRealtime}
+                loadingRealtime={loadingStationRealtime}
                 analytics={stationAnalytics}
                 loadingAnalytics={loadingStationAnalytics}
                 sessions={stationSessions}
                 loadingSessions={loadingSessions}
                 onReloadAnalytics={() => {
                   if (selectedStationId) {
+                    void loadStationDetails(selectedStationId)
+                    void loadStationRealtime(selectedStationId)
                     void loadStationAnalytics(selectedStationId)
                     void loadStationSessions(selectedStationId)
                   }

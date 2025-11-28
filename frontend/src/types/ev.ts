@@ -84,3 +84,23 @@ export type StationAnalytics = {
   average_energy_kwh: number
   vehicle_type_breakdown: StationVehicleStats[]
 }
+
+export type StationRealtime = {
+  id: string
+  status?: string | null
+  available_capacity?: number | null
+  instantaneous_power?: number | null
+  queue_length?: number | null
+}
+
+export type Dataset = {
+  id: string
+  title: string
+  description: string
+  path: string
+  mediaType: string
+}
+
+export type HealthStatus = {
+  status: string
+}
