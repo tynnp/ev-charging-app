@@ -26,11 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
-
-const USER_ID = 'citizen_user_1'
+import { API_BASE_URL, USER_ID } from '../../config.ts'
 
 function haversineDistance(
   lat1: number,

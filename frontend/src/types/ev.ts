@@ -42,10 +42,13 @@ export type Session = {
   id: string
   station_id: string
   sensor_id?: string | null
+  user_id?: string | null
   vehicle_type?: string | null
   charging_unit_id?: string | null
   transaction_id?: string | null
   transaction_type?: string | null
+  session_status?: string | null
+  duration_minutes?: number | null
   start_date_time: string
   end_date_time: string
   phenomenon_time: string
@@ -53,6 +56,25 @@ export type Session = {
   power_consumption_kwh: number
   amount_collected_vnd: number
   tax_amount_collected_vnd: number
+}
+
+export type CitizenProfile = {
+  id: string
+  name?: string | null
+  email?: string | null
+  phone_number?: string | null
+}
+
+export type CitizenSessionsStats = {
+  user_id: string
+  total_sessions: number
+  total_energy_kwh: number
+  total_amount_vnd: number
+  total_tax_vnd: number
+  total_duration_minutes: number
+  average_session_duration_minutes: number
+  average_energy_kwh: number
+  average_amount_vnd: number
 }
 
 export type AnalyticsOverview = {

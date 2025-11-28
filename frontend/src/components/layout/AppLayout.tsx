@@ -19,6 +19,7 @@ import {
   XCircle,
   Heart,
   Navigation,
+  History,
 } from 'lucide-react'
 
 type UserRole = 'manager' | 'citizen'
@@ -115,6 +116,7 @@ export function AppLayout({
                       <Plug className="h-4 w-4" />
                     )}
                     {item.id.includes('find') && <Search className="h-4 w-4" />}
+                    {item.id.includes('history') && <History className="h-4 w-4" />}
                     {item.id.includes('favorites') && <Heart className="h-4 w-4" />}
                     {item.id.includes('compare') && <BarChart3 className="h-4 w-4" />}
                     {item.id.includes('route') && <Navigation className="h-4 w-4" />}

@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { AppLayout } from './components/layout/AppLayout'
 import { DashboardPage } from './components/pages/DashboardPage'
 import { CitizenPage } from './components/pages/CitizenPage'
+import { CitizenHistoryPage } from './components/citizen/CitizenHistoryPage'
 import { FavoritesPage } from './components/citizen/FavoritesPage'
 import { ComparisonPage } from './components/citizen/ComparisonPage'
 
@@ -19,7 +20,11 @@ type ManagerNavId =
   | 'manager-map'
   | 'manager-stations'
 
-type CitizenNavId = 'citizen-find' | 'citizen-favorites' | 'citizen-compare'
+type CitizenNavId =
+  | 'citizen-find'
+  | 'citizen-history'
+  | 'citizen-favorites'
+  | 'citizen-compare'
 
 function App() {
   const [role, setRole] = useState<'manager' | 'citizen'>('manager')
@@ -34,6 +39,7 @@ function App() {
 
   const citizenNavItems = [
     { id: 'citizen-find', label: 'Tìm trạm' },
+    { id: 'citizen-history', label: 'Lịch sử sạc' },
     { id: 'citizen-favorites', label: 'Yêu thích' },
     { id: 'citizen-compare', label: 'So sánh' },
   ] satisfies { id: CitizenNavId; label: string }[]
@@ -59,6 +65,8 @@ function App() {
   } else if (role === 'citizen') {
     if (normalizedActiveNavId === 'citizen-find') {
       content = <CitizenPage />
+    } else if (normalizedActiveNavId === 'citizen-history') {
+      content = <CitizenHistoryPage />
     } else if (normalizedActiveNavId === 'citizen-favorites') {
       content = <FavoritesPage />
     } else if (normalizedActiveNavId === 'citizen-compare') {
