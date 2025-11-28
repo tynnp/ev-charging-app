@@ -5,11 +5,17 @@
 from typing import Any, Dict, List
 import asyncio
 import json
+from datetime import datetime
 from math import asin, cos, radians, sin, sqrt
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
-from .db import get_sessions_collection, get_sensors_collection, get_stations_collection
+from .db import (
+    get_sessions_collection,
+    get_sensors_collection,
+    get_stations_collection,
+    get_favorites_collection,
+)
 from .etl import (
     get_default_data_dir,
     get_property_value,
@@ -655,3 +661,172 @@ def get_observations_dataset() -> FileResponse:
     data_dir = get_default_data_dir()
     path = data_dir / "observations.jsonld"
     return FileResponse(path, media_type="application/ld+json", filename="observations.jsonld")
+
+@app.post(
+    "/citizen/favorites",
+    tags=["Citizen"],
+    summary="Add a station to favorites",
+)
+def add_favorite(
+    user_id: str = Query(..., description="User identifier"),
+    station_id: str = Query(..., description="Station ID to favorite"),
+) -> Dict[str, Any]:
+    favorites_collection = get_favorites_collection()
+    
+    # Check if station exists
+    stations_collection = get_stations_collection()
+    station = stations_collection.find_one({"_id": station_id})
+    if not station:
+        raise HTTPException(status_code=404, detail="Station not found")
+    
+    # Check if already favorited
+    existing = favorites_collection.find_one({"user_id": user_id, "station_id": station_id})
+    if existing:
+        return {"message": "Station already in favorites", "favorited": True}
+    
+    # Add to favorites
+    favorite_doc = {
+        "user_id": user_id,
+        "station_id": station_id,
+        "created_at": datetime.now(),
+    }
+    favorites_collection.insert_one(favorite_doc)
+    
+    return {"message": "Station added to favorites", "favorited": True}
+
+@app.delete(
+    "/citizen/favorites",
+    tags=["Citizen"],
+    summary="Remove a station from favorites",
+)
+def remove_favorite(
+    user_id: str = Query(..., description="User identifier"),
+    station_id: str = Query(..., description="Station ID to unfavorite"),
+) -> Dict[str, Any]:
+    favorites_collection = get_favorites_collection()
+    result = favorites_collection.delete_one({"user_id": user_id, "station_id": station_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Favorite not found")
+    
+    return {"message": "Station removed from favorites", "favorited": False}
+
+@app.get(
+    "/citizen/favorites",
+    response_model=List[StationBase],
+    tags=["Citizen"],
+    summary="Get user's favorite stations",
+)
+def get_favorites(
+    user_id: str = Query(..., description="User identifier"),
+) -> List[StationBase]:
+    favorites_collection = get_favorites_collection()
+    stations_collection = get_stations_collection()
+    
+    favorites = list(favorites_collection.find({"user_id": user_id}))
+    station_ids = [fav["station_id"] for fav in favorites]
+    
+    if not station_ids:
+        return []
+    
+    stations = list(stations_collection.find({"_id": {"$in": station_ids}}))
+    return [StationBase(**doc) for doc in stations]
+
+@app.get(
+    "/citizen/favorites/check",
+    tags=["Citizen"],
+    summary="Check if a station is favorited",
+)
+def check_favorite(
+    user_id: str = Query(..., description="User identifier"),
+    station_id: str = Query(..., description="Station ID to check"),
+) -> Dict[str, bool]:
+    favorites_collection = get_favorites_collection()
+    favorite = favorites_collection.find_one({"user_id": user_id, "station_id": station_id})
+    return {"favorited": favorite is not None}
+
+@app.get(
+    "/citizen/route",
+    tags=["Citizen"],
+    summary="Get route information to a station",
+)
+def get_route(
+    from_lat: float = Query(..., description="Starting latitude"),
+    from_lng: float = Query(..., description="Starting longitude"),
+    to_station_id: str = Query(..., description="Destination station ID"),
+) -> Dict[str, Any]:
+    stations_collection = get_stations_collection()
+    station = stations_collection.find_one({"_id": to_station_id})
+    
+    if not station:
+        raise HTTPException(status_code=404, detail="Station not found")
+    
+    location = station.get("location") or {}
+    coordinates = location.get("coordinates")
+    if not isinstance(coordinates, list) or len(coordinates) != 2:
+        raise HTTPException(status_code=400, detail="Station location invalid")
+    
+    to_lon, to_lat = coordinates
+    distance_km = _haversine_km(from_lat, from_lng, to_lat, to_lon)
+    
+    # Estimate travel time (assuming average speed of 40 km/h in city)
+    estimated_time_minutes = (distance_km / 40.0) * 60.0
+    
+    return {
+        "from": {"lat": from_lat, "lng": from_lng},
+        "to": {"lat": to_lat, "lng": to_lon, "station_id": to_station_id, "station_name": station.get("name")},
+        "distance_km": round(distance_km, 2),
+        "estimated_time_minutes": round(estimated_time_minutes, 1),
+        "route_coordinates": [
+            [from_lng, from_lat],
+            [to_lon, to_lat],
+        ],
+    }
+
+@app.post(
+    "/citizen/compare",
+    tags=["Citizen"],
+    summary="Compare multiple stations",
+)
+def compare_stations(
+    station_ids: List[str] = Query(..., description="List of station IDs to compare"),
+) -> Dict[str, Any]:
+    stations_collection = get_stations_collection()
+    sessions_collection = get_sessions_collection()
+    
+    stations = list(stations_collection.find({"_id": {"$in": station_ids}}))
+    
+    if len(stations) != len(station_ids):
+        found_ids = {s["_id"] for s in stations}
+        missing = set(station_ids) - found_ids
+        raise HTTPException(
+            status_code=404,
+            detail=f"Stations not found: {', '.join(missing)}",
+        )
+    
+    comparison = []
+    for station in stations:
+        station_id = station["_id"]
+        sessions = list(sessions_collection.find({"station_id": station_id}))
+        
+        total_sessions = len(sessions)
+        total_energy = sum(float(s.get("power_consumption_kwh", 0)) for s in sessions)
+        avg_energy = total_energy / total_sessions if total_sessions > 0 else 0
+        
+        comparison.append({
+            "station_id": station_id,
+            "station_name": station.get("name"),
+            "status": station.get("status"),
+            "available_capacity": station.get("available_capacity"),
+            "capacity": station.get("capacity"),
+            "network": station.get("network"),
+            "total_sessions": total_sessions,
+            "avg_energy_per_session_kwh": round(avg_energy, 2),
+            "address": station.get("address"),
+            "location": station.get("location"),
+        })
+    
+    return {
+        "stations": comparison,
+        "count": len(comparison),
+    }

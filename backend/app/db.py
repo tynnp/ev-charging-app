@@ -30,3 +30,6 @@ def get_sessions_collection() -> Collection:
 
 def get_sensors_collection() -> Collection:
     return get_db()["sensors"]
+
+def get_favorites_collection() -> Collection:
+    return get_db()["favorites"]
