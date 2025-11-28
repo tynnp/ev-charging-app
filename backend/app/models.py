@@ -54,10 +54,13 @@ class SessionBase(BaseModel):
     id: str
     station_id: str
     sensor_id: Optional[str] = None
+    user_id: Optional[str] = None
     vehicle_type: Optional[str] = None
     charging_unit_id: Optional[str] = None
     transaction_id: Optional[str] = None
     transaction_type: Optional[str] = None
+    session_status: Optional[str] = None
+    duration_minutes: Optional[float] = None
     start_date_time: datetime
     end_date_time: datetime
     phenomenon_time: datetime
@@ -78,3 +81,23 @@ class SensorBase(BaseModel):
 
 class SensorInDB(SensorBase):
     raw: Any
+
+class CitizenProfile(BaseModel):
+    id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+
+class CitizenProfileInDB(CitizenProfile):
+    raw: Any
+
+class CitizenSessionsStats(BaseModel):
+    user_id: str
+    total_sessions: int
+    total_energy_kwh: float
+    total_amount_vnd: float
+    total_tax_vnd: float
+    total_duration_minutes: float
+    average_session_duration_minutes: float
+    average_energy_kwh: float
+    average_amount_vnd: float

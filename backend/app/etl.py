@@ -10,11 +10,19 @@ from typing import Any, Dict, Optional
 from dateutil import parser as dt_parser
 
 from .db import (
+    get_citizens_collection,
     get_sessions_collection,
     get_sensors_collection,
     get_stations_collection,
 )
-from .models import Address, GeoPoint, SensorInDB, SessionInDB, StationInDB
+from .models import (
+    Address,
+    CitizenProfileInDB,
+    GeoPoint,
+    SensorInDB,
+    SessionInDB,
+    StationInDB,
+)
 
 def load_jsonld(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
@@ -112,6 +120,7 @@ def import_session_entity(entity: Dict[str, Any], collection) -> None:
     session_id = entity["id"]
     station_id = entity.get("refFeatureOfInterest", {}).get("object")
     sensor_id = entity.get("refSensor", {}).get("object")
+    user_id = entity.get("refUser", {}).get("object")
 
     start = parse_iso(get_property_value(entity, "startDateTime"))
     end = parse_iso(get_property_value(entity, "endDateTime"))
@@ -122,6 +131,8 @@ def import_session_entity(entity: Dict[str, Any], collection) -> None:
     charging_unit_id = get_property_value(entity, "chargingUnitId")
     transaction_id = get_property_value(entity, "transactionId")
     transaction_type = get_property_value(entity, "transactionType")
+    session_status = get_property_value(entity, "sessionStatus")
+    duration_minutes = get_property_value(entity, "durationMinutes")
     power_kwh = get_property_value(entity, "powerConsumption")
     amount_vnd = get_property_value(entity, "amountCollected")
     tax_vnd = get_property_value(entity, "taxAmountCollected")
@@ -130,10 +141,13 @@ def import_session_entity(entity: Dict[str, Any], collection) -> None:
         id=session_id,
         station_id=station_id,
         sensor_id=sensor_id,
+        user_id=user_id,
         vehicle_type=vehicle_type,
         charging_unit_id=charging_unit_id,
         transaction_id=transaction_id,
         transaction_type=transaction_type,
+        session_status=session_status,
+        duration_minutes=float(duration_minutes) if duration_minutes is not None else None,
         start_date_time=start,
         end_date_time=end,
         phenomenon_time=phenomenon_time,
@@ -166,6 +180,37 @@ def import_sensor_entity(entity: Dict[str, Any], collection) -> None:
     doc["_id"] = sensor_id
     collection.replace_one({"_id": sensor_id}, doc, upsert=True)
 
+def import_citizen_entity(entity: Dict[str, Any], collection) -> None:
+    citizen_id = entity["id"]
+    name = get_property_value(entity, "name")
+    email = get_property_value(entity, "email")
+    phone_number = get_property_value(entity, "phoneNumber")
+
+    citizen = CitizenProfileInDB(
+        id=citizen_id,
+        name=name,
+        email=email,
+        phone_number=phone_number,
+        raw=entity,
+    )
+
+    doc = citizen.model_dump()
+    doc["_id"] = citizen_id
+    collection.replace_one({"_id": citizen_id}, doc, upsert=True)
+
+def import_sessions_dataset(path: Path) -> None:
+    data = load_jsonld(path)
+    entities = data.get("mainEntity", [])
+    sessions_collection = get_sessions_collection()
+    citizens_collection = get_citizens_collection()
+
+    for entity in entities:
+        entity_type = entity.get("type")
+        if entity_type == "EVChargingSession":
+            import_session_entity(entity, sessions_collection)
+        elif entity_type == "Person":
+            import_citizen_entity(entity, citizens_collection)
+
 def get_default_data_dir() -> Path:
     env_dir = os.getenv("EV_OPEN_DATA_DIR")
     if env_dir:
@@ -179,6 +224,9 @@ def run_etl(data_dir: Optional[Path] = None) -> None:
         data_dir = get_default_data_dir()
     import_stations(data_dir / "stations.jsonld")
     import_observations(data_dir / "observations.jsonld")
+    sessions_path = data_dir / "sessions.jsonld"
+    if sessions_path.exists():
+        import_sessions_dataset(sessions_path)
 
 if __name__ == "__main__":
     run_etl()

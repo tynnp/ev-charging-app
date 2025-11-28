@@ -67,11 +67,12 @@ Sau khi clone xong, cấu trúc sẽ giống như sơ đồ ở trên, và các 
 - Bộ dữ liệu JSON-LD trong `ev-charging-open-data/data/` gồm:
   - `stations.jsonld`: danh sách trạm sạc `EVChargingStation`.
   - `observations.jsonld`: các phiên sạc `EVChargingSession` + entity `Sensor` (mô hình quan trắc SOSA/SSN).
+  - `sessions.jsonld`: lịch sử phiên sạc gắn với người dùng (`Person`) để phục vụ chức năng "Lịch sử sạc" của công dân.
   - `realtime_sample.json`: các sự kiện mẫu NGSI-LD để mô phỏng realtime.
 - Module `app/etl.py`:
   - Đọc các tệp JSON-LD.
-  - Ánh xạ entity sang các Pydantic model `StationInDB`, `SessionInDB`, `SensorInDB`.
-  - Ghi vào MongoDB qua các collection `stations`, `sessions`, `sensors`.
+  - Ánh xạ entity sang các Pydantic model `StationInDB`, `SessionInDB`, `SensorInDB`, `CitizenProfileInDB`.
+  - Ghi vào MongoDB qua các collection `stations`, `sessions`, `sensors`, `citizens`.
 - Module `app/main.py`:
   - Khởi tạo FastAPI app và CORS cho frontend (port 5173).
   - Lập lịch một **worker realtime** đọc `realtime_sample.json` và liên tục:
@@ -148,6 +149,7 @@ Script `app/etl.py` sẽ:
 1. Tìm thư mục dữ liệu qua `EV_OPEN_DATA_DIR` hoặc mặc định `ev-charging-open-data/data/`.
 2. Đọc `stations.jsonld` và nạp vào collection `stations`.
 3. Đọc `observations.jsonld` và nạp vào `sessions` + `sensors`.
+4. Đọc `sessions.jsonld` và nạp `citizens` + các phiên sạc gắn với người dùng.
 
 Có thể chạy lại script nhiều lần; dữ liệu được upsert theo `_id` nên không nhân bản.
 
@@ -255,6 +257,14 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
     - Áp dụng từng event vào DB.
     - Gửi JSON qua tất cả kết nối WebSocket đang mở.
 
+### 8.7. Citizens & Session history
+
+- `GET /citizens/{user_id}`: Lấy thông tin hồ sơ người dùng (tên, email, số điện thoại) đã được ETL từ `sessions.jsonld`.
+- `GET /citizens/{user_id}/sessions`: Liệt kê các phiên sạc của công dân, hỗ trợ filter theo `station_id`, `start_date`, `end_date`, `limit`, `offset`. Kết quả được sắp xếp mới nhất trước.
+- `GET /citizens/{user_id}/sessions/stats`: Tổng hợp thống kê cho công dân (tổng phiên, tổng năng lượng, doanh thu, thuế, thời lượng trung bình...).
+
+Các trường trả về được chuẩn hóa theo Pydantic model `SessionBase`/`CitizenSessionsStats` nên đồng nhất với dữ liệu của các endpoint phân tích.
+
 ## 9. Chạy test
 
 Các test cơ bản sử dụng `unittest` và FastAPI `TestClient`, đồng thời mock lớp truy cập DB bằng các collection giả.
@@ -270,7 +280,7 @@ Test cover:
 - Endpoint `/health`.
 - Endpoint `/datasets` và `/datasets/stations.jsonld` (kiểm tra content-type JSON-LD).
 - Hàm tiện ích `_haversine_km` và `get_property_value`.
-- Một số endpoint `/stations`, `/stations/near`, `/analytics/overview` với collection giả lập.
+- Một số endpoint `/stations`, `/stations/near`, `/analytics/overview`, và các endpoint công dân `/citizens/...` với collection giả lập.
 
 ## 10. Thư mục `ev-charging-open-data`
 

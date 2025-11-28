@@ -8,11 +8,13 @@ import json
 import os
 from datetime import datetime
 from math import asin, cos, radians, sin, sqrt
+
 import httpx
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from .db import (
+    get_citizens_collection,
     get_sessions_collection,
     get_sensors_collection,
     get_stations_collection,
@@ -25,7 +27,13 @@ from .etl import (
     import_station_entity,
     import_sensor_entity,
 )
-from .models import StationBase, SessionBase, StationRealtime
+from .models import (
+    CitizenProfile,
+    CitizenSessionsStats,
+    StationBase,
+    SessionBase,
+    StationRealtime,
+)
 
 app = FastAPI()
 
@@ -99,6 +107,27 @@ def _doc_to_ngsi_entity(doc: Dict[str, Any]) -> Dict[str, Any]:
     if "@context" not in entity:
         entity = {"@context": ctx, **entity}
     return entity
+
+def _get_citizen_profile_or_404(user_id: str) -> CitizenProfile:
+    collection = get_citizens_collection()
+    doc = collection.find_one({"_id": user_id})
+    if not doc:
+        doc = collection.find_one({"id": user_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Citizen not found")
+    return CitizenProfile(**doc)
+
+def _apply_citizen_time_filters(
+    query: Dict[str, Any], start_date: datetime | None, end_date: datetime | None
+) -> Dict[str, Any]:
+    time_filter: Dict[str, Any] = {}
+    if start_date is not None:
+        time_filter["$gte"] = start_date
+    if end_date is not None:
+        time_filter["$lte"] = end_date
+    if time_filter:
+        query["start_date_time"] = time_filter
+    return query
 
 async def apply_realtime_event(event: Dict[str, Any]) -> None:
     entity = event.get("entity", {})
@@ -379,6 +408,120 @@ def list_station_sessions(
         .limit(limit)
     )
     return [SessionBase(**doc) for doc in cursor]
+
+@app.get(
+    "/citizens/{user_id}",
+    response_model=CitizenProfile,
+    tags=["Citizens"],
+    summary="Get citizen profile",
+)
+def get_citizen_profile(user_id: str) -> CitizenProfile:
+    return _get_citizen_profile_or_404(user_id)
+
+@app.get(
+    "/citizens/{user_id}/sessions",
+    response_model=List[SessionBase],
+    tags=["Citizens", "Sessions"],
+    summary="List citizen charging sessions",
+)
+def list_citizen_sessions(
+    user_id: str,
+    station_id: str | None = Query(None),
+    start_date: datetime | None = Query(
+        None, description="Filter sessions starting at or after this ISO timestamp"
+    ),
+    end_date: datetime | None = Query(
+        None, description="Filter sessions starting at or before this ISO timestamp"
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[SessionBase]:
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+
+    _get_citizen_profile_or_404(user_id)
+
+    sessions_collection = get_sessions_collection()
+    query: Dict[str, Any] = {"user_id": user_id}
+    if station_id is not None:
+        query["station_id"] = station_id
+    query = _apply_citizen_time_filters(query, start_date, end_date)
+
+    cursor = (
+        sessions_collection.find(query)
+        .sort("start_date_time", -1)
+        .skip(offset)
+        .limit(limit)
+    )
+    return [SessionBase(**doc) for doc in cursor]
+
+@app.get(
+    "/citizens/{user_id}/sessions/stats",
+    response_model=CitizenSessionsStats,
+    tags=["Citizens", "Analytics"],
+    summary="Get citizen charging session statistics",
+)
+def get_citizen_sessions_stats(
+    user_id: str,
+    station_id: str | None = Query(None),
+    start_date: datetime | None = Query(
+        None, description="Filter sessions starting at or after this ISO timestamp"
+    ),
+    end_date: datetime | None = Query(
+        None, description="Filter sessions starting at or before this ISO timestamp"
+    ),
+) -> CitizenSessionsStats:
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+
+    _get_citizen_profile_or_404(user_id)
+
+    sessions_collection = get_sessions_collection()
+    query: Dict[str, Any] = {"user_id": user_id}
+    if station_id is not None:
+        query["station_id"] = station_id
+    query = _apply_citizen_time_filters(query, start_date, end_date)
+
+    sessions = list(sessions_collection.find(query))
+
+    total_sessions = len(sessions)
+    total_energy_kwh = 0.0
+    total_amount_vnd = 0.0
+    total_tax_vnd = 0.0
+    total_duration_minutes = 0.0
+
+    for doc in sessions:
+        energy = float(doc.get("power_consumption_kwh") or 0.0)
+        amount = float(doc.get("amount_collected_vnd") or 0.0)
+        tax = float(doc.get("tax_amount_collected_vnd") or 0.0)
+        duration = doc.get("duration_minutes")
+        if duration is None:
+            start_dt = doc.get("start_date_time")
+            end_dt = doc.get("end_date_time")
+            if isinstance(start_dt, datetime) and isinstance(end_dt, datetime):
+                duration = (end_dt - start_dt).total_seconds() / 60.0
+        total_energy_kwh += energy
+        total_amount_vnd += amount
+        total_tax_vnd += tax
+        total_duration_minutes += float(duration or 0.0)
+
+    average_session_duration_minutes = (
+        total_duration_minutes / total_sessions if total_sessions else 0.0
+    )
+    average_energy_kwh = total_energy_kwh / total_sessions if total_sessions else 0.0
+    average_amount_vnd = total_amount_vnd / total_sessions if total_sessions else 0.0
+
+    return CitizenSessionsStats(
+        user_id=user_id,
+        total_sessions=total_sessions,
+        total_energy_kwh=total_energy_kwh,
+        total_amount_vnd=total_amount_vnd,
+        total_tax_vnd=total_tax_vnd,
+        total_duration_minutes=total_duration_minutes,
+        average_session_duration_minutes=average_session_duration_minutes,
+        average_energy_kwh=average_energy_kwh,
+        average_amount_vnd=average_amount_vnd,
+    )
 
 @app.get(
     "/analytics/overview",

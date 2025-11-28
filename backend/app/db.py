@@ -33,3 +33,6 @@ def get_sensors_collection() -> Collection:
 
 def get_favorites_collection() -> Collection:
     return get_db()["favorites"]
+
+def get_citizens_collection() -> Collection:
+    return get_db()["citizens"]
