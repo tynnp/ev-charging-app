@@ -7,6 +7,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
+
 from dateutil import parser as dt_parser
 
 from .db import (
@@ -116,11 +117,19 @@ def import_observations(path: Path) -> None:
         elif entity_type == "Sensor":
             import_sensor_entity(e, sensors_collection)
 
+def normalize_citizen_id(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    if value.startswith("urn:ngsi-ld:Person:"):
+        return value.rsplit(":", 1)[-1]
+    return value.rsplit(":", 1)[-1] if ":" in value else value
+
 def import_session_entity(entity: Dict[str, Any], collection) -> None:
     session_id = entity["id"]
     station_id = entity.get("refFeatureOfInterest", {}).get("object")
     sensor_id = entity.get("refSensor", {}).get("object")
-    user_id = entity.get("refUser", {}).get("object")
+    user_id_raw = entity.get("refUser", {}).get("object")
+    user_id = normalize_citizen_id(user_id_raw)
 
     start = parse_iso(get_property_value(entity, "startDateTime"))
     end = parse_iso(get_property_value(entity, "endDateTime"))
@@ -182,12 +191,13 @@ def import_sensor_entity(entity: Dict[str, Any], collection) -> None:
 
 def import_citizen_entity(entity: Dict[str, Any], collection) -> None:
     citizen_id = entity["id"]
+    simple_id = normalize_citizen_id(citizen_id) or citizen_id
     name = get_property_value(entity, "name")
     email = get_property_value(entity, "email")
     phone_number = get_property_value(entity, "phoneNumber")
 
     citizen = CitizenProfileInDB(
-        id=citizen_id,
+        id=simple_id,
         name=name,
         email=email,
         phone_number=phone_number,
@@ -195,8 +205,9 @@ def import_citizen_entity(entity: Dict[str, Any], collection) -> None:
     )
 
     doc = citizen.model_dump()
-    doc["_id"] = citizen_id
-    collection.replace_one({"_id": citizen_id}, doc, upsert=True)
+    doc["raw_id"] = citizen_id
+    doc["_id"] = simple_id
+    collection.replace_one({"_id": simple_id}, doc, upsert=True)
 
 def import_sessions_dataset(path: Path) -> None:
     data = load_jsonld(path)
