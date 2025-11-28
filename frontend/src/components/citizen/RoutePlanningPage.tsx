@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import type { Station } from '../../types/ev'
 import maplibregl, { Map as MapLibreMap, Marker, Popup } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { MAP_STYLE } from '../../mapConfig'
@@ -28,6 +27,7 @@ type RouteInfo = {
   distance_km: number
   estimated_time_minutes: number
   route_coordinates: number[][]
+  osrm_used?: boolean
 }
 
 export function RoutePlanningPage() {
@@ -280,36 +280,57 @@ export function RoutePlanningPage() {
           ) : null}
 
           {routeInfo && (
-            <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="flex items-center gap-3">
-                  <Ruler className="h-5 w-5 text-emerald-700" />
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-700">Khoảng cách</div>
-                    <div className="text-lg font-bold text-emerald-900">
-                      {routeInfo.distance_km} km
+            <div className="space-y-3">
+              <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="flex items-center gap-3">
+                    <Ruler className="h-5 w-5 text-emerald-700" />
+                    <div>
+                      <div className="text-xs font-semibold text-emerald-700">Khoảng cách</div>
+                      <div className="text-lg font-bold text-emerald-900">
+                        {routeInfo.distance_km} km
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-emerald-700" />
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-700">Thời gian ước tính</div>
-                    <div className="text-lg font-bold text-emerald-900">
-                      {Math.round(routeInfo.estimated_time_minutes)} phút
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-emerald-700" />
+                    <div>
+                      <div className="text-xs font-semibold text-emerald-700">Thời gian ước tính</div>
+                      <div className="text-lg font-bold text-emerald-900">
+                        {Math.round(routeInfo.estimated_time_minutes)} phút
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-emerald-700" />
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-700">Điểm đến</div>
-                    <div className="text-sm font-bold text-emerald-900">
-                      {routeInfo.to.station_name}
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-5 w-5 text-emerald-700" />
+                    <div>
+                      <div className="text-xs font-semibold text-emerald-700">Điểm đến</div>
+                      <div className="text-sm font-bold text-emerald-900">
+                        {routeInfo.to.station_name}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+              {routeInfo.osrm_used !== undefined && (
+                <div
+                  className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                    routeInfo.osrm_used
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}
+                >
+                  {routeInfo.osrm_used ? (
+                    <span>
+                      Tuyến đường được tính bằng OSRM (tuyến đường thực tế trên bản đồ)
+                    </span>
+                  ) : (
+                    <span>
+                      Sử dụng khoảng cách đường thẳng (OSRM không khả dụng)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

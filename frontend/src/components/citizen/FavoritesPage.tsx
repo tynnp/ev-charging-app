@@ -13,7 +13,6 @@ import {
   Heart,
   Loader2,
   AlertTriangle,
-  Trash2,
 } from 'lucide-react'
 
 const API_BASE_URL =
@@ -145,45 +144,30 @@ export function FavoritesPage() {
             </p>
           </div>
         ) : null}
+
+        {favorites.length > 0 && (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {favorites.map((station) => (
+              <CitizenStationCard
+                key={station.id}
+                station={station}
+                distanceKm={getStationDistance(station)}
+                onSelect={setSelectedStation}
+                onRemoveFavorite={removeFavorite}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {favorites.length > 0 && (
-        <>
-          <div className="rounded-2xl border border-slate-200/50 bg-white p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">
-                Danh sách trạm ({favorites.length})
-              </h3>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {favorites.map((station) => (
-                <div key={station.id} className="relative">
-                  <CitizenStationCard
-                    station={station}
-                    distanceKm={getStationDistance(station)}
-                    onSelect={setSelectedStation}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void removeFavorite(station.id)}
-                    className="absolute top-2 right-2 rounded-full bg-red-500 p-2 text-white shadow-lg transition-all hover:bg-red-600 hover:scale-110"
-                    title="Xóa khỏi yêu thích"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
-            <StationsMap
-              stations={favorites}
-              currentLocation={currentLocation}
-              onStationClick={setSelectedStation}
-            />
-          </div>
-        </>
+        <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
+          <StationsMap
+            stations={favorites}
+            currentLocation={currentLocation}
+            onStationClick={setSelectedStation}
+          />
+        </div>
       )}
 
       {selectedStation && (

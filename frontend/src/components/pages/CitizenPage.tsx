@@ -24,6 +24,8 @@ import {
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
 
+const USER_ID = 'citizen_user_1'
+
 function haversineDistance(
   lat1: number,
   lon1: number,
@@ -58,6 +60,7 @@ export function CitizenPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchMode, setSearchMode] = useState<'nearby' | 'advanced'>('nearby')
   const [sortBy, setSortBy] = useState<SortOption>('distance')
+  const [favoritedStations, setFavoritedStations] = useState<Set<string>>(new Set())
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState('')
@@ -88,12 +91,52 @@ export function CitizenPage() {
     }
   }, [])
 
+  // Load favorites on mount
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}`)
+        if (res.ok) {
+          const favorites = (await res.json()) as Station[]
+          setFavoritedStations(new Set(favorites.map((s) => s.id)))
+        }
+      } catch (error) {
+        console.error('Error loading favorites:', error)
+      }
+    }
+    void loadFavorites()
+  }, [])
+
+  async function handleToggleFavorite(stationId: string, favorited: boolean) {
+    try {
+      if (favorited) {
+        await fetch(
+          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(stationId)}`,
+          { method: 'POST' },
+        )
+        setFavoritedStations((prev) => new Set(prev).add(stationId))
+      } else {
+        await fetch(
+          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(stationId)}`,
+          { method: 'DELETE' },
+        )
+        setFavoritedStations((prev) => {
+          const next = new Set(prev)
+          next.delete(stationId)
+          return next
+        })
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    }
+  }
+
   // Calculate distances and sort
   useEffect(() => {
     if (stations.length === 0) {
       setFilteredStations([])
-      return
-    }
+        return
+      }
 
     let result = [...stations]
 
@@ -268,7 +311,7 @@ export function CitizenPage() {
           <div className="flex items-center gap-2">
           <Search className="h-6 w-6 text-[#CF373D]" />
           <h3 className="text-lg font-bold text-slate-900">Tìm kiếm trạm sạc</h3>
-          </div>
+        </div>
           <div className="flex gap-2">
             <button
               type="button"
@@ -443,6 +486,8 @@ export function CitizenPage() {
                 station={station}
                 distanceKm={getStationDistance(station)}
                 onSelect={setSelectedStation}
+                isFavorited={favoritedStations.has(station.id)}
+                onToggleFavorite={handleToggleFavorite}
               />
             ))}
         </div>

@@ -13,7 +13,6 @@ import {
   Zap,
   Plug,
   CreditCard,
-  Check,
 } from 'lucide-react'
 
 type StationFiltersProps = {
@@ -194,7 +193,6 @@ export function StationFilters({
           onClick={onApplyFilters}
           className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2"
         >
-          <Check className="h-4 w-4" />
           Áp dụng
         </button>
       </div>
