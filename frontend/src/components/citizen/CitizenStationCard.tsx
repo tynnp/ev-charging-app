@@ -16,12 +16,19 @@ import {
   Car,
   Navigation,
   Eye,
+  Heart,
 } from 'lucide-react'
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
+const USER_ID = 'citizen_user_1'
 
 type CitizenStationCardProps = {
   station: Station
   distanceKm?: number | null
   onSelect: (station: Station) => void
+  isFavorited?: boolean
+  onToggleFavorite?: (stationId: string, favorited: boolean) => void
 }
 
 function formatDistance(km: number | null | undefined): string {
@@ -30,7 +37,35 @@ function formatDistance(km: number | null | undefined): string {
   return `${km.toFixed(1)}km`
 }
 
-export function CitizenStationCard({ station, distanceKm, onSelect }: CitizenStationCardProps) {
+export function CitizenStationCard({
+  station,
+  distanceKm,
+  onSelect,
+  isFavorited = false,
+  onToggleFavorite,
+}: CitizenStationCardProps) {
+  async function handleToggleFavorite(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!onToggleFavorite) return
+
+    try {
+      if (isFavorited) {
+        await fetch(
+          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(station.id)}`,
+          { method: 'DELETE' },
+        )
+        onToggleFavorite(station.id, false)
+      } else {
+        await fetch(
+          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(station.id)}`,
+          { method: 'POST' },
+        )
+        onToggleFavorite(station.id, true)
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    }
+  }
   const addressParts = [
     station.address?.streetAddress,
     station.address?.addressLocality,
@@ -112,14 +147,30 @@ export function CitizenStationCard({ station, distanceKm, onSelect }: CitizenSta
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onSelect(station)}
-        className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[#CF373D]/30 bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-2"
-      >
-        <Eye className="h-4 w-4" />
-        Xem chi tiết
-      </button>
+      <div className="flex gap-2">
+        {onToggleFavorite && (
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold shadow-md transition-all hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isFavorited
+                ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100 focus:ring-red-500'
+                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-500'
+            }`}
+          >
+            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-700' : ''}`} />
+            {isFavorited ? 'Đã yêu thích' : 'Yêu thích'}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onSelect(station)}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-[#CF373D]/30 bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-2"
+        >
+          <Eye className="h-4 w-4" />
+          Xem chi tiết
+        </button>
+      </div>
     </div>
   )
 }
