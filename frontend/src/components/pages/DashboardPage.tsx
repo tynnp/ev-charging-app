@@ -201,6 +201,9 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const [minCapacityFilter, setMinCapacityFilter] = useState('')
   const [maxCapacityFilter, setMaxCapacityFilter] = useState('')
 
+  const [stationPage, setStationPage] = useState(1)
+  const STATIONS_PER_PAGE = 5
+
   const [loadingOverview, setLoadingOverview] = useState(false)
   const [loadingStations, setLoadingStations] = useState(false)
   const [loadingStationDetails, setLoadingStationDetails] = useState(false)
@@ -214,6 +217,13 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const [nearbyStations, setNearbyStations] = useState<Station[]>([])
   const [loadingNearby, setLoadingNearby] = useState(false)
   const [nearbyError, setNearbyError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(stations.length / STATIONS_PER_PAGE))
+    if (stationPage > totalPages) {
+      setStationPage(totalPages)
+    }
+  }, [stations, stationPage, STATIONS_PER_PAGE])
 
   useEffect(() => {
     void loadOverview()
@@ -373,6 +383,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
       }
       const data = (await res.json()) as Station[]
       setStations(data)
+      setStationPage(1)
 
       if (data.length === 0) {
         setSelectedStationId(undefined)
@@ -526,6 +537,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
     (selectedStationId != null
       ? stations.find((station) => station.id === selectedStationId) ?? null
       : null)
+
+  const totalStationPages = Math.max(1, Math.ceil(stations.length / STATIONS_PER_PAGE))
+  const pageStartIndex = (stationPage - 1) * STATIONS_PER_PAGE
+  const paginatedStations = stations.slice(pageStartIndex, pageStartIndex + STATIONS_PER_PAGE)
 
   return (
     <div className="flex flex-col gap-6">
@@ -751,8 +766,33 @@ export function DashboardPage({ section }: DashboardPageProps) {
           />
           <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             <div>
+              <div className="mb-3 flex items-center justify-between text-xs font-medium text-slate-600">
+                <span>
+                  Hiển thị {stations.length === 0 ? 0 : pageStartIndex + 1}–
+                  {Math.min(pageStartIndex + paginatedStations.length, stations.length)} / {stations.length}
+                </span>
+                <div className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setStationPage((prev) => Math.max(1, prev - 1))}
+                    disabled={stationPage === 1}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
+                  >
+                    Trang trước
+                  </button>
+                  <span className="px-2 py-1">{stationPage} / {totalStationPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setStationPage((prev) => Math.min(totalStationPages, prev + 1))}
+                    disabled={stationPage >= totalStationPages}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
+                  >
+                    Trang sau
+                  </button>
+                </div>
+              </div>
               <StationList
-                stations={stations}
+                stations={paginatedStations}
                 selectedStationId={selectedStationId}
                 loading={loadingStations}
                 onSelectStation={handleSelectStation}
