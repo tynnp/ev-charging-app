@@ -13,6 +13,8 @@ import {
   Heart,
   Loader2,
   AlertTriangle,
+  X,
+  ChevronRight,
 } from 'lucide-react'
 
 const API_BASE_URL =
@@ -46,6 +48,7 @@ export function FavoritesPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedStation, setSelectedStation] = useState<Station | null>(null)
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   useEffect(() => {
     void loadFavorites()
@@ -113,63 +116,110 @@ export function FavoritesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg">
-        <div className="mb-4 flex items-center gap-2">
-          <Heart className="h-6 w-6 text-[#CF373D]" />
-          <h3 className="text-lg font-bold text-slate-900">Trạm yêu thích của tôi</h3>
-        </div>
-
-        {loading && favorites.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-[#CF373D] mx-auto mb-4" />
-              <p className="text-base font-medium text-slate-600">Đang tải danh sách yêu thích...</p>
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Sidebar */}
+      <div
+        className={`relative flex flex-col border-r border-slate-200 bg-white transition-all duration-300 ${
+          sidebarOpen ? 'w-[420px]' : 'w-0'
+        } overflow-hidden`}
+      >
+        {sidebarOpen && (
+          <div className="flex h-full flex-col overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 z-10 border-b border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-[#CF373D]" />
+                  <h3 className="text-base font-bold text-slate-900">Trạm yêu thích</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              {favorites.length > 0 && (
+                <p className="text-xs text-slate-600">{favorites.length} trạm đã lưu</p>
+              )}
             </div>
-          </div>
-        ) : null}
 
-        {error ? (
-          <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 border border-red-200">
-            <AlertTriangle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
-        ) : null}
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {loading && favorites.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-[#CF373D] mx-auto mb-4" />
+                    <p className="text-sm font-medium text-slate-600">Đang tải...</p>
+                  </div>
+                </div>
+              ) : null}
 
-        {!loading && favorites.length === 0 && !error ? (
-          <div className="rounded-xl bg-blue-50 p-6 text-center border border-blue-200">
-            <Heart className="h-12 w-12 text-blue-400 mx-auto mb-3" />
-            <p className="text-base font-medium text-blue-800">
-              Bạn chưa có trạm yêu thích nào. Hãy tìm trạm và thêm vào danh sách yêu thích!
-            </p>
-          </div>
-        ) : null}
+              {error ? (
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 border border-red-200">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>{error}</span>
+                </div>
+              ) : null}
 
-        {favorites.length > 0 && (
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {favorites.map((station) => (
-              <CitizenStationCard
-                key={station.id}
-                station={station}
-                distanceKm={getStationDistance(station)}
-                onSelect={setSelectedStation}
-                onRemoveFavorite={removeFavorite}
-              />
-            ))}
+              {!loading && favorites.length === 0 && !error ? (
+                <div className="rounded-xl bg-blue-50 p-6 text-center border border-blue-200">
+                  <Heart className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-blue-800">
+                    Bạn chưa có trạm yêu thích nào. Hãy tìm trạm và thêm vào danh sách yêu thích!
+                  </p>
+                </div>
+              ) : null}
+
+              {favorites.length > 0 && (
+                <div className="space-y-3">
+                  {favorites.map((station) => (
+                    <CitizenStationCard
+                      key={station.id}
+                      station={station}
+                      distanceKm={getStationDistance(station)}
+                      onSelect={setSelectedStation}
+                      onRemoveFavorite={removeFavorite}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {favorites.length > 0 && (
-        <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
-          <StationsMap
-            stations={favorites}
-            currentLocation={currentLocation}
-            onStationClick={setSelectedStation}
-          />
+      {/* Map Area */}
+      <div className="relative flex-1">
+        {!sidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="absolute left-4 top-4 z-10 rounded-lg bg-white p-2 shadow-lg hover:bg-slate-50"
+          >
+            <ChevronRight className="h-5 w-5 text-slate-700" />
+          </button>
+        )}
+        <div className="h-full w-full">
+          {favorites.length > 0 ? (
+            <StationsMap
+              stations={favorites}
+              currentLocation={currentLocation}
+              onStationClick={setSelectedStation}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-slate-100">
+              <div className="text-center">
+                <Heart className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-sm font-medium text-slate-500">Chưa có trạm yêu thích để hiển thị</p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
+      {/* Station Modal */}
       {selectedStation && (
         <CitizenStationModal
           station={selectedStation}
@@ -180,4 +230,3 @@ export function FavoritesPage() {
     </div>
   )
 }
-

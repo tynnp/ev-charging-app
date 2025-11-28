@@ -16,7 +16,6 @@ import {
   Ruler,
   AlertTriangle,
   Lightbulb,
-  CheckCircle2,
   Navigation,
   ArrowUpDown,
 } from 'lucide-react'
@@ -61,6 +60,7 @@ export function CitizenPage() {
   const [searchMode, setSearchMode] = useState<'nearby' | 'advanced'>('nearby')
   const [sortBy, setSortBy] = useState<SortOption>('distance')
   const [favoritedStations, setFavoritedStations] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<'search' | 'results'>('search')
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState('')
@@ -215,6 +215,8 @@ export function CitizenPage() {
 
       if (data.length === 0) {
         setError('Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.')
+      } else {
+        setActiveTab('results')
       }
     } catch (e) {
       setError('Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.')
@@ -278,6 +280,8 @@ export function CitizenPage() {
 
       if (data.length === 0) {
         setError('Không tìm được trạm phù hợp với bộ lọc.')
+      } else {
+        setActiveTab('results')
       }
     } catch (e) {
       setError('Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.')
@@ -305,205 +309,277 @@ export function CitizenPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-          <Search className="h-6 w-6 text-[#CF373D]" />
-          <h3 className="text-lg font-bold text-slate-900">Tìm kiếm trạm sạc</h3>
-        </div>
-          <div className="flex gap-2">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Left Panel: Tabs for Search & Results */}
+      <div className="flex flex-col w-[60%] border-r border-slate-200 bg-white min-h-0">
+        {/* Header with Tabs */}
+        <div className="flex-shrink-0 border-b border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-[#CF373D]" />
+              <h3 className="text-base font-bold text-slate-900">Tìm kiếm trạm</h3>
+            </div>
+            
+            {/* Results Count - Always visible */}
+            {stations.length > 0 && (
+              <div className="rounded-lg bg-emerald-50 px-3 py-1.5 border border-emerald-200">
+                <span className="text-xs font-semibold text-emerald-800">
+                  Tìm thấy {stations.length} trạm
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200">
             <button
               type="button"
-              onClick={() => setSearchMode('nearby')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                searchMode === 'nearby'
-                  ? 'bg-[#CF373D] text-white shadow-md'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              onClick={() => setActiveTab('search')}
+              className={`flex-1 px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
+                activeTab === 'search'
+                  ? 'border-[#CF373D] text-[#CF373D] bg-slate-50/50'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50/30'
               }`}
             >
-              Tìm gần đây
+              <div className="flex items-center justify-center gap-2">
+                <Search className="h-4 w-4" />
+                Tìm kiếm
+              </div>
             </button>
             <button
               type="button"
-              onClick={() => setSearchMode('advanced')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                searchMode === 'advanced'
-                  ? 'bg-[#CF373D] text-white shadow-md'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              onClick={() => setActiveTab('results')}
+              className={`flex-1 px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
+                activeTab === 'results'
+                  ? 'border-[#CF373D] text-[#CF373D] bg-slate-50/50'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50/30'
               }`}
             >
-              Tìm kiếm nâng cao
+              <div className="flex items-center justify-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Danh sách trạm
+                {filteredStations.length > 0 && (
+                  <span className="rounded-full bg-[#CF373D] text-white text-xs px-1.5 py-0.5 min-w-[20px] text-center">
+                    {filteredStations.length}
+                  </span>
+                )}
+              </div>
             </button>
           </div>
         </div>
 
-        {searchMode === 'nearby' ? (
-        <div className="space-y-4">
-          <div className="rounded-xl bg-white p-4 border border-slate-200/50">
-            <div className="flex flex-wrap items-end gap-3">
-              <div>
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Vĩ độ (lat)
-                </label>
-                <input
-                  type="number"
-                  step="0.0001"
-                  value={nearLat}
-                  onChange={(event) => setNearLat(event.target.value)}
-                    className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-                />
-              </div>
-              <div>
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Kinh độ (lng)
-                </label>
-                <input
-                  type="number"
-                  step="0.0001"
-                  value={nearLng}
-                  onChange={(event) => setNearLng(event.target.value)}
-                    className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-                />
-              </div>
-              <div>
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                  <Ruler className="h-3.5 w-3.5" />
-                  Bán kính (km)
-                </label>
-                <input
-                  type="number"
-                  min={0.1}
-                  step={0.5}
-                  value={nearRadiusKm}
-                  onChange={(event) => setNearRadiusKm(event.target.value)}
-                    className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-                />
-              </div>
-                {currentLocation && (
-              <button
-                type="button"
-                onClick={() => {
-                      setNearLat(String(currentLocation[1]))
-                      setNearLng(String(currentLocation[0]))
-                    }}
-                    className="inline-flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-all hover:bg-blue-100"
-                  >
-                    <Navigation className="h-4 w-4" />
-                    Dùng vị trí hiện tại
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleSearchNearby()}
-                disabled={loading}
-                className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
-              >
-                <Search className="h-4 w-4" />
-                {loading ? 'Đang tìm...' : 'Tìm trạm gần đây'}
-              </button>
+        {/* Error Message */}
+        {error && (
+          <div className="flex-shrink-0 border-b border-slate-200 bg-red-50 px-4 py-3">
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 border border-red-200">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>{error}</span>
             </div>
-          </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <StationFilters
-              status={statusFilter}
-              vehicleType={vehicleTypeFilter}
-              minAvailable={minAvailableFilter}
-              network={networkFilter}
-              chargeType={chargeTypeFilter}
-              socketType={socketTypeFilter}
-              paymentMethod={paymentMethodFilter}
-              minCapacity={minCapacityFilter}
-              maxCapacity={maxCapacityFilter}
-              onStatusChange={setStatusFilter}
-              onVehicleTypeChange={setVehicleTypeFilter}
-              onMinAvailableChange={setMinAvailableFilter}
-              onNetworkChange={setNetworkFilter}
-              onChargeTypeChange={setChargeTypeFilter}
-              onSocketTypeChange={setSocketTypeFilter}
-              onPaymentMethodChange={setPaymentMethodFilter}
-              onMinCapacityChange={setMinCapacityFilter}
-              onMaxCapacityChange={setMaxCapacityFilter}
-              onApplyFilters={() => void handleAdvancedSearch()}
-            />
           </div>
         )}
 
-          {error ? (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 border border-red-200">
-              <AlertTriangle className="h-4 w-4" />
-              <span>{error}</span>
-            </div>
-          ) : null}
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {activeTab === 'search' ? (
+            <div className="p-4 bg-slate-50/30">
+              {/* Search Mode Toggle */}
+              <div className="mb-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('nearby')}
+                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                    searchMode === 'nearby'
+                      ? 'bg-[#CF373D] text-white shadow-sm'
+                      : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  Tìm gần đây
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchMode('advanced')}
+                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                    searchMode === 'advanced'
+                      ? 'bg-[#CF373D] text-white shadow-sm'
+                      : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  Tìm kiếm nâng cao
+                </button>
+              </div>
 
-          {!error && stations.length === 0 && !loading ? (
-            <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
-              <p className="flex items-center gap-2 text-sm font-medium text-blue-800">
-                <Lightbulb className="h-4 w-4" />
-              {searchMode === 'nearby'
-                ? 'Nhập toạ độ và bấm "Tìm trạm gần đây" để xem các trạm sạc gần vị trí của bạn.'
-                : 'Sử dụng bộ lọc ở trên để tìm kiếm trạm sạc phù hợp với nhu cầu của bạn.'}
-              </p>
-            </div>
-          ) : null}
+              {/* Search Form */}
+              {searchMode === 'nearby' ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                        <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                        Vĩ độ
+                      </label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={nearLat}
+                        onChange={(e) => setNearLat(e.target.value)}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                        <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                        Kinh độ
+                      </label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={nearLng}
+                        onChange={(e) => setNearLng(e.target.value)}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                      <Ruler className="inline h-3.5 w-3.5 mr-1" />
+                      Bán kính (km)
+                    </label>
+                    <input
+                      type="number"
+                      min={0.1}
+                      step={0.5}
+                      value={nearRadiusKm}
+                      onChange={(e) => setNearRadiusKm(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                    />
+                  </div>
+                  {currentLocation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNearLat(String(currentLocation[1]))
+                        setNearLng(String(currentLocation[0]))
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      Dùng vị trí hiện tại
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleSearchNearby()}
+                    disabled={loading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
+                  >
+                    <Search className="h-4 w-4" />
+                    {loading ? 'Đang tìm...' : 'Tìm trạm'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <StationFilters
+                    status={statusFilter}
+                    vehicleType={vehicleTypeFilter}
+                    minAvailable={minAvailableFilter}
+                    network={networkFilter}
+                    chargeType={chargeTypeFilter}
+                    socketType={socketTypeFilter}
+                    paymentMethod={paymentMethodFilter}
+                    minCapacity={minCapacityFilter}
+                    maxCapacity={maxCapacityFilter}
+                    onStatusChange={setStatusFilter}
+                    onVehicleTypeChange={setVehicleTypeFilter}
+                    onMinAvailableChange={setMinAvailableFilter}
+                    onNetworkChange={setNetworkFilter}
+                    onChargeTypeChange={setChargeTypeFilter}
+                    onSocketTypeChange={setSocketTypeFilter}
+                    onPaymentMethodChange={setPaymentMethodFilter}
+                    onMinCapacityChange={setMinCapacityFilter}
+                    onMaxCapacityChange={setMaxCapacityFilter}
+                    onApplyFilters={() => void handleAdvancedSearch()}
+                  />
+                </div>
+              )}
 
-          {stations.length > 0 ? (
-            <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
-              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
-                <CheckCircle2 className="h-4 w-4" />
-              Tìm thấy {stations.length} trạm phù hợp.
-              </p>
+              {/* Info Messages */}
+              {!error && stations.length === 0 && !loading && (
+                <div className="mt-4 rounded-lg bg-blue-50 p-3 border border-blue-200">
+                  <p className="flex items-center gap-2 text-xs font-medium text-blue-800">
+                    <Lightbulb className="h-3.5 w-3.5" />
+                    {searchMode === 'nearby'
+                      ? 'Nhập toạ độ và bấm "Tìm trạm" để xem các trạm sạc.'
+                      : 'Sử dụng bộ lọc ở trên để tìm kiếm trạm sạc.'}
+                  </p>
+                </div>
+              )}
             </div>
-          ) : null}
-      </div>
-
-      {filteredStations.length > 0 && (
-        <div className="rounded-2xl border border-slate-200/50 bg-white p-6 shadow-lg">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900">Danh sách trạm ({filteredStations.length})</h3>
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="h-4 w-4 text-slate-500" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-              >
-                <option value="distance">Sắp xếp theo khoảng cách</option>
-                <option value="status">Sắp xếp theo trạng thái</option>
-                <option value="available">Sắp xếp theo số chỗ trống</option>
-                <option value="capacity">Sắp xếp theo công suất</option>
-              </select>
+          ) : (
+            <div className="flex flex-col h-full min-h-0">
+              {/* Results Tab Content */}
+              {filteredStations.length > 0 ? (
+                <>
+                  <div className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Danh sách ({filteredStations.length})
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" />
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value as SortOption)}
+                          className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-medium focus:border-[#CF373D] focus:ring-1 focus:ring-[#CF373D]/20"
+                        >
+                          <option value="distance">Khoảng cách</option>
+                          <option value="status">Trạng thái</option>
+                          <option value="available">Chỗ trống</option>
+                          <option value="capacity">Công suất</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-slate-50/50">
+                    {filteredStations.map((station) => (
+                      <div key={station.id} className="transform transition-all hover:scale-[1.01]">
+                        <CitizenStationCard
+                          station={station}
+                          distanceKm={getStationDistance(station)}
+                          onSelect={setSelectedStation}
+                          isFavorited={favoritedStations.has(station.id)}
+                          onToggleFavorite={handleToggleFavorite}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-slate-50/50">
+                  <div className="text-center p-6">
+                    <Search className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-slate-500">
+                      {loading ? 'Đang tìm kiếm...' : 'Chưa có kết quả tìm kiếm'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredStations.map((station) => (
-              <CitizenStationCard
-                key={station.id}
-                station={station}
-                distanceKm={getStationDistance(station)}
-                onSelect={setSelectedStation}
-                isFavorited={favoritedStations.has(station.id)}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
+          )}
         </div>
       </div>
-      )}
 
-      {stations.length > 0 && (
-      <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
+      {/* Map Area - Always visible on the right */}
+      <div className="flex-1 min-w-0 bg-white">
+        <div className="h-full w-full">
           <StationsMap
             stations={filteredStations}
             currentLocation={currentLocation}
             onStationClick={setSelectedStation}
           />
+        </div>
       </div>
-      )}
 
+      {/* Station Modal */}
       {selectedStation && (
         <CitizenStationModal
           station={selectedStation}

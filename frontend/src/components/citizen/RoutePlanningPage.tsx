@@ -16,6 +16,8 @@ import {
   Clock,
   Ruler,
   Search,
+  X,
+  ChevronRight,
 } from 'lucide-react'
 
 const API_BASE_URL =
@@ -38,6 +40,7 @@ export function RoutePlanningPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -180,166 +183,189 @@ export function RoutePlanningPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg">
-        <div className="mb-4 flex items-center gap-2">
-          <Navigation className="h-6 w-6 text-[#CF373D]" />
-          <h3 className="text-lg font-bold text-slate-900">Tìm đường đến trạm</h3>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl bg-white p-4 border border-slate-200/50">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Điểm xuất phát
-              </label>
-              <div className="space-y-2">
-                <div>
-                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                    <MapPin className="h-3.5 w-3.5" />
-                    Vĩ độ
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={fromLat}
-                    onChange={(e) => setFromLat(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-                  />
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Sidebar */}
+      <div
+        className={`relative flex flex-col border-r border-slate-200 bg-white transition-all duration-300 ${
+          sidebarOpen ? 'w-[420px]' : 'w-0'
+        } overflow-hidden`}
+      >
+        {sidebarOpen && (
+          <div className="flex h-full flex-col overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 z-10 border-b border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Navigation className="h-5 w-5 text-[#CF373D]" />
+                  <h3 className="text-base font-bold text-slate-900">Tìm đường</h3>
                 </div>
-                <div>
-                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                    <MapPin className="h-3.5 w-3.5" />
-                    Kinh độ
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={fromLng}
-                    onChange={(e) => setFromLng(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-                  />
-                </div>
-                {currentLocation && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFromLat(String(currentLocation[1]))
-                      setFromLng(String(currentLocation[0]))
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 transition-all hover:bg-blue-100"
-                  >
-                    <Navigation className="h-4 w-4" />
-                    Dùng vị trí hiện tại
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-white p-4 border border-slate-200/50">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Trạm đích
-              </label>
-              <input
-                type="text"
-                value={toStationId}
-                onChange={(e) => setToStationId(e.target.value)}
-                placeholder="Nhập ID trạm (VD: urn:ngsi-ld:EVChargingStation:001)"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-[#CF373D] focus:outline-none focus:ring-2 focus:ring-[#CF373D]/20"
-              />
-              <p className="mt-2 text-xs text-slate-500">
-                Bạn có thể tìm ID trạm từ trang &quot;Tìm trạm&quot;
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void handleFindRoute()}
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#CF373D] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Đang tìm đường...
-              </>
-            ) : (
-              <>
-                <Search className="h-4 w-4" />
-                Tìm đường
-              </>
-            )}
-          </button>
-
-          {error ? (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 border border-red-200">
-              <AlertTriangle className="h-4 w-4" />
-              <span>{error}</span>
-            </div>
-          ) : null}
-
-          {routeInfo && (
-            <div className="space-y-3">
-              <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="flex items-center gap-3">
-                    <Ruler className="h-5 w-5 text-emerald-700" />
-                    <div>
-                      <div className="text-xs font-semibold text-emerald-700">Khoảng cách</div>
-                      <div className="text-lg font-bold text-emerald-900">
-                        {routeInfo.distance_km} km
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-emerald-700" />
-                    <div>
-                      <div className="text-xs font-semibold text-emerald-700">Thời gian ước tính</div>
-                      <div className="text-lg font-bold text-emerald-900">
-                        {Math.round(routeInfo.estimated_time_minutes)} phút
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-emerald-700" />
-                    <div>
-                      <div className="text-xs font-semibold text-emerald-700">Điểm đến</div>
-                      <div className="text-sm font-bold text-emerald-900">
-                        {routeInfo.to.station_name}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {routeInfo.osrm_used !== undefined && (
-                <div
-                  className={`rounded-lg px-3 py-2 text-xs font-medium ${
-                    routeInfo.osrm_used
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200'
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
                 >
-                  {routeInfo.osrm_used ? (
-                    <span>
-                      Tuyến đường được tính bằng OSRM (tuyến đường thực tế trên bản đồ)
-                    </span>
-                  ) : (
-                    <span>
-                      Sử dụng khoảng cách đường thẳng (OSRM không khả dụng)
-                    </span>
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Form */}
+            <div className="p-4 space-y-4">
+              <div className="rounded-xl bg-white p-4 border border-slate-200/50">
+                <label className="mb-3 block text-sm font-semibold text-slate-700">
+                  Điểm xuất phát
+                </label>
+                <div className="space-y-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                      <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                      Vĩ độ
+                    </label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={fromLat}
+                      onChange={(e) => setFromLat(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                      <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                      Kinh độ
+                    </label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={fromLng}
+                      onChange={(e) => setFromLng(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                    />
+                  </div>
+                  {currentLocation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFromLat(String(currentLocation[1]))
+                        setFromLng(String(currentLocation[0]))
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      Dùng vị trí hiện tại
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-white p-4 border border-slate-200/50">
+                <label className="mb-3 block text-sm font-semibold text-slate-700">
+                  Trạm đích
+                </label>
+                <input
+                  type="text"
+                  value={toStationId}
+                  onChange={(e) => setToStationId(e.target.value)}
+                  placeholder="Nhập ID trạm"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Tìm ID trạm từ trang &quot;Tìm trạm&quot;
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handleFindRoute()}
+                disabled={loading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang tìm...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    Tìm đường
+                  </>
+                )}
+              </button>
+
+              {error ? (
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 border border-red-200">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>{error}</span>
+                </div>
+              ) : null}
+
+              {routeInfo && (
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Ruler className="h-5 w-5 text-emerald-700" />
+                        <div>
+                          <div className="text-xs font-semibold text-emerald-700">Khoảng cách</div>
+                          <div className="text-lg font-bold text-emerald-900">
+                            {routeInfo.distance_km.toFixed(1)} km
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 text-emerald-700" />
+                        <div>
+                          <div className="text-xs font-semibold text-emerald-700">Thời gian ước tính</div>
+                          <div className="text-lg font-bold text-emerald-900">
+                            {Math.round(routeInfo.estimated_time_minutes)} phút
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-emerald-700" />
+                        <div>
+                          <div className="text-xs font-semibold text-emerald-700">Điểm đến</div>
+                          <div className="text-sm font-bold text-emerald-900">
+                            {routeInfo.to.station_name}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {routeInfo.osrm_used !== undefined && (
+                    <div
+                      className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                        routeInfo.osrm_used
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}
+                    >
+                      {routeInfo.osrm_used
+                        ? 'Tuyến đường được tính bằng OSRM (tuyến đường thực tế)'
+                        : 'Sử dụng khoảng cách đường thẳng (OSRM không khả dụng)'}
+                    </div>
                   )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
-        <div ref={mapContainerRef} className="h-[600px] w-full" />
+      {/* Map Area */}
+      <div className="relative flex-1">
+        {!sidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="absolute left-4 top-4 z-10 rounded-lg bg-white p-2 shadow-lg hover:bg-slate-50"
+          >
+            <ChevronRight className="h-5 w-5 text-slate-700" />
+          </button>
+        )}
+        <div ref={mapContainerRef} className="h-full w-full" />
       </div>
     </div>
   )
 }
-

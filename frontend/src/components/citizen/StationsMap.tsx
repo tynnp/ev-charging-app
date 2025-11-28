@@ -115,6 +115,6 @@ export function StationsMap({ stations, currentLocation, onStationClick }: Stati
     }
   }, [])
 
-  return <div ref={mapContainerRef} className="h-[600px] w-full" />
+  return <div ref={mapContainerRef} className="h-full w-full" />
 }
 

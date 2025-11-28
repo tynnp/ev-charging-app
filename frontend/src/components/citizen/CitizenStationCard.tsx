@@ -88,7 +88,7 @@ export function CitizenStationCard({
   }
 
   return (
-    <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-[#CF373D]/40 hover:shadow-md">
+    <div className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[#CF373D]/40 hover:shadow-md">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 flex-1">
           <Plug className="h-5 w-5 mt-0.5 text-[#CF373D]" />

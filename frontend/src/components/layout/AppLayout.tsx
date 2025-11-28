@@ -79,7 +79,7 @@ export function AppLayout({
               <Zap className="h-5 w-5 text-white" />
             </div>
             <div className="text-base font-bold leading-tight">
-              <div>Thành phố X</div>
+              <div>Quản lý trạm sạc</div>
               <div className="text-xs font-normal text-slate-100/70">
                 Nền tảng dữ liệu đô thị mở
               </div>
