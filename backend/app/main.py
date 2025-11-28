@@ -5,8 +5,10 @@
 from typing import Any, Dict, List
 import asyncio
 import json
+import os
 from datetime import datetime
 from math import asin, cos, radians, sin, sqrt
+import httpx
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -748,9 +750,9 @@ def check_favorite(
 @app.get(
     "/citizen/route",
     tags=["Citizen"],
-    summary="Get route information to a station",
+    summary="Get route information to a station using OSRM",
 )
-def get_route(
+async def get_route(
     from_lat: float = Query(..., description="Starting latitude"),
     from_lng: float = Query(..., description="Starting longitude"),
     to_station_id: str = Query(..., description="Destination station ID"),
@@ -767,23 +769,77 @@ def get_route(
         raise HTTPException(status_code=400, detail="Station location invalid")
     
     to_lon, to_lat = coordinates
-    distance_km = _haversine_km(from_lat, from_lng, to_lat, to_lon)
     
-    # Estimate travel time (assuming average speed of 40 km/h in city)
-    estimated_time_minutes = (distance_km / 40.0) * 60.0
+    # OSRM API endpoint (public demo server)
+    # In production, you might want to use your own OSRM instance
+    osrm_url = os.getenv(
+        "OSRM_URL",
+        "http://router.project-osrm.org/route/v1/driving",
+    )
+    
+    # OSRM expects coordinates in format: lon,lat;lon,lat
+    osrm_coords = f"{from_lng},{from_lat};{to_lon},{to_lat}"
+    osrm_endpoint = f"{osrm_url}/{osrm_coords}"
+    
+    osrm_used = False
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                osrm_endpoint,
+                params={
+                    "overview": "full",
+                    "geometries": "geojson",
+                    "steps": "false",
+                },
+            )
+            response.raise_for_status()
+            osrm_data = response.json()
+            
+            if osrm_data.get("code") != "Ok" or not osrm_data.get("routes"):
+                # Fallback to haversine if OSRM fails
+                raise ValueError("OSRM route not found")
+            
+            route = osrm_data["routes"][0]
+            distance_meters = route["distance"]
+            duration_seconds = route["duration"]
+            
+            distance_km = distance_meters / 1000.0
+            estimated_time_minutes = duration_seconds / 60.0
+            
+            # Extract route geometry (GeoJSON LineString coordinates)
+            geometry = route.get("geometry", {})
+            route_coordinates = geometry.get("coordinates", [])
+            
+            # Convert from GeoJSON format [lon, lat] to our format
+            if not route_coordinates:
+                # Fallback to straight line
+                route_coordinates = [
+                    [from_lng, from_lat],
+                    [to_lon, to_lat],
+                ]
+            else:
+                osrm_used = True
+            
+    except Exception as e:
+        # Fallback to haversine calculation if OSRM is unavailable
+        print(f"OSRM error: {e}, falling back to haversine")
+        distance_km = _haversine_km(from_lat, from_lng, to_lat, to_lon)
+        estimated_time_minutes = (distance_km / 40.0) * 60.0
+        route_coordinates = [
+            [from_lng, from_lat],
+            [to_lon, to_lat],
+        ]
     
     return {
         "from": {"lat": from_lat, "lng": from_lng},
         "to": {"lat": to_lat, "lng": to_lon, "station_id": to_station_id, "station_name": station.get("name")},
         "distance_km": round(distance_km, 2),
         "estimated_time_minutes": round(estimated_time_minutes, 1),
-        "route_coordinates": [
-            [from_lng, from_lat],
-            [to_lon, to_lat],
-        ],
+        "route_coordinates": route_coordinates,
+        "osrm_used": osrm_used,
     }
 
-@app.post(
+@app.get(
     "/citizen/compare",
     tags=["Citizen"],
     summary="Compare multiple stations",
