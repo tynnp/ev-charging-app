@@ -282,13 +282,13 @@ export function CitizenHistoryPage() {
               className: 'from-emerald-500/20 via-emerald-400/10 to-emerald-500/5 text-emerald-900',
             },
             {
-              label: 'Tổng doanh thu (VND)',
+              label: 'Tổng chi phí đã trả (VND)',
               icon: DollarSign,
               value: formatCurrency(stats?.total_amount_vnd),
               className: 'from-amber-500/20 via-amber-400/10 to-amber-500/5 text-amber-900',
             },
             {
-              label: 'Tổng thuế (VND)',
+              label: 'Thuế đã trả (VND)',
               icon: TrendingUp,
               value: formatCurrency(stats?.total_tax_vnd),
               className: 'from-purple-500/20 via-purple-400/10 to-purple-500/5 text-purple-900',
@@ -455,7 +455,7 @@ export function CitizenHistoryPage() {
                   <th className="border-b border-slate-200 px-4 py-3 text-left">Trạng thái</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right">Thời lượng</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right">kWh</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-right">Doanh thu (VND)</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-right">Chi phí (VND)</th>
                 </tr>
               </thead>
               <tbody>
