@@ -4,6 +4,7 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
+import { useState } from 'react'
 import type { Station, StationAnalytics, Session, StationRealtime } from '../../types/ev'
 import { MapView } from './MapView'
 import {
@@ -67,6 +68,7 @@ export function StationDetails({
   loadingSessions,
   onReloadAnalytics,
 }: StationDetailsProps) {
+  const [activeTab, setActiveTab] = useState<'info' | 'realtime' | 'analytics' | 'sessions'>('info')
   if (!station) {
     return (
       <div className="rounded-xl bg-gradient-to-br from-slate-50 to-blue-50/30 p-8 text-center border border-slate-200/50">
@@ -105,348 +107,393 @@ export function StationDetails({
           <p className="text-sm font-medium text-slate-700">{addressText}</p>
         </div>
       ) : null}
-      {Array.isArray(station.location?.coordinates) &&
-      station.location.coordinates.length >= 2 ? (
-        <div className="mb-4">
-          <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900">
-            <Map className="h-4 w-4 text-[#124874]" />
-            Vị trí trên bản đồ
-          </h4>
-          <div className="h-64 overflow-hidden rounded-xl border-2 border-slate-200 shadow-md">
-            <MapView
-              center={[
-                station.location.coordinates[0],
-                station.location.coordinates[1],
-              ]}
-              zoom={14}
-            />
-          </div>
-        </div>
-      ) : null}
-      <div className="mb-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 p-3 border border-slate-200">
-          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <BarChart3 className="h-3 w-3" />
-            Trạng thái
-          </div>
-          <div className="font-bold text-base text-slate-900">{station.status || 'unknown'}</div>
-        </div>
-        {station.available_capacity != null ? (
-          <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 border border-emerald-200">
-            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-              <CheckCircle2 className="h-3 w-3" />
-              Số chỗ trống
-            </div>
-            <div className="font-bold text-base text-emerald-900">{station.available_capacity}</div>
-          </div>
-        ) : null}
-        {station.capacity != null ? (
-          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 border border-purple-200">
-            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-purple-700">
-              <Zap className="h-3 w-3" />
-              Công suất thiết kế
-            </div>
-            <div className="font-bold text-base text-purple-900">{station.capacity} kW</div>
-          </div>
-        ) : null}
-        {station.socket_number != null ? (
-          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 border border-blue-200">
-            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
-              <Plug className="h-3 w-3" />
-              Số ổ sạc
-            </div>
-            <div className="font-bold text-base text-blue-900">{station.socket_number}</div>
-          </div>
-        ) : null}
-        <div className="rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 p-3 border border-amber-200">
-          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-            <Zap className="h-3 w-3" />
-            Công suất tức thời (kW)
-          </div>
-          <div className="font-bold text-base text-amber-900">
-            {station.instantaneous_power != null
-              ? formatNumber(station.instantaneous_power)
-              : 'Không có dữ liệu'}
-          </div>
-        </div>
-        <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 border border-orange-200">
-          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
-            <Car className="h-3 w-3" />
-            Số xe đang chờ
-          </div>
-          <div className="font-bold text-base text-orange-900">
-            {station.queue_length != null ? station.queue_length : 'Không có dữ liệu'}
-          </div>
-        </div>
+      <div className="mb-4 flex gap-2 rounded-lg bg-slate-100/60 p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('info')}
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${activeTab === 'info' ? 'bg-white text-slate-900 shadow' : 'text-slate-700 hover:bg-white/50'}`}
+        >
+          <Map className="h-4 w-4" />
+          Tổng quan
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('realtime')}
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${activeTab === 'realtime' ? 'bg-white text-slate-900 shadow' : 'text-slate-700 hover:bg-white/50'}`}
+        >
+          <Zap className="h-4 w-4" />
+          Realtime
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('analytics')}
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${activeTab === 'analytics' ? 'bg-white text-slate-900 shadow' : 'text-slate-700 hover:bg-white/50'}`}
+        >
+          <BarChart3 className="h-4 w-4" />
+          Thống kê
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('sessions')}
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${activeTab === 'sessions' ? 'bg-white text-slate-900 shadow' : 'text-slate-700 hover:bg-white/50'}`}
+        >
+          <History className="h-4 w-4" />
+          Phiên sạc
+        </button>
       </div>
 
-      {realtime ? (
-        <div className="mb-4 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 pt-4 pb-3 px-4">
-          <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
-            <Zap className="h-5 w-5 text-blue-600" />
-            Trạng thái Realtime
-          </h4>
-          {loadingRealtime ? (
-            <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Đang tải dữ liệu realtime...</span>
+      {activeTab === 'info' ? (
+        <>
+          {Array.isArray(station.location?.coordinates) && station.location.coordinates.length >= 2 ? (
+            <div className="mb-4">
+              <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900">
+                <Map className="h-4 w-4 text-[#124874]" />
+                Vị trí trên bản đồ
+              </h4>
+              <div className="h-64 overflow-hidden rounded-xl border-2 border-slate-200 shadow-md">
+                <MapView
+                  center={[station.location.coordinates[0], station.location.coordinates[1]]}
+                  zoom={14}
+                />
+              </div>
             </div>
-          ) : (
-            <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-              {realtime.status != null ? (
-                <div className="rounded-lg bg-white p-3 border border-blue-200 shadow-sm">
-                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
-                    <BarChart3 className="h-3 w-3" />
-                    Trạng thái
-                  </div>
-                  <div className="font-bold text-base text-blue-900">{realtime.status}</div>
-                </div>
-              ) : null}
-              {realtime.available_capacity != null ? (
-                <div className="rounded-lg bg-white p-3 border border-emerald-200 shadow-sm">
-                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Chỗ trống
-                  </div>
-                  <div className="font-bold text-base text-emerald-900">
-                    {realtime.available_capacity}
-                  </div>
-                </div>
-              ) : null}
-              {realtime.instantaneous_power != null ? (
-                <div className="rounded-lg bg-white p-3 border border-amber-200 shadow-sm">
-                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                    <Zap className="h-3 w-3" />
-                    Công suất (kW)
-                  </div>
-                  <div className="font-bold text-base text-amber-900">
-                    {formatNumber(realtime.instantaneous_power)}
-                  </div>
-                </div>
-              ) : null}
-              {realtime.queue_length != null ? (
-                <div className="rounded-lg bg-white p-3 border border-orange-200 shadow-sm">
-                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
-                    <Car className="h-3 w-3" />
-                    Xe đang chờ
-                  </div>
-                  <div className="font-bold text-base text-orange-900">
-                    {realtime.queue_length}
-                  </div>
-                </div>
-              ) : null}
+          ) : null}
+          <div className="mb-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 p-3 border border-slate-200">
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <BarChart3 className="h-3 w-3" />
+                Trạng thái
+              </div>
+              <div className="font-bold text-base text-slate-900">{station.status || 'unknown'}</div>
             </div>
-          )}
-        </div>
+            {station.available_capacity != null ? (
+              <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 border border-emerald-200">
+                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Số chỗ trống
+                </div>
+                <div className="font-bold text-base text-emerald-900">{station.available_capacity}</div>
+              </div>
+            ) : null}
+            {station.capacity != null ? (
+              <div className="rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-3 border border-purple-200">
+                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-purple-700">
+                  <Zap className="h-3 w-3" />
+                  Công suất thiết kế
+                </div>
+                <div className="font-bold text-base text-purple-900">{station.capacity} kW</div>
+              </div>
+            ) : null}
+            {station.socket_number != null ? (
+              <div className="rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-3 border border-blue-200">
+                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                  <Plug className="h-3 w-3" />
+                  Số ổ sạc
+                </div>
+                <div className="font-bold text-base text-blue-900">{station.socket_number}</div>
+              </div>
+            ) : null}
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 p-3 border border-amber-200">
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                <Zap className="h-3 w-3" />
+                Công suất tức thời (kW)
+              </div>
+              <div className="font-bold text-base text-amber-900">
+                {station.instantaneous_power != null ? formatNumber(station.instantaneous_power) : 'Không có dữ liệu'}
+              </div>
+            </div>
+            <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 border border-orange-200">
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+                <Car className="h-3 w-3" />
+                Số xe đang chờ
+              </div>
+              <div className="font-bold text-base text-orange-900">
+                {station.queue_length != null ? station.queue_length : 'Không có dữ liệu'}
+              </div>
+            </div>
+          </div>
+        </>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onReloadAnalytics}
-        className="mb-4 inline-flex items-center gap-2 rounded-lg border border-[#124874]/30 bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Tải lại thống kê
-      </button>
-
-      <div className="mb-4 rounded-xl border-t-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white pt-4 pb-3 px-4">
-        <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
-          <BarChart3 className="h-5 w-5 text-[#124874]" />
-          Thống kê theo trạm
-        </h4>
-        {loadingAnalytics && !analytics ? (
-          <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Đang tải thống kê cho trạm...</span>
+      {activeTab === 'realtime' ? (
+        realtime ? (
+          <div className="mb-4 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 pt-4 pb-3 px-4">
+            <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
+              <Zap className="h-5 w-5 text-blue-600" />
+              Trạng thái Realtime
+            </h4>
+            {loadingRealtime ? (
+              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Đang tải dữ liệu realtime...</span>
+              </div>
+            ) : (
+              <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                {realtime.status != null ? (
+                  <div className="rounded-lg bg-white p-3 border border-blue-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                      <BarChart3 className="h-3 w-3" />
+                      Trạng thái
+                    </div>
+                    <div className="font-bold text-base text-blue-900">{realtime.status}</div>
+                  </div>
+                ) : null}
+                {realtime.available_capacity != null ? (
+                  <div className="rounded-lg bg-white p-3 border border-emerald-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Chỗ trống
+                    </div>
+                    <div className="font-bold text-base text-emerald-900">
+                      {realtime.available_capacity}
+                    </div>
+                  </div>
+                ) : null}
+                {realtime.instantaneous_power != null ? (
+                  <div className="rounded-lg bg-white p-3 border border-amber-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                      <Zap className="h-3 w-3" />
+                      Công suất (kW)
+                    </div>
+                    <div className="font-bold text-base text-amber-900">
+                      {formatNumber(realtime.instantaneous_power)}
+                    </div>
+                  </div>
+                ) : null}
+                {realtime.queue_length != null ? (
+                  <div className="rounded-lg bg-white p-3 border border-orange-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+                      <Car className="h-3 w-3" />
+                      Xe đang chờ
+                    </div>
+                    <div className="font-bold text-base text-orange-900">
+                      {realtime.queue_length}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
-        ) : null}
-        {!loadingAnalytics && !analytics ? (
-          <div className="mt-2 rounded-lg bg-amber-50 p-3 border border-amber-200">
-            <p className="text-sm font-medium text-amber-800">
-              Chưa có thống kê cho trạm này. Bạn có thể thử bấm &quot;Tải lại thống kê&quot;.
-            </p>
+        ) : (
+          <div className="rounded-xl bg-slate-50 p-6 text-center">
+            <p className="text-sm font-medium text-slate-600">Không có dữ liệu realtime.</p>
           </div>
-        ) : null}
-        {analytics ? (
-          <div className="mt-2 text-sm text-slate-700">
-            <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <Zap className="h-3 w-3" />
-                  Tổng số phiên sạc
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {analytics.total_sessions.toLocaleString('vi-VN')}
-                </div>
-              </div>
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <Battery className="h-3 w-3" />
-                  Tổng năng lượng (kWh)
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {formatNumber(analytics.total_energy_kwh)}
-                </div>
-              </div>
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <DollarSign className="h-3 w-3" />
-                  Doanh thu
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {formatCurrency(analytics.total_amount_vnd)}
-                </div>
-              </div>
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <FileText className="h-3 w-3" />
-                  Thuế
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {formatCurrency(analytics.total_tax_vnd)}
-                </div>
-              </div>
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <Clock className="h-3 w-3" />
-                  Thời lượng TB (phút)
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {formatNumber(analytics.average_session_duration_minutes)}
-                </div>
-              </div>
-              <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  <TrendingUp className="h-3 w-3" />
-                  Năng lượng TB/phiên (kWh)
-                </div>
-                <div className="font-bold text-base text-slate-900">
-                  {formatNumber(analytics.average_energy_kwh)}
-                </div>
-              </div>
-            </div>
+        )
+      ) : null}
 
-            {analytics.vehicle_type_breakdown.length > 0 ? (
-              <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <table className="w-full border-collapse text-xs">
-                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
-                    <tr>
-                      <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
-                        <span className="flex items-center gap-1.5">
-                          <Car className="h-4 w-4" />
-                          Loại phương tiện
-                        </span>
-                      </th>
-                      <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
-                        Số phiên
-                      </th>
-                      <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
-                        Tổng kWh
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analytics.vehicle_type_breakdown.map((item, index) => (
-                      <tr key={item.vehicle_type} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                        <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                          {item.vehicle_type}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
-                          {item.session_count.toLocaleString('vi-VN')}
-                        </td>
-                        <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
-                          {formatNumber(item.total_energy_kwh)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {activeTab === 'analytics' ? (
+        <>
+          <button
+            type="button"
+            onClick={onReloadAnalytics}
+            className="mb-4 inline-flex items-center gap-2 rounded-lg border border-[#124874]/30 bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Tải lại thống kê
+          </button>
+
+          <div className="mb-4 rounded-xl border-t-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white pt-4 pb-3 px-4">
+            <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
+              <BarChart3 className="h-5 w-5 text-[#124874]" />
+              Thống kê theo trạm
+            </h4>
+            {loadingAnalytics && !analytics ? (
+              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Đang tải thống kê cho trạm...</span>
+              </div>
+            ) : null}
+            {!loadingAnalytics && !analytics ? (
+              <div className="mt-2 rounded-lg bg-amber-50 p-3 border border-amber-200">
+                <p className="text-sm font-medium text-amber-800">
+                  Chưa có thống kê cho trạm này. Bạn có thể thử bấm &quot;Tải lại thống kê&quot;.
+                </p>
+              </div>
+            ) : null}
+            {analytics ? (
+              <div className="mt-2 text-sm text-slate-700">
+                <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <Zap className="h-3 w-3" />
+                      Tổng số phiên sạc
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {analytics.total_sessions.toLocaleString('vi-VN')}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <Battery className="h-3 w-3" />
+                      Tổng năng lượng (kWh)
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {formatNumber(analytics.total_energy_kwh)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <DollarSign className="h-3 w-3" />
+                      Doanh thu
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {formatCurrency(analytics.total_amount_vnd)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <FileText className="h-3 w-3" />
+                      Thuế
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {formatCurrency(analytics.total_tax_vnd)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <Clock className="h-3 w-3" />
+                      Thời lượng TB (phút)
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {formatNumber(analytics.average_session_duration_minutes)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white p-3 border border-slate-200 shadow-sm">
+                    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <TrendingUp className="h-3 w-3" />
+                      Năng lượng TB/phiên (kWh)
+                    </div>
+                    <div className="font-bold text-base text-slate-900">
+                      {formatNumber(analytics.average_energy_kwh)}
+                    </div>
+                  </div>
+                </div>
+
+                {analytics.vehicle_type_breakdown.length > 0 ? (
+                  <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <table className="w-full border-collapse text-xs">
+                      <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+                        <tr>
+                          <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                              <Car className="h-4 w-4" />
+                              Loại phương tiện
+                            </span>
+                          </th>
+                          <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
+                            Số phiên
+                          </th>
+                          <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
+                            Tổng kWh
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analytics.vehicle_type_breakdown.map((item, index) => (
+                          <tr key={item.vehicle_type} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                            <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
+                              {item.vehicle_type}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
+                              {item.session_count.toLocaleString('vi-VN')}
+                            </td>
+                            <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
+                              {formatNumber(item.total_energy_kwh)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
-        ) : null}
-      </div>
+        </>
+      ) : null}
 
-      <div className="mb-4 rounded-xl border-t-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white pt-4 pb-3 px-4">
-        <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
-          <History className="h-5 w-5 text-[#124874]" />
-          Lịch sử phiên sạc
-        </h4>
-        {loadingSessions && (!sessions || sessions.length === 0) ? (
-          <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Đang tải danh sách phiên sạc...</span>
-          </div>
-        ) : null}
-        {!loadingSessions && (!sessions || sessions.length === 0) ? (
-          <div className="mt-2 rounded-lg bg-blue-50 p-3 border border-blue-200">
-            <p className="text-sm font-medium text-blue-800">
-              Chưa có phiên sạc nào cho trạm này.
-            </p>
-          </div>
-        ) : null}
-        {sessions && sessions.length > 0 ? (
-          <div className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table className="w-full border-collapse text-xs">
-              <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
-                <tr>
-                  <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4" />
-                      Bắt đầu
-                    </span>
-                  </th>
-                  <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4" />
-                      Kết thúc
-                    </span>
-                  </th>
-                  <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
-                    <span className="flex items-center gap-1.5">
-                      <Car className="h-4 w-4" />
-                      Loại xe
-                    </span>
-                  </th>
-                  <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
-                    <span className="flex items-center justify-end gap-1.5">
-                      <Zap className="h-4 w-4" />
-                      kWh
-                    </span>
-                  </th>
-                  <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
-                    <span className="flex items-center justify-end gap-1.5">
-                      <DollarSign className="h-4 w-4" />
-                      Doanh thu (VND)
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sessions.map((session, index) => (
-                  <tr key={session.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                    <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                      {formatDateTime(session.start_date_time)}
-                    </td>
-                    <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                      {formatDateTime(session.end_date_time)}
-                    </td>
-                    <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                      {session.vehicle_type ?? 'unknown'}
-                    </td>
-                    <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
-                      {formatNumber(session.power_consumption_kwh)}
-                    </td>
-                    <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
-                      {formatCurrency(session.amount_collected_vnd)}
-                    </td>
+      {activeTab === 'sessions' ? (
+        <div className="mb-4 rounded-xl border-t-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white pt-4 pb-3 px-4">
+          <h4 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900">
+            <History className="h-5 w-5 text-[#124874]" />
+            Lịch sử phiên sạc
+          </h4>
+          {loadingSessions && (!sessions || sessions.length === 0) ? (
+            <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Đang tải danh sách phiên sạc...</span>
+            </div>
+          ) : null}
+          {!loadingSessions && (!sessions || sessions.length === 0) ? (
+            <div className="mt-2 rounded-lg bg-blue-50 p-3 border border-blue-200">
+              <p className="text-sm font-medium text-blue-800">
+                Chưa có phiên sạc nào cho trạm này.
+              </p>
+            </div>
+          ) : null}
+          {sessions && sessions.length > 0 ? (
+            <div className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+              <table className="w-full border-collapse text-xs">
+                <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+                  <tr>
+                    <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        Bắt đầu
+                      </span>
+                    </th>
+                    <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        Kết thúc
+                      </span>
+                    </th>
+                    <th className="border-b border-slate-200 px-3 py-2.5 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Car className="h-4 w-4" />
+                        Loại xe
+                      </span>
+                    </th>
+                    <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <Zap className="h-4 w-4" />
+                        kWh
+                      </span>
+                    </th>
+                    <th className="border-b border-slate-200 px-3 py-2.5 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <DollarSign className="h-4 w-4" />
+                        Doanh thu (VND)
+                      </span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </div>
+                </thead>
+                <tbody>
+                  {sessions.map((session, index) => (
+                    <tr key={session.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                      <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
+                        {formatDateTime(session.start_date_time)}
+                      </td>
+                      <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
+                        {formatDateTime(session.end_date_time)}
+                      </td>
+                      <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
+                        {session.vehicle_type ?? 'unknown'}
+                      </td>
+                      <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
+                        {formatNumber(session.power_consumption_kwh)}
+                      </td>
+                      <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
+                        {formatCurrency(session.amount_collected_vnd)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   )
 }
