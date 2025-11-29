@@ -39,6 +39,35 @@ const VEHICLE_TYPE_LABELS: Record<string, string> = {
   electricbike: 'Xe đạp điện',
 }
 
+const DAY_LABELS: Record<string, string> = {
+  Mon: 'Thứ Hai',
+  Tue: 'Thứ Ba',
+  Wed: 'Thứ Tư',
+  Thu: 'Thứ Năm',
+  Fri: 'Thứ Sáu',
+  Sat: 'Thứ Bảy',
+  Sun: 'Chủ Nhật',
+  Mo: 'Thứ Hai',
+  Tu: 'Thứ Ba',
+  We: 'Thứ Tư',
+  Th: 'Thứ Năm',
+  Fr: 'Thứ Sáu',
+  Sa: 'Thứ Bảy',
+  Su: 'Chủ Nhật',
+}
+
+const OPENING_TEXT_REPLACEMENTS: Record<string, string> = {
+  Daily: 'Mỗi ngày',
+  Closed: 'Đóng cửa',
+  Holiday: 'Ngày lễ',
+  Holidays: 'Ngày lễ',
+  Weekend: 'Cuối tuần',
+  Weekends: 'Cuối tuần',
+  Weekday: 'Ngày trong tuần',
+  Weekdays: 'Ngày trong tuần',
+  '24/7': 'Mở cửa 24/7',
+}
+
 export function getStationStatusLabel(status?: string | null): string {
   if (!status) {
     return 'Không xác định'
@@ -70,4 +99,40 @@ export function formatVehicleType(type?: string | null): string {
   }
   const normalized = type.trim()
   return VEHICLE_TYPE_LABELS[normalized.toLowerCase()] ?? normalized
+}
+
+export function formatOpeningHours(hours?: string | null): string {
+  if (!hours) {
+    return 'Không có thông tin'
+  }
+
+  const segments = hours
+    .split(';')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+
+  if (segments.length === 0) {
+    return 'Không có thông tin'
+  }
+
+  const dayRegex = /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Mo|Tu|We|Th|Fr|Sa|Su)\b/gi
+  const textRegex = /\b(Daily|Closed|Holiday|Holidays|Weekend|Weekends|Weekday|Weekdays|24\/7)\b/gi
+
+  const formattedSegments = segments.map((segment) => {
+    let converted = segment.replace(dayRegex, (match) => {
+      const key = match.slice(0, 1).toUpperCase() + match.slice(1).toLowerCase()
+      return DAY_LABELS[key] ?? match
+    })
+
+    converted = converted.replace(textRegex, (match) => {
+      const normalized = match === match.toUpperCase() ? match : match.slice(0, 1).toUpperCase() + match.slice(1)
+      return OPENING_TEXT_REPLACEMENTS[normalized] ?? match
+    })
+
+    converted = converted.replace(/\s*-\s*/g, ' - ')
+
+    return converted.trim()
+  })
+
+  return formattedSegments.join('\n')
 }

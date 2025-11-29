@@ -21,7 +21,7 @@ import {
   Navigation,
   Globe,
 } from 'lucide-react'
-import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
+import { formatOpeningHours, formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -264,7 +264,9 @@ export function CitizenStationModal({
                 <Clock className="h-3 w-3" />
                 Giờ mở cửa
               </div>
-              <div className="text-sm font-medium text-slate-900">{station.opening_hours}</div>
+              <div className="whitespace-pre-line text-sm font-medium text-slate-900">
+                {formatOpeningHours(station.opening_hours)}
+              </div>
             </div>
           )}
         </div>
