@@ -22,8 +22,9 @@ import {
   User,
   Zap,
 } from 'lucide-react'
-import type { CitizenProfile, CitizenSessionsStats, Session } from '../../types/ev'
+import type { CitizenProfile, CitizenSessionsStats, Session, Station } from '../../types/ev'
 import { API_BASE_URL, USER_ID } from '../../config.ts'
+import { formatVehicleType, getStationStatusLabel } from '../../utils/labels'
 
 function formatDateTime(value: string): string {
   const date = new Date(value)
@@ -69,13 +70,14 @@ export function CitizenHistoryPage() {
   const [profile, setProfile] = useState<CitizenProfile | null>(null)
   const [stats, setStats] = useState<CitizenSessionsStats | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
+  const [stations, setStations] = useState<Station[]>([])
 
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [loadingStats, setLoadingStats] = useState(false)
   const [loadingSessions, setLoadingSessions] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [stationIdFilter, setStationIdFilter] = useState('')
+  const [stationSearchFilter, setStationSearchFilter] = useState('')
   const [startDateFilter, setStartDateFilter] = useState('')
   const [endDateFilter, setEndDateFilter] = useState('')
   const [limit, setLimit] = useState(20)
@@ -84,7 +86,21 @@ export function CitizenHistoryPage() {
     void loadProfile()
     void loadStats()
     void loadSessions()
+    void loadStations()
   }, [])
+
+  async function loadStations() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/stations/search`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as Station[]
+      setStations(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   async function loadProfile() {
     try {
@@ -142,11 +158,53 @@ export function CitizenHistoryPage() {
     }
   }
 
+  const stationNameLookup = useMemo<Record<string, string>>(() => {
+    const entries = new globalThis.Map<string, string>()
+    stations.forEach((station) => entries.set(station.id, station.name))
+    sessions.forEach((session) => {
+      if (session.station_id && session.station_name) {
+        entries.set(session.station_id, session.station_name)
+      }
+    })
+    return Object.fromEntries(entries) as Record<string, string>
+  }, [stations, sessions])
+
+  const stationNameSuggestions = useMemo(() => {
+    const names = new Set<string>()
+    stations.forEach((station) => names.add(station.name))
+    sessions.forEach((session) => {
+      if (session.station_name) {
+        names.add(session.station_name)
+      }
+    })
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'vi'))
+  }, [stations, sessions])
+
+  function resolveStationId(search: string): string | null {
+    const normalized = search.trim().toLowerCase()
+    if (!normalized) {
+      return null
+    }
+    for (const [id, name] of Object.entries(stationNameLookup)) {
+      if (name.toLowerCase() === normalized) {
+        return id
+      }
+    }
+    // allow direct ID entry
+    const directMatch = stations.find((station) => station.id.toLowerCase() === normalized)
+    return directMatch?.id ?? null
+  }
+
   function buildQueryParams() {
     const params = new URLSearchParams()
     params.append('limit', String(limit))
-    if (stationIdFilter.trim()) {
-      params.append('station_id', stationIdFilter.trim())
+    if (stationSearchFilter.trim()) {
+      const stationId = resolveStationId(stationSearchFilter)
+      if (stationId) {
+        params.append('station_id', stationId)
+      } else {
+        params.append('station_name', stationSearchFilter.trim())
+      }
     }
     if (startDateFilter) {
       const startIso = new Date(`${startDateFilter}T00:00:00Z`).toISOString()
@@ -166,7 +224,7 @@ export function CitizenHistoryPage() {
   }
 
   async function handleResetFilters() {
-    setStationIdFilter('')
+    setStationSearchFilter('')
     setStartDateFilter('')
     setEndDateFilter('')
     setLimit(20)
@@ -177,16 +235,6 @@ export function CitizenHistoryPage() {
     const params = buildQueryParams()
     await Promise.all([loadProfile(), loadSessions(params), loadStats(params)])
   }
-
-  const uniqueStationIds = useMemo(() => {
-    const ids = new Set<string>()
-    sessions.forEach((session) => {
-      if (session.station_id) {
-        ids.add(session.station_id)
-      }
-    })
-    return Array.from(ids)
-  }, [sessions])
 
   return (
     <div className="flex flex-col gap-6">
@@ -336,14 +384,14 @@ export function CitizenHistoryPage() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   list="station-options"
-                  value={stationIdFilter}
-                  onChange={(e) => setStationIdFilter(e.target.value)}
-                  placeholder="Nhập ID trạm..."
+                  value={stationSearchFilter}
+                  onChange={(e) => setStationSearchFilter(e.target.value)}
+                  placeholder="Nhập tên trạm..."
                   className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
                 />
                 <datalist id="station-options">
-                  {uniqueStationIds.map((id) => (
-                    <option key={id} value={id} />
+                  {stationNameSuggestions.map((name) => (
+                    <option key={name} value={name} />
                   ))}
                 </datalist>
               </div>
@@ -473,15 +521,15 @@ export function CitizenHistoryPage() {
                         {formatDateTime(session.end_date_time)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
-                        <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs text-slate-600">
-                          {session.station_id}
+                        <span className="font-semibold text-slate-800">
+                          {stationNameLookup[session.station_id] ?? session.station_name ?? session.station_id}
                         </span>
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
-                        {session.vehicle_type ?? 'Không rõ'}
+                        {formatVehicleType(session.vehicle_type)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
-                        {session.session_status ?? 'Hoàn tất'}
+                        {getStationStatusLabel(session.session_status)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-3 text-right font-semibold text-slate-800">
                         {formatDuration(duration)}

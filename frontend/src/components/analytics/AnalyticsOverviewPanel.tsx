@@ -19,6 +19,7 @@ import {
 type AnalyticsOverviewPanelProps = {
   overview: AnalyticsOverview | null
   loading: boolean
+  stationNameLookup?: Record<string, string>
 }
 
 function formatCurrency(value: number) {
@@ -35,7 +36,7 @@ function formatNumber(value: number, fractionDigits = 1) {
   })
 }
 
-export function AnalyticsOverviewPanel({ overview, loading }: AnalyticsOverviewPanelProps) {
+export function AnalyticsOverviewPanel({ overview, loading, stationNameLookup }: AnalyticsOverviewPanelProps) {
   if (loading && !overview) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -167,7 +168,9 @@ export function AnalyticsOverviewPanel({ overview, loading }: AnalyticsOverviewP
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#124874] to-[#0f3a5a] text-xs font-bold text-white">
                     {index + 1}
                   </span>
-                  <span className="font-semibold text-slate-800">{item.station_id}</span>
+                  <span className="font-semibold text-slate-800">
+                    {stationNameLookup?.[item.station_id] ?? item.station_id}
+                  </span>
                 </div>
                 <span className="rounded-full bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-3 py-1 text-xs font-semibold text-white shadow-sm">
                   {item.session_count.toLocaleString('vi-VN')} phiên

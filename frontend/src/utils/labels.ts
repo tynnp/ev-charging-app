@@ -18,6 +18,17 @@ const STATUS_LABELS: Record<string, string> = {
   closed: 'Đã đóng cửa',
   inactive: 'Không hoạt động',
   unknown: 'Không xác định',
+  finished: 'Đã hoàn tất',
+  completed: 'Đã hoàn tất',
+  success: 'Thành công',
+  inprogress: 'Đang tiến hành',
+  processing: 'Đang xử lý',
+  pending: 'Đang chờ',
+  queued: 'Đang chờ',
+  cancelled: 'Đã huỷ',
+  canceled: 'Đã huỷ',
+  failed: 'Thất bại',
+  error: 'Lỗi',
 }
 
 const VEHICLE_TYPE_LABELS: Record<string, string> = {
@@ -47,9 +58,16 @@ export function formatVehicleTypes(types?: string[] | null): string {
   }
   const labels = types.map((type) => {
     const normalized = type.trim()
-    const key = normalized.toLowerCase().replace(/[^a-z0-9]/g, '')
-    return VEHICLE_TYPE_LABELS[key] ?? normalized
+    return VEHICLE_TYPE_LABELS[normalized.toLowerCase()] ?? normalized
   })
   const uniqueLabels = Array.from(new Set(labels))
   return uniqueLabels.join(', ')
+}
+
+export function formatVehicleType(type?: string | null): string {
+  if (!type) {
+    return 'Không xác định'
+  }
+  const normalized = type.trim()
+  return VEHICLE_TYPE_LABELS[normalized.toLowerCase()] ?? normalized
 }

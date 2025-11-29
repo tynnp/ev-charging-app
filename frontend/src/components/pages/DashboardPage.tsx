@@ -4,7 +4,7 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl, { Map as MapLibreMap, Marker, Popup, type MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type {
@@ -15,6 +15,7 @@ import type {
   StationRealtime,
 } from '../../types/ev'
 import { MAP_STYLE } from '../../mapConfig'
+import { formatVehicleType } from '../../utils/labels'
 import { AnalyticsOverviewPanel } from '../analytics/AnalyticsOverviewPanel'
 import { StationFilters } from '../stations/StationFilters'
 import { StationList } from '../stations/StationList'
@@ -597,6 +598,22 @@ export function DashboardPage({ section }: DashboardPageProps) {
         null
       : null)
 
+  const stationNameLookup = useMemo<Record<string, string>>(() => {
+    const entries = new globalThis.Map<string, string>()
+    stations.forEach((station) => entries.set(station.id, station.name))
+    nearbyStations.forEach((station) => entries.set(station.id, station.name))
+    if (selectedStation) {
+      entries.set(selectedStation.id, selectedStation.name)
+    }
+    if (displayStation) {
+      entries.set(displayStation.id, displayStation.name)
+    }
+    if (stationAnalytics?.station_id && stationAnalytics.station_name) {
+      entries.set(stationAnalytics.station_id, stationAnalytics.station_name)
+    }
+    return Object.fromEntries(entries) as Record<string, string>
+  }, [stations, nearbyStations, selectedStation, displayStation, stationAnalytics])
+
   const locationParts = displayStation
     ? [
         displayStation.address?.streetAddress,
@@ -627,7 +644,11 @@ export function DashboardPage({ section }: DashboardPageProps) {
       {section === 'overview' ? (
         <>
           <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
-            <AnalyticsOverviewPanel overview={overview} loading={loadingOverview} />
+            <AnalyticsOverviewPanel
+            overview={overview}
+            loading={loadingOverview}
+            stationNameLookup={stationNameLookup}
+          />
           </section>
           <DatasetsPanel />
         </>
@@ -704,10 +725,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
                         {formatDateTime(item.start_date_time)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
-                        {item.station_id ?? '-'}
+                        {stationNameLookup[item.station_id ?? ''] ?? item.station_id ?? '-'}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
-                        {item.vehicle_type ?? '-'}
+                        {formatVehicleType(item.vehicle_type)}
                       </td>
                       <td className="border-b border-slate-100 px-4 py-2.5 text-right font-semibold text-slate-700">
                         {item.power_consumption_kwh != null

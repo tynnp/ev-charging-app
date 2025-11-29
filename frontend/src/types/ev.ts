@@ -41,6 +41,7 @@ export type Station = {
 export type Session = {
   id: string
   station_id: string
+  station_name?: string | null
   sensor_id?: string | null
   user_id?: string | null
   vehicle_type?: string | null
