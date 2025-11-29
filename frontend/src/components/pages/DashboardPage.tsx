@@ -79,9 +79,10 @@ type MiniStationsMapProps = {
   stations: Station[]
   onSelectStation: (stationId: string) => void
   onCoordinateSelect?: (lng: number, lat: number) => void
+  selectedCoordinate?: [number, number] | null
 }
 
-function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect }: MiniStationsMapProps) {
+function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect, selectedCoordinate }: MiniStationsMapProps) {
   const coords = stations
     .map((station) => station.location?.coordinates)
     .filter((value): value is number[] => Array.isArray(value) && value.length === 2)
@@ -97,12 +98,15 @@ function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect }: Mini
     ? lats.reduce((sum, value) => sum + value, 0) / lats.length
     : 0
 
-  const centerLon = hasCoords ? avgLon : DEFAULT_CENTER[0]
-  const centerLat = hasCoords ? avgLat : DEFAULT_CENTER[1]
+  const fallbackCenter: [number, number] = hasCoords ? [avgLon, avgLat] : DEFAULT_CENTER
+  const targetCenter = selectedCoordinate ?? fallbackCenter
+  const centerLon = targetCenter[0]
+  const centerLat = targetCenter[1]
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
+  const selectedPointMarkerRef = useRef<Marker | null>(null)
   const lastCenterRef = useRef<[number, number] | null>(null)
   const stationsKey = stations.map((station) => station.id).join('|')
 
@@ -186,12 +190,35 @@ function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect }: Mini
       })
       markersRef.current = []
 
+      if (selectedPointMarkerRef.current) {
+        selectedPointMarkerRef.current.remove()
+        selectedPointMarkerRef.current = null
+      }
+
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
       }
     }
   }, [])
+
+  useEffect(() => {
+    const mapInstance = mapRef.current
+    if (!mapInstance) {
+      return
+    }
+
+    if (selectedCoordinate) {
+      if (!selectedPointMarkerRef.current) {
+        selectedPointMarkerRef.current = new maplibregl.Marker({ color: '#0f3a5a' })
+      }
+
+      selectedPointMarkerRef.current.setLngLat(selectedCoordinate).addTo(mapInstance)
+    } else if (selectedPointMarkerRef.current) {
+      selectedPointMarkerRef.current.remove()
+      selectedPointMarkerRef.current = null
+    }
+  }, [selectedCoordinate])
 
   return <div ref={mapContainerRef} className="h-96 w-full rounded-md" />
 }
@@ -238,6 +265,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const [nearbyStations, setNearbyStations] = useState<Station[]>([])
   const [loadingNearby, setLoadingNearby] = useState(false)
   const [nearbyError, setNearbyError] = useState<string | null>(null)
+  const [selectedCoordinate, setSelectedCoordinate] = useState<[number, number] | null>([Number(nearLng), Number(nearLat)])
 
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(stations.length / STATIONS_PER_PAGE))
@@ -531,6 +559,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
       }
       const data = (await res.json()) as Station[]
       setNearbyStations(data)
+      setSelectedCoordinate([lng, lat])
     } catch (error) {
       console.error(error)
       setNearbyError('Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.')
@@ -544,6 +573,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
     setNearLat(String(lat))
     setNearLng(String(lng))
     setNearbyError(null)
+    setSelectedCoordinate([lng, lat])
   }
 
   function handleApplyFilters() {
@@ -720,7 +750,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   step="0.0001"
                   value={nearLat}
                   onChange={(event) => setNearLat(event.target.value)}
-                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 />
               </div>
               <div>
@@ -733,7 +763,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   step="0.0001"
                   value={nearLng}
                   onChange={(event) => setNearLng(event.target.value)}
-                  className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 />
               </div>
               <div>
@@ -786,6 +816,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
               stations={nearbyStations}
               onSelectStation={handleSelectStation}
               onCoordinateSelect={handleMapCoordinateSelect}
+              selectedCoordinate={selectedCoordinate}
             />
           </div>
 

@@ -18,12 +18,15 @@ type StationsMapProps = {
   currentLocation: [number, number] | null
   onStationClick?: (station: Station) => void
   onCoordinateSelect?: (lng: number, lat: number) => void
+  selectedCoordinate?: [number, number] | null
 }
 
-export function StationsMap({ stations, currentLocation, onStationClick, onCoordinateSelect }: StationsMapProps) {
+export function StationsMap({ stations, currentLocation, onStationClick, onCoordinateSelect, selectedCoordinate }: StationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
+  const selectedPointMarkerRef = useRef<Marker | null>(null)
+  const lastCenterRef = useRef<[number, number] | null>(null)
   const stationsKey = stations.map((station) => station.id).join('|')
 
   const coords = stations
@@ -36,8 +39,10 @@ export function StationsMap({ stations, currentLocation, onStationClick, onCoord
   const avgLon = hasCoords ? lons.reduce((sum, value) => sum + value, 0) / lons.length : 0
   const avgLat = hasCoords ? lats.reduce((sum, value) => sum + value, 0) / lats.length : 0
 
-  const centerLon = currentLocation ? currentLocation[0] : hasCoords ? avgLon : DEFAULT_CENTER[0]
-  const centerLat = currentLocation ? currentLocation[1] : hasCoords ? avgLat : DEFAULT_CENTER[1]
+  const fallbackCenter: [number, number] = hasCoords ? [avgLon, avgLat] : DEFAULT_CENTER
+  const targetCenter = selectedCoordinate ?? currentLocation ?? fallbackCenter
+  const centerLon = targetCenter[0]
+  const centerLat = targetCenter[1]
 
   useEffect(() => {
     if (!mapContainerRef.current) {
@@ -51,8 +56,15 @@ export function StationsMap({ stations, currentLocation, onStationClick, onCoord
         center: [centerLon, centerLat],
         zoom: 13,
       })
+      lastCenterRef.current = [centerLon, centerLat]
     } else {
-      mapRef.current.setCenter([centerLon, centerLat])
+      const prevCenter = lastCenterRef.current
+      const nextCenter: [number, number] = [centerLon, centerLat]
+
+      if (!prevCenter || prevCenter[0] !== nextCenter[0] || prevCenter[1] !== nextCenter[1]) {
+        mapRef.current.easeTo({ center: nextCenter, duration: 500 })
+        lastCenterRef.current = nextCenter
+      }
     }
 
     markersRef.current.forEach((marker) => {
@@ -129,12 +141,40 @@ export function StationsMap({ stations, currentLocation, onStationClick, onCoord
       })
       markersRef.current = []
 
+      if (selectedPointMarkerRef.current) {
+        selectedPointMarkerRef.current.remove()
+        selectedPointMarkerRef.current = null
+      }
+
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
       }
+      lastCenterRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    const mapInstance = mapRef.current
+    if (!mapInstance) {
+      return
+    }
+
+    if (selectedCoordinate) {
+      if (!selectedPointMarkerRef.current) {
+        selectedPointMarkerRef.current = new maplibregl.Marker({ color: '#0f3a5a' })
+      }
+
+      selectedPointMarkerRef.current
+        .setLngLat(selectedCoordinate)
+        .addTo(mapInstance)
+
+      mapInstance.easeTo({ center: selectedCoordinate, duration: 400 })
+    } else if (selectedPointMarkerRef.current) {
+      selectedPointMarkerRef.current.remove()
+      selectedPointMarkerRef.current = null
+    }
+  }, [selectedCoordinate])
 
   return <div ref={mapContainerRef} className="h-full w-full" />
 }

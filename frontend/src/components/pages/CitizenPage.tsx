@@ -65,6 +65,7 @@ export function CitizenPage() {
   const [favoritedStations, setFavoritedStations] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'route'>('search')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [selectedCoordinate, setSelectedCoordinate] = useState<[number, number] | null>(null)
 
   // Route planning states
   const [fromLat, setFromLat] = useState('10.7769')
@@ -111,6 +112,7 @@ export function CitizenPage() {
           setNearLng(String(lng))
           setFromLat(String(lat))
           setFromLng(String(lng))
+          setSelectedCoordinate([lng, lat])
         },
         (error) => {
           console.error('Error getting location:', error)
@@ -217,6 +219,7 @@ export function CitizenPage() {
   function handleMapCoordinateSelect(lng: number, lat: number) {
     setNearLat(String(lat))
     setNearLng(String(lng))
+    setSelectedCoordinate([lng, lat])
   }
 
   async function handleSearchNearby() {
@@ -245,6 +248,8 @@ export function CitizenPage() {
       }
       const data = (await res.json()) as Station[]
       setStations(data)
+
+      setSelectedCoordinate([lng, lat])
 
       if (data.length === 0) {
         setError('Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.')
@@ -659,6 +664,7 @@ export function CitizenPage() {
                 onClick={() => {
                         setNearLat(String(currentLocation[1]))
                         setNearLng(String(currentLocation[0]))
+                        setSelectedCoordinate(currentLocation)
                       }}
                       className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                     >
@@ -960,6 +966,7 @@ export function CitizenPage() {
             currentLocation={currentLocation}
             onStationClick={setSelectedStation}
             onCoordinateSelect={handleMapCoordinateSelect}
+            selectedCoordinate={selectedCoordinate}
           />
       </div>
         )}
