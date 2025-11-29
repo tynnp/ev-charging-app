@@ -15,6 +15,39 @@ import {
   CreditCard,
 } from 'lucide-react'
 
+const NETWORK_OPTIONS = [
+  'CityEV Network',
+  'NowCharge Network',
+  'CityPark EV',
+  'VinCity Charge',
+  'SaigonSouth EV',
+  'ThuDuc EV Network',
+  'Airport EV',
+  'Intercity EV Network',
+  'Downtown EV',
+]
+
+const CHARGE_TYPE_OPTIONS = ['flat', 'monthlyPayment', 'free', 'annualPayment', 'other']
+
+const SOCKET_TYPE_OPTIONS = [
+  'Type2',
+  'CCS/SAE',
+  'CHAdeMO',
+  'Tesla',
+  'Type3',
+  'Wall_Euro',
+  'Caravan_Mains_Socket',
+]
+
+const PAYMENT_METHOD_OPTIONS = [
+  'Cash',
+  'PayPal',
+  'DirectDebit',
+  'ByInvoice',
+  'ByBankTransferInAdvance',
+  'GoogleCheckout',
+]
+
 type StationFiltersProps = {
   status: string
   vehicleType: string
@@ -115,52 +148,72 @@ export function StationFilters({
             <Globe className="h-3.5 w-3.5" />
             Nhà mạng / network
           </label>
-          <input
-            type="text"
+          <select
             value={network}
             onChange={(event) => onNetworkChange(event.target.value)}
-            className="w-40 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
-            placeholder="VD: VN-EV"
-          />
+            className="min-w-[190px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+          >
+            <option value="">Tất cả</option>
+            {NETWORK_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
             <Zap className="h-3.5 w-3.5" />
             Loại sạc (charge_type)
           </label>
-          <input
-            type="text"
+          <select
             value={chargeType}
             onChange={(event) => onChargeTypeChange(event.target.value)}
-            className="w-44 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
-            placeholder="VD: fastDC"
-          />
+            className="min-w-[180px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+          >
+            <option value="">Tất cả</option>
+            {CHARGE_TYPE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
             <Plug className="h-3.5 w-3.5" />
             Chuẩn ổ cắm (socket_type)
           </label>
-          <input
-            type="text"
+          <select
             value={socketType}
             onChange={(event) => onSocketTypeChange(event.target.value)}
-            className="w-48 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
-            placeholder="VD: Type2"
-          />
+            className="min-w-[200px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+          >
+            <option value="">Tất cả</option>
+            {SOCKET_TYPE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
             <CreditCard className="h-3.5 w-3.5" />
             Phương thức thanh toán
           </label>
-          <input
-            type="text"
+          <select
             value={paymentMethod}
             onChange={(event) => onPaymentMethodChange(event.target.value)}
-            className="w-56 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
-            placeholder="VD: cash, card, eWallet"
-          />
+            className="min-w-[220px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+          >
+            <option value="">Tất cả</option>
+            {PAYMENT_METHOD_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
