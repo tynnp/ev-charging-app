@@ -679,7 +679,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
           <div className="mb-4 flex items-center gap-2">
             <Map className="h-6 w-6 text-[#124874]" />
             <h2 className="text-xl font-bold text-slate-900">
-              Bản đồ trạm sạc &amp; tìm gần toạ độ
+              Bản đồ trạm sạc &amp; Tra cứu tọa độ gần đây
             </h2>
           </div>
           <div className="mb-4 rounded-xl bg-gradient-to-br from-slate-50 to-white p-4 border border-slate-200/50">

@@ -33,14 +33,14 @@ function App() {
   const managerNavItems = [
     { id: 'manager-overview', label: 'Tổng quan' },
     { id: 'manager-realtime', label: 'Phiên sạc thời gian thực' },
-    { id: 'manager-map', label: 'Bản đồ & tìm gần' },
+    { id: 'manager-map', label: 'Bản đồ & Tra cứu' },
     { id: 'manager-stations', label: 'Trạm sạc & thống kê' },
   ] satisfies { id: ManagerNavId; label: string }[]
 
   const citizenNavItems = [
     { id: 'citizen-find', label: 'Tìm trạm' },
     { id: 'citizen-history', label: 'Lịch sử sạc' },
-    { id: 'citizen-favorites', label: 'Yêu thích' },
+    { id: 'citizen-favorites', label: 'Đã lưu' },
     { id: 'citizen-compare', label: 'So sánh' },
   ] satisfies { id: CitizenNavId; label: string }[]
 

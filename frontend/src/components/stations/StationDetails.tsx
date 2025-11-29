@@ -24,6 +24,7 @@ import {
   TrendingUp,
   History,
 } from 'lucide-react'
+import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
 
 type StationDetailsProps = {
   station?: Station | null
@@ -164,7 +165,7 @@ export function StationDetails({
                 <BarChart3 className="h-3 w-3" />
                 Trạng thái
               </div>
-              <div className="font-bold text-base text-slate-900">{station.status || 'unknown'}</div>
+              <div className="font-bold text-base text-slate-900">{getStationStatusLabel(station.status)}</div>
             </div>
             {station.available_capacity != null ? (
               <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 border border-emerald-200">
@@ -205,10 +206,12 @@ export function StationDetails({
             <div className="rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-3 border border-orange-200">
               <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
                 <Car className="h-3 w-3" />
-                Số xe đang chờ
+                Loại phương tiện
               </div>
               <div className="font-bold text-base text-orange-900">
-                {station.queue_length != null ? station.queue_length : 'Không có dữ liệu'}
+                {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0
+                  ? formatVehicleTypes(station.allowed_vehicle_types)
+                  : 'Không có dữ liệu'}
               </div>
             </div>
           </div>
@@ -235,7 +238,7 @@ export function StationDetails({
                       <BarChart3 className="h-3 w-3" />
                       Trạng thái
                     </div>
-                    <div className="font-bold text-base text-blue-900">{realtime.status}</div>
+                    <div className="font-bold text-base text-blue-900">{getStationStatusLabel(realtime.status)}</div>
                   </div>
                 ) : null}
                 {realtime.available_capacity != null ? (
@@ -260,14 +263,14 @@ export function StationDetails({
                     </div>
                   </div>
                 ) : null}
-                {realtime.queue_length != null ? (
+                {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0 ? (
                   <div className="rounded-lg bg-white p-3 border border-orange-200 shadow-sm">
                     <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
                       <Car className="h-3 w-3" />
-                      Xe đang chờ
+                      Loại phương tiện
                     </div>
                     <div className="font-bold text-base text-orange-900">
-                      {realtime.queue_length}
+                      {formatVehicleTypes(station.allowed_vehicle_types)}
                     </div>
                   </div>
                 ) : null}

@@ -16,6 +16,7 @@ import {
   Zap,
   Car,
 } from 'lucide-react'
+import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
 
 type StationListProps = {
   stations: Station[]
@@ -102,7 +103,7 @@ export function StationList({
                 {station.status === 'maintenance' && (
                   <Wrench className="h-3 w-3 inline mr-1" />
                 )}
-                {station.status || 'unknown'}
+                {getStationStatusLabel(station.status)}
               </span>
             </div>
             <div className="mb-3 flex items-center gap-1.5 text-sm text-slate-600">
@@ -131,9 +132,7 @@ export function StationList({
               {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700 border border-amber-100">
                   <Car className="h-3 w-3" />
-                  {station.allowed_vehicle_types
-                    .map((value) => value.replace('electric', ''))
-                    .join(', ')}
+                  {formatVehicleTypes(station.allowed_vehicle_types)}
                 </span>
               )}
             </div>

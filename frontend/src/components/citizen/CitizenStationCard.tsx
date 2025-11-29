@@ -16,9 +16,11 @@ import {
   Car,
   Navigation,
   Eye,
-  Heart,
+  Bookmark,
+  BookmarkCheck,
   Trash2,
 } from 'lucide-react'
+import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -110,7 +112,7 @@ export function CitizenStationCard({
           )}
           {station.status === 'outOfService' && <XCircle className="h-3 w-3 inline mr-1" />}
           {station.status === 'maintenance' && <Wrench className="h-3 w-3 inline mr-1" />}
-          {station.status || 'unknown'}
+          {getStationStatusLabel(station.status)}
         </span>
       </div>
 
@@ -143,9 +145,7 @@ export function CitizenStationCard({
         {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0 && (
           <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700 border border-amber-100">
             <Car className="h-3 w-3" />
-            {station.allowed_vehicle_types
-              .map((value) => value.replace('electric', ''))
-              .join(', ')}
+            {formatVehicleTypes(station.allowed_vehicle_types)}
           </span>
         )}
       </div>
@@ -161,8 +161,12 @@ export function CitizenStationCard({
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-500'
             }`}
           >
-            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-700' : ''}`} />
-            {isFavorited ? 'Đã yêu thích' : 'Yêu thích'}
+            {isFavorited ? (
+              <BookmarkCheck className="h-4 w-4" />
+            ) : (
+              <Bookmark className="h-4 w-4" />
+            )}
+            {isFavorited ? 'Đã lưu' : 'Lưu trạm'}
           </button>
         )}
         <button
@@ -181,7 +185,7 @@ export function CitizenStationCard({
               onRemoveFavorite(station.id)
             }}
             className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-red-600 hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            title="Xóa khỏi yêu thích"
+            title="Xóa khỏi danh sách đã lưu"
           >
             <Trash2 className="h-4 w-4" />
           </button>

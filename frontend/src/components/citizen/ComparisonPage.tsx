@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   Table2,
 } from 'lucide-react'
+import { getStationStatusLabel } from '../../utils/labels'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -241,32 +242,54 @@ export function ComparisonPage() {
     return selectedStations.find((s) => s.id === result.station_id) || null
   }
 
+  function normalizeStatus(status: string): string {
+    return status.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+  }
+
   function getStatusIcon(status: string) {
-    switch (status) {
-      case 'operational':
-        return <CheckCircle2 className="h-4 w-4" />
-      case 'maintenance':
-        return <Wrench className="h-4 w-4" />
-      case 'outOfService':
-      case 'out_of_service':
-        return <XCircle className="h-4 w-4" />
-      default:
-        return null
+    const key = normalizeStatus(status)
+    if (key === 'operational' || key === 'working') {
+      return <CheckCircle2 className="h-4 w-4" />
     }
+    if (key === 'maintenance' || key === 'planned' || key === 'underconstruction') {
+      return <Wrench className="h-4 w-4" />
+    }
+    if (
+      key === 'outofservice' ||
+      key === 'outoforder' ||
+      key === 'withincidence' ||
+      key === 'inactive' ||
+      key === 'closed'
+    ) {
+      return <XCircle className="h-4 w-4" />
+    }
+    return null
   }
 
   function getStatusColor(status: string) {
-    switch (status) {
-      case 'operational':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-      case 'maintenance':
-        return 'bg-amber-50 text-amber-700 border-amber-200'
-      case 'outOfService':
-      case 'out_of_service':
-        return 'bg-red-50 text-red-700 border-red-200'
-      default:
-        return 'bg-slate-50 text-slate-700 border-slate-200'
+    const key = normalizeStatus(status)
+    if (key === 'operational' || key === 'working') {
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200'
     }
+    if (key === 'maintenance' || key === 'planned' || key === 'underconstruction') {
+      return 'bg-amber-50 text-amber-700 border-amber-200'
+    }
+    if (
+      key === 'outofservice' ||
+      key === 'outoforder' ||
+      key === 'withincidence' ||
+      key === 'inactive' ||
+      key === 'closed'
+    ) {
+      return 'bg-red-50 text-red-700 border-red-200'
+    }
+    if (key === 'almostfull') {
+      return 'bg-orange-50 text-orange-700 border-orange-200'
+    }
+    if (key === 'almostempty') {
+      return 'bg-blue-50 text-blue-700 border-blue-200'
+    }
+    return 'bg-slate-50 text-slate-700 border-slate-200'
   }
 
   // Get stations to display on map
@@ -604,7 +627,7 @@ export function ComparisonPage() {
                               )}`}
                             >
                               {getStatusIcon(result.status) && getStatusIcon(result.status)}
-                              <span className="capitalize whitespace-nowrap">{result.status}</span>
+                              <span className="whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
                             </div>
                           </div>
 
@@ -684,7 +707,7 @@ export function ComparisonPage() {
                                   )}`}
                                 >
                                   {getStatusIcon(result.status) && getStatusIcon(result.status)}
-                                  <span className="capitalize whitespace-nowrap">{result.status}</span>
+                                  <span className="whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-center font-bold text-slate-700">

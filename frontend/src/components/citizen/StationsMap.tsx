@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react'
 import maplibregl, { Map as MapLibreMap, Marker, Popup } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Station } from '../../types/ev'
+import { getStationStatusLabel } from '../../utils/labels'
 import { MAP_STYLE } from '../../mapConfig'
 
 const DEFAULT_CENTER: [number, number] = [106.7009, 10.7769]
@@ -82,7 +83,7 @@ export function StationsMap({ stations, currentLocation, onStationClick }: Stati
       const popup = new Popup({ offset: 12 }).setHTML(
         `<div class="p-2">
           <div class="font-semibold text-sm">${station.name}</div>
-          <div class="text-xs text-slate-600">${station.status || 'unknown'}</div>
+          <div class="text-xs text-slate-600">${getStationStatusLabel(station.status)}</div>
         </div>`,
       )
 

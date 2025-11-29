@@ -10,7 +10,8 @@ import { CitizenStationCard } from './CitizenStationCard'
 import { CitizenStationModal } from './CitizenStationModal'
 import { StationsMap } from './StationsMap'
 import {
-  Heart,
+  Bookmark,
+  BookmarkX,
   Loader2,
   AlertTriangle,
   X,
@@ -75,7 +76,7 @@ export function FavoritesPage() {
       setFavorites(data)
     } catch (e) {
       console.error(e)
-      setError('Không thể tải danh sách trạm yêu thích.')
+      setError('Không thể tải danh sách trạm đã lưu.')
     } finally {
       setLoading(false)
     }
@@ -94,7 +95,7 @@ export function FavoritesPage() {
       void loadFavorites()
     } catch (e) {
       console.error(e)
-      setError('Không thể xóa trạm khỏi danh sách yêu thích.')
+      setError('Không thể xóa trạm khỏi danh sách đã lưu.')
     }
   }
 
@@ -129,8 +130,8 @@ export function FavoritesPage() {
             <div className="sticky top-0 z-10 border-b border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-[#CF373D]" />
-                  <h3 className="text-base font-bold text-slate-900">Trạm yêu thích</h3>
+                  <Bookmark className="h-5 w-5 text-[#CF373D]" />
+                  <h3 className="text-base font-bold text-slate-900">Trạm đã lưu</h3>
                 </div>
                 <button
                   type="button"
@@ -165,9 +166,9 @@ export function FavoritesPage() {
 
               {!loading && favorites.length === 0 && !error ? (
                 <div className="rounded-xl bg-blue-50 p-6 text-center border border-blue-200">
-                  <Heart className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+                  <Bookmark className="h-12 w-12 text-blue-400 mx-auto mb-3" />
                   <p className="text-sm font-medium text-blue-800">
-                    Bạn chưa có trạm yêu thích nào. Hãy tìm trạm và thêm vào danh sách yêu thích!
+                    Bạn chưa lưu trạm nào. Hãy tìm trạm và thêm vào danh sách đã lưu!
                   </p>
                 </div>
               ) : null}
@@ -211,8 +212,8 @@ export function FavoritesPage() {
           ) : (
             <div className="flex h-full items-center justify-center bg-slate-100">
               <div className="text-center">
-                <Heart className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <p className="text-sm font-medium text-slate-500">Chưa có trạm yêu thích để hiển thị</p>
+                <BookmarkX className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-sm font-medium text-slate-500">Chưa có trạm đã lưu để hiển thị</p>
               </div>
             </div>
           )}

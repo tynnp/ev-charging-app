@@ -21,6 +21,7 @@ import {
   Navigation,
   Globe,
 } from 'lucide-react'
+import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
 
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
@@ -141,7 +142,7 @@ export function CitizenStationModal({
                 Trạng thái
               </div>
               <div className="text-base font-bold text-slate-900">
-                {station.status || 'unknown'}
+                {getStationStatusLabel(station.status)}
               </div>
             </div>
             {station.available_capacity != null ? (
@@ -189,9 +190,7 @@ export function CitizenStationModal({
                   Loại phương tiện
                 </div>
                 <div className="text-base font-bold text-amber-900">
-                  {station.allowed_vehicle_types
-                    .map((v) => v.replace('electric', ''))
-                    .join(', ')}
+                  {formatVehicleTypes(station.allowed_vehicle_types)}
                 </div>
               </div>
             ) : null}
@@ -224,7 +223,9 @@ export function CitizenStationModal({
                 {realtime.status != null && (
                   <div className="rounded-lg bg-white p-3 border border-blue-200">
                     <div className="text-xs font-semibold text-blue-700 mb-1">Trạng thái</div>
-                    <div className="text-sm font-bold text-blue-900">{realtime.status}</div>
+                    <div className="text-sm font-bold text-blue-900">
+                      {getStationStatusLabel(realtime.status)}
+                    </div>
                   </div>
                 )}
                 {realtime.available_capacity != null && (
