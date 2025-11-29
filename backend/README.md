@@ -250,6 +250,8 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
 
 - `GET /datasets/sessions.jsonld` Tải dataset lịch sử sạc gắn người dùng.
 
+> **Lưu ý:** Các dataset được đóng gói dưới dạng JSON-LD `Dataset` có `mainEntity`. Khi cần nạp lại vào NGSI-LD broker, hãy: (1) tách `@context` và mảng entity trong `mainEntity`; (2) gửi từng entity qua `POST /ngsi-ld/v1/entities` hoặc batch `POST /ngsi-ld/v1/entityOperations/upsert`; (3) cung cấp context qua body hoặc header `Link` theo chuẩn NGSI-LD.
+
 ### 8.6. Realtime WebSocket
 
 `GET /ws/realtime` (WebSocket)
@@ -297,7 +299,7 @@ Test cover:
 Thư mục `ev-charging-open-data` **không phải** là phần logic chính của backend mà là một **repo dữ liệu mở** được clone riêng từ kho `tynnp/ev-charging-open-data`, dùng làm nguồn dữ liệu mẫu (xem thêm mục *2.1. Clone repo dữ liệu mở*). Thư mục này đã được thêm vào `.gitignore`, nên sẽ **không xuất hiện trong các commit**; mỗi người phát triển cần tự clone về khi thiết lập môi trường.
 
 - Nội dung chính:
-  - `data/stations.jsonld`, `data/observations.jsonld`, `data/realtime_sample.json`.
+  - `data/stations.jsonld`, `data/observations.jsonld`, `data/sessions.jsonld`, `data/realtime_sample.json`.
   - `README.md`: mô tả chi tiết mô hình NGSI-LD, Smart Data Models, SOSA/SSN và cách nạp vào NGSI-LD broker.
   - `LICENSE`: giấy phép cho bộ dữ liệu (ví dụ CC BY 4.0, xem chi tiết trong file).
 - Khi sử dụng hoặc tái phân phối dự án:
@@ -307,6 +309,6 @@ Thư mục `ev-charging-open-data` **không phải** là phần logic chính c�
 ## 11. Giấy phép
 
 - Mã nguồn backend (`backend/app`, `backend/tests`, v.v.) được phát hành theo giấy phép **MIT** (xem file `LICENSE` ở root dự án, và dòng `SPDX-License-Identifier: MIT` trong từng tệp Python).
-- Bộ dữ liệu trong `ev-charging-open-data/` tuân theo giấy phép ghi trong chính kho dữ liệu đó (xem `ev-charging-open-data/README.md` và `ev-charging-open-data/LICENSE`).
+- Bộ dữ liệu trong `ev-charging-open-data/` phát hành theo **Creative Commons Attribution 4.0 International (CC BY 4.0)**; khi tái sử dụng cần ghi nguồn theo gợi ý trong `ev-charging-open-data/README.md` và giữ nguyên file `LICENSE`.
 
 Khi phát triển tiếp backend (thêm API, tích hợp NGSI-LD broker thật, mở rộng phân tích, v.v.), nên tiếp tục tuân thủ các giấy phép này và cập nhật README nếu có thay đổi lớn về kiến trúc hoặc cách triển khai.
