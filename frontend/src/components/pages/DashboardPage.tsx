@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import maplibregl, { Map as MapLibreMap, Marker, Popup } from 'maplibre-gl'
+import maplibregl, { Map as MapLibreMap, Marker, Popup, type MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type {
   Station,
@@ -78,9 +78,10 @@ function formatDateTime(value: string | null | undefined) {
 type MiniStationsMapProps = {
   stations: Station[]
   onSelectStation: (stationId: string) => void
+  onCoordinateSelect?: (lng: number, lat: number) => void
 }
 
-function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
+function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect }: MiniStationsMapProps) {
   const coords = stations
     .map((station) => station.location?.coordinates)
     .filter((value): value is number[] => Array.isArray(value) && value.length === 2)
@@ -158,6 +159,25 @@ function MiniStationsMap({ stations, onSelectStation }: MiniStationsMapProps) {
 
     lastCenterRef.current = [centerLon, centerLat]
   }, [centerLon, centerLat, hasCoords, stationsKey])
+
+  useEffect(() => {
+    const mapInstance = mapRef.current
+
+    if (!mapInstance || !onCoordinateSelect) {
+      return
+    }
+
+    function handleClick(event: MapMouseEvent) {
+      const { lng, lat } = event.lngLat
+      onCoordinateSelect?.(lng, lat)
+    }
+
+    mapInstance.on('click', handleClick)
+
+    return () => {
+      mapInstance.off('click', handleClick)
+    }
+  }, [onCoordinateSelect])
 
   useEffect(() => {
     return () => {
@@ -520,6 +540,12 @@ export function DashboardPage({ section }: DashboardPageProps) {
     }
   }
 
+  function handleMapCoordinateSelect(lng: number, lat: number) {
+    setNearLat(String(lat))
+    setNearLng(String(lng))
+    setNearbyError(null)
+  }
+
   function handleApplyFilters() {
     void loadStations()
   }
@@ -756,7 +782,11 @@ export function DashboardPage({ section }: DashboardPageProps) {
           </div>
 
           <div className="mt-4 overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
-            <MiniStationsMap stations={nearbyStations} onSelectStation={handleSelectStation} />
+            <MiniStationsMap
+              stations={nearbyStations}
+              onSelectStation={handleSelectStation}
+              onCoordinateSelect={handleMapCoordinateSelect}
+            />
           </div>
 
           {selectedStationId ? (

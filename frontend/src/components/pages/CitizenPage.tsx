@@ -214,6 +214,11 @@ export function CitizenPage() {
     setFilteredStations(stationsWithDistance.map((item) => item.station))
   }, [stations, sortBy, currentLocation])
 
+  function handleMapCoordinateSelect(lng: number, lat: number) {
+    setNearLat(String(lat))
+    setNearLng(String(lng))
+  }
+
   async function handleSearchNearby() {
     try {
       setLoading(true)
@@ -954,6 +959,7 @@ export function CitizenPage() {
             stations={filteredStations}
             currentLocation={currentLocation}
             onStationClick={setSelectedStation}
+            onCoordinateSelect={handleMapCoordinateSelect}
           />
       </div>
         )}

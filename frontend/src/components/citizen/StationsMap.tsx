@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from 'react'
-import maplibregl, { Map as MapLibreMap, Marker, Popup } from 'maplibre-gl'
+import maplibregl, { Map as MapLibreMap, Marker, Popup, type MapMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Station } from '../../types/ev'
 import { getStationStatusLabel } from '../../utils/labels'
@@ -17,9 +17,10 @@ type StationsMapProps = {
   stations: Station[]
   currentLocation: [number, number] | null
   onStationClick?: (station: Station) => void
+  onCoordinateSelect?: (lng: number, lat: number) => void
 }
 
-export function StationsMap({ stations, currentLocation, onStationClick }: StationsMapProps) {
+export function StationsMap({ stations, currentLocation, onStationClick, onCoordinateSelect }: StationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
@@ -101,6 +102,25 @@ export function StationsMap({ stations, currentLocation, onStationClick }: Stati
       markersRef.current.push(marker)
     })
   }, [centerLon, centerLat, hasCoords, stationsKey, stations, currentLocation, onStationClick])
+
+  useEffect(() => {
+    const mapInstance = mapRef.current
+
+    if (!mapInstance || !onCoordinateSelect) {
+      return
+    }
+
+    function handleClick(event: MapMouseEvent) {
+      const { lng, lat } = event.lngLat
+      onCoordinateSelect?.(lng, lat)
+    }
+
+    mapInstance.on('click', handleClick)
+
+    return () => {
+      mapInstance.off('click', handleClick)
+    }
+  }, [onCoordinateSelect])
 
   useEffect(() => {
     return () => {
