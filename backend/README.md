@@ -119,8 +119,9 @@ Các biến:
 - `EV_OPEN_DATA_DIR` (tùy chọn) – đường dẫn thư mục chứa dữ liệu JSON-LD. Nếu **không đặt**, backend sẽ dùng mặc định:
 
   ```text
-  backend/ev-charging-open-data/data
+  ev-charging-open-data/data
   ```
+- `OSRM_URL` (tùy chọn) – endpoint dịch vụ định tuyến OSRM cho API `/citizen/route`. Mặc định dùng public demo server: `http://router.project-osrm.org/route/v1/driving`.
 
 ### 5.1. Sử dụng file `.env`
 
@@ -241,10 +242,13 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
 - `GET /datasets` Trả về danh sách các dataset mà backend công bố:
     - Dataset trạm sạc (`stations.jsonld`).
     - Dataset quan trắc/phiên sạc + cảm biến (`observations.jsonld`).
+    - Dataset lịch sử sạc gắn công dân (`sessions.jsonld`).
 
 - `GET /datasets/stations.jsonld` Tải file dataset trạm sạc.
 
 - `GET /datasets/observations.jsonld` Tải file dataset quan trắc.
+
+- `GET /datasets/sessions.jsonld` Tải dataset lịch sử sạc gắn người dùng.
 
 ### 8.6. Realtime WebSocket
 
@@ -262,6 +266,12 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
 - `GET /citizens/{user_id}`: Lấy thông tin hồ sơ người dùng (tên, email, số điện thoại) đã được ETL từ `sessions.jsonld`.
 - `GET /citizens/{user_id}/sessions`: Liệt kê các phiên sạc của công dân, hỗ trợ filter theo `station_id`, `start_date`, `end_date`, `limit`, `offset`. Kết quả được sắp xếp mới nhất trước.
 - `GET /citizens/{user_id}/sessions/stats`: Tổng hợp thống kê cho công dân (tổng phiên, tổng năng lượng, doanh thu, thuế, thời lượng trung bình...).
+- `POST /citizen/favorites`: Thêm một trạm vào danh sách yêu thích của công dân (lưu trong collection `favorites`).
+- `DELETE /citizen/favorites`: Gỡ một trạm khỏi danh sách yêu thích.
+- `GET /citizen/favorites`: Trả về danh sách trạm yêu thích của người dùng.
+- `GET /citizen/favorites/check`: Kiểm tra xem một trạm đã nằm trong danh sách yêu thích chưa.
+- `GET /citizen/route`: Tính toán quãng đường, thời gian dự kiến từ vị trí nguồn đến trạm đích sử dụng dịch vụ OSRM (hoặc fallback Haversine nếu OSRM lỗi).
+- `GET /citizen/compare`: So sánh nhanh nhiều trạm (trạng thái, dung lượng, số phiên sạc, năng lượng trung bình mỗi phiên,...).
 
 Các trường trả về được chuẩn hóa theo Pydantic model `SessionBase`/`CitizenSessionsStats` nên đồng nhất với dữ liệu của các endpoint phân tích.
 
