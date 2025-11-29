@@ -180,18 +180,25 @@ export function CitizenHistoryPage() {
     return Array.from(names).sort((a, b) => a.localeCompare(b, 'vi'))
   }, [stations, sessions])
 
+  function normalizeText(value: string): string {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+  }
+
   function resolveStationId(search: string): string | null {
-    const normalized = search.trim().toLowerCase()
+    const normalized = normalizeText(search.trim())
     if (!normalized) {
       return null
     }
     for (const [id, name] of Object.entries(stationNameLookup)) {
-      if (name.toLowerCase() === normalized) {
+      if (normalizeText(name) === normalized) {
         return id
       }
     }
     // allow direct ID entry
-    const directMatch = stations.find((station) => station.id.toLowerCase() === normalized)
+    const directMatch = stations.find((station) => normalizeText(station.id) === normalized)
     return directMatch?.id ?? null
   }
 
@@ -235,6 +242,57 @@ export function CitizenHistoryPage() {
     const params = buildQueryParams()
     await Promise.all([loadProfile(), loadSessions(params), loadStats(params)])
   }
+
+  const filteredSessions = useMemo(() => {
+    const keyword = normalizeText(stationSearchFilter.trim())
+    if (!keyword) {
+      return sessions
+    }
+    return sessions.filter((session) => {
+      const displayName = stationNameLookup[session.station_id] ?? session.station_name ?? session.station_id
+      return normalizeText(displayName).includes(keyword)
+    })
+  }, [sessions, stationSearchFilter, stationNameLookup])
+
+  function calculateStats(list: Session[]): CitizenSessionsStats {
+    const totalSessions = list.length
+    let totalEnergy = 0
+    let totalAmount = 0
+    let totalTax = 0
+    let totalDuration = 0
+
+    list.forEach((session) => {
+      totalEnergy += session.power_consumption_kwh ?? 0
+      totalAmount += session.amount_collected_vnd ?? 0
+      totalTax += session.tax_amount_collected_vnd ?? 0
+      const duration = getDurationMinutes(session)
+      if (duration != null) {
+        totalDuration += duration
+      }
+    })
+
+    return {
+      user_id: USER_ID,
+      total_sessions: totalSessions,
+      total_energy_kwh: totalEnergy,
+      total_amount_vnd: totalAmount,
+      total_tax_vnd: totalTax,
+      total_duration_minutes: totalDuration,
+      average_session_duration_minutes: totalSessions > 0 ? totalDuration / totalSessions : 0,
+      average_energy_kwh: totalSessions > 0 ? totalEnergy / totalSessions : 0,
+      average_amount_vnd: totalSessions > 0 ? totalAmount / totalSessions : 0,
+    }
+  }
+
+  const statsToDisplay = useMemo(() => {
+    if (stationSearchFilter.trim()) {
+      return calculateStats(filteredSessions)
+    }
+    if (stats) {
+      return stats
+    }
+    return calculateStats(filteredSessions)
+  }, [filteredSessions, stats, stationSearchFilter])
 
   return (
     <div className="flex flex-col gap-6">
@@ -320,37 +378,37 @@ export function CitizenHistoryPage() {
             {
               label: 'Tổng phiên sạc',
               icon: History,
-              value: stats?.total_sessions ?? 0,
+              value: statsToDisplay.total_sessions ?? 0,
               className: 'from-blue-500/20 via-blue-400/10 to-blue-500/5 text-blue-900',
             },
             {
               label: 'Tổng năng lượng (kWh)',
               icon: Zap,
-              value: formatNumber(stats?.total_energy_kwh, 1),
+              value: formatNumber(statsToDisplay.total_energy_kwh, 1),
               className: 'from-emerald-500/20 via-emerald-400/10 to-emerald-500/5 text-emerald-900',
             },
             {
               label: 'Tổng chi phí đã trả (VND)',
               icon: DollarSign,
-              value: formatCurrency(stats?.total_amount_vnd),
+              value: formatCurrency(statsToDisplay.total_amount_vnd),
               className: 'from-amber-500/20 via-amber-400/10 to-amber-500/5 text-amber-900',
             },
             {
               label: 'Thuế đã trả (VND)',
               icon: TrendingUp,
-              value: formatCurrency(stats?.total_tax_vnd),
+              value: formatCurrency(statsToDisplay.total_tax_vnd),
               className: 'from-purple-500/20 via-purple-400/10 to-purple-500/5 text-purple-900',
             },
             {
               label: 'Tổng thời lượng (phút)',
               icon: Clock,
-              value: formatNumber(stats?.total_duration_minutes, 0),
+              value: formatNumber(statsToDisplay.total_duration_minutes, 0),
               className: 'from-rose-500/20 via-rose-400/10 to-rose-500/5 text-rose-900',
             },
             {
               label: 'Thời lượng trung bình',
               icon: CalendarClock,
-              value: formatDuration(stats?.average_session_duration_minutes ?? null),
+              value: formatDuration(statsToDisplay.average_session_duration_minutes ?? null),
               className: 'from-slate-500/20 via-slate-400/10 to-slate-500/5 text-slate-900',
             },
           ].map(({ label, icon: Icon, value, className }) => (
@@ -473,7 +531,7 @@ export function CitizenHistoryPage() {
             Lịch sử phiên sạc
           </h2>
           <span className="text-xs font-medium text-slate-500">
-            {sessions.length} phiên được hiển thị
+            {filteredSessions.length} phiên được hiển thị
           </span>
         </div>
 
@@ -491,7 +549,7 @@ export function CitizenHistoryPage() {
           </div>
         ) : null}
 
-        {sessions.length > 0 ? (
+        {filteredSessions.length > 0 ? (
           <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
             <table className="min-w-full border-collapse text-sm">
               <thead className="bg-gradient-to-r from-slate-50 to-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -507,7 +565,7 @@ export function CitizenHistoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((session, index) => {
+                {filteredSessions.map((session, index) => {
                   const duration = getDurationMinutes(session)
                   return (
                     <tr
