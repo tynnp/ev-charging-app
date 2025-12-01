@@ -90,6 +90,31 @@ export type AnalyticsOverview = {
   }[]
 }
 
+//Item trong phân tgian doanh thu
+export type RevenueTimelineItem = {
+  period: string
+  period_label: string
+  timestamp: string
+  total_amount_vnd: number
+  total_tax_vnd: number
+  total_energy_kwh: number
+  session_count: number
+}
+
+export type RevenueTimeline = {
+  period: 'day' | 'week'
+  start_date: string
+  end_date: string
+  timeline: RevenueTimelineItem[]
+  summary: {
+    total_amount_vnd: number
+    total_tax_vnd: number
+    total_energy_kwh: number
+    total_sessions: number
+    period_count: number
+  }
+}
+
 export type StationVehicleStats = {
   vehicle_type: string
   session_count: number

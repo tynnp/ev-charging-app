@@ -13,6 +13,7 @@ import type {
   StationAnalytics,
   Session,
   StationRealtime,
+  RevenueTimeline,
 } from '../../types/ev'
 import { MAP_STYLE } from '../../mapConfig'
 import { formatVehicleType } from '../../utils/labels'
@@ -232,6 +233,8 @@ type DashboardPageProps = {
 
 export function DashboardPage({ section }: DashboardPageProps) {
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
+  const [revenueTimeline, setRevenueTimeline] = useState<RevenueTimeline | null>(null)
+  const [revenuePeriod, setRevenuePeriod] = useState<'day' | 'week'>('day')
   const [stations, setStations] = useState<Station[]>([])
   const [selectedStationId, setSelectedStationId] = useState<string | undefined>(undefined)
   const [selectedStation, setSelectedStation] = useState<Station | null>(null)
@@ -254,6 +257,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const STATIONS_PER_PAGE = 5
 
   const [loadingOverview, setLoadingOverview] = useState(false)
+  const [loadingTimeline, setLoadingTimeline] = useState(false)
   const [loadingStations, setLoadingStations] = useState(false)
   const [loadingStationDetails, setLoadingStationDetails] = useState(false)
   const [loadingStationRealtime, setLoadingStationRealtime] = useState(false)
@@ -279,6 +283,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
     void loadOverview()
     void loadStations()
   }, [])
+
+  useEffect(() => {
+    void loadRevenueTimeline(revenuePeriod)
+  }, [revenuePeriod])
 
   useEffect(() => {
     const wsUrl = getWebSocketUrl()
@@ -379,6 +387,24 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setError('Không tải được thống kê tổng quan.')
     } finally {
       setLoadingOverview(false)
+    }
+  }
+
+  async function loadRevenueTimeline(period: 'day' | 'week' = 'day') {
+    try {
+      setLoadingTimeline(true)
+      const params = new URLSearchParams()
+      params.append('period', period)
+      const res = await fetch(`${API_BASE_URL}/analytics/revenue-timeline?${params.toString()}`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as RevenueTimeline
+      setRevenueTimeline(data)
+    } catch (error) {
+      console.error('Không tải được dữ liệu doanh thu theo thời gian:', error)
+    } finally {
+      setLoadingTimeline(false)
     }
   }
 
@@ -646,7 +672,11 @@ export function DashboardPage({ section }: DashboardPageProps) {
           <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
             <AnalyticsOverviewPanel
             overview={overview}
+            revenueTimeline={revenueTimeline}
             loading={loadingOverview}
+            loadingTimeline={loadingTimeline}
+            period={revenuePeriod}
+            onPeriodChange={setRevenuePeriod}
             stationNameLookup={stationNameLookup}
           />
           </section>

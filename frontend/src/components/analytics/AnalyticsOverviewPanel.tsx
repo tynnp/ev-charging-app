@@ -4,7 +4,8 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
-import type { AnalyticsOverview } from '../../types/ev'
+import { useState, useEffect } from 'react'
+import type { AnalyticsOverview, RevenueTimeline } from '../../types/ev'
 import {
   DollarSign,
   FileText,
@@ -14,11 +15,22 @@ import {
   Plug,
   Trophy,
   Loader2,
+  TrendingUp,
+  Calendar,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 
 type AnalyticsOverviewPanelProps = {
   overview: AnalyticsOverview | null
+  revenueTimeline: RevenueTimeline | null
   loading: boolean
+  loadingTimeline: boolean
+  period: 'day' | 'week'
+  onPeriodChange: (period: 'day' | 'week') => void
   stationNameLookup?: Record<string, string>
 }
 
@@ -36,7 +48,34 @@ function formatNumber(value: number, fractionDigits = 1) {
   })
 }
 
-export function AnalyticsOverviewPanel({ overview, loading, stationNameLookup }: AnalyticsOverviewPanelProps) {
+const ITEMS_PER_PAGE = 10
+
+export function AnalyticsOverviewPanel({ 
+  overview, 
+  revenueTimeline, 
+  loading, 
+  loadingTimeline,
+  period,
+  onPeriodChange,
+  stationNameLookup 
+}: AnalyticsOverviewPanelProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [showRevenueDetails, setShowRevenueDetails] = useState(false)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [period])
+
+  const timelineItems = revenueTimeline?.timeline || []
+  const totalPages = Math.max(1, Math.ceil(timelineItems.length / ITEMS_PER_PAGE))
+  const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedItems = timelineItems.slice(pageStartIndex, pageStartIndex + ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
   if (loading && !overview) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -93,6 +132,165 @@ export function AnalyticsOverviewPanel({ overview, loading, stationNameLookup }:
             </p>
           </div>
         </div>
+      </div>
+
+            {/* Revenue Timeline Section */}
+      <div className="rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-[#124874]" />
+            <p className="text-sm font-bold text-slate-900">
+              Doanh thu toàn hệ thống theo thời gian
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowRevenueDetails(!showRevenueDetails)}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-[#124874]/40 hover:text-[#124874] hover:bg-slate-50"
+          >
+            Chi tiết
+            {showRevenueDetails ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+
+        {showRevenueDetails && (
+          <>
+            <div className="mb-4 flex items-center justify-end">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-slate-500" />
+                <label className="text-xs font-semibold text-slate-700">
+                  Xem theo:
+                </label>
+                <select
+                  value={period}
+                  onChange={(e) => onPeriodChange(e.target.value as 'day' | 'week')}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                >
+                  <option value="day">Theo ngày</option>
+                  <option value="week">Theo tuần</option>
+                </select>
+              </div>
+            </div>
+
+            {loadingTimeline ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-[#124874]" />
+            <p className="ml-2 text-sm text-slate-600">Đang tải dữ liệu doanh thu...</p>
+          </div>
+        ) : revenueTimeline && timelineItems.length > 0 ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                      {revenueTimeline.period === 'day' ? 'Ngày' : 'Tuần'}
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Doanh thu
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Thuế
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Năng lượng (kWh)
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Số phiên
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paginatedItems.map((item) => (
+                    <tr
+                      key={item.period}
+                      className="transition-colors hover:bg-slate-50/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {item.period_label}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                        {formatCurrency(item.total_amount_vnd)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {formatCurrency(item.total_tax_vnd)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {formatNumber(item.total_energy_kwh, 2)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {item.session_count.toLocaleString('vi-VN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                {revenueTimeline.summary && (
+                  <tfoot className="border-t-2 border-slate-300 bg-slate-50/50">
+                    <tr>
+                      <td className="px-4 py-3 font-bold text-slate-900">
+                        Tổng cộng:
+                        {/* ({revenueTimeline.summary.period_count} {revenueTimeline.period === 'day' ? 'ngày' : 'tuần'}) */}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-[#124874]">
+                        {formatCurrency(revenueTimeline.summary.total_amount_vnd)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                        {formatCurrency(revenueTimeline.summary.total_tax_vnd)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                        {formatNumber(revenueTimeline.summary.total_energy_kwh, 2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                        {revenueTimeline.summary.total_sessions.toLocaleString('vi-VN')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+
+            {/* Phân trang  */}
+            <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
+              <span className="text-xs font-medium text-slate-600">
+                Hiển thị {timelineItems.length === 0 ? 0 : pageStartIndex + 1}–
+                {Math.min(pageStartIndex + paginatedItems.length, timelineItems.length)} / {timelineItems.length} {period === 'day' ? 'ngày' : 'tuần'}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1 || totalPages <= 1}
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Trang trước
+                </button>
+                <span className="px-3 py-1.5 text-xs font-medium text-slate-700">
+                  Trang {currentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage >= totalPages || totalPages <= 1}
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200"
+                >
+                  Trang sau
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
+            ) : (
+              <div className="py-8 text-center text-sm text-slate-500">
+                Chưa có dữ liệu doanh thu.
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className="rounded-xl bg-white/60 p-5 backdrop-blur-sm">
