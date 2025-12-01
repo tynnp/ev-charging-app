@@ -23,6 +23,7 @@ Các dependency chính nằm trong `backend/requirements.txt`:
 - `pydantic`
 - `pymongo`
 - `python-dateutil`
+- `httpx`
 - `python-jose[cryptography]` (JWT authentication)
 - `bcrypt` (password hashing)
 - `python-multipart` (form data parsing)
@@ -113,12 +114,14 @@ File ví dụ: `env.example`:
 ```env
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=ev_charging
+SECRET_KEY=change-me-in-production
 ```
 
 Các biến:
 
 - `MONGODB_URI` – URI kết nối MongoDB. Mặc định: `mongodb://localhost:27017`.
 - `MONGODB_DB_NAME` – tên database MongoDB. Mặc định: `ev_charging`.
+- `SECRET_KEY` – khóa bí mật dùng ký JWT cho API xác thực. Cần thiết lập giá trị ngẫu nhiên đủ dài trước khi triển khai thực tế.
 - `EV_OPEN_DATA_DIR` (tùy chọn) – đường dẫn thư mục chứa dữ liệu JSON-LD. Nếu **không đặt**, backend sẽ dùng mặc định:
 
   ```text
