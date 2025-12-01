@@ -21,10 +21,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
-const USER_ID = 'citizen_user_1'
+import { apiFetch } from '../../utils/api'
 
 type CitizenStationCardProps = {
   station: Station
@@ -55,16 +52,14 @@ export function CitizenStationCard({
 
     try {
       if (isFavorited) {
-        await fetch(
-          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(station.id)}`,
-          { method: 'DELETE' },
-        )
+        await apiFetch(`/citizen/favorites?station_id=${encodeURIComponent(station.id)}`, {
+          method: 'DELETE',
+        })
         onToggleFavorite(station.id, false)
       } else {
-        await fetch(
-          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(station.id)}`,
-          { method: 'POST' },
-        )
+        await apiFetch(`/citizen/favorites?station_id=${encodeURIComponent(station.id)}`, {
+          method: 'POST',
+        })
         onToggleFavorite(station.id, true)
       }
     } catch (error) {

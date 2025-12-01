@@ -6,35 +6,65 @@
 
 import 'leaflet/dist/leaflet.css'
 import './App.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from './contexts/AuthContext'
 import { AppLayout } from './components/layout/AppLayout'
+import { LoginPage } from './components/auth/LoginPage'
 import { DashboardPage } from './components/pages/DashboardPage'
 import { CitizenPage } from './components/pages/CitizenPage'
 import { CitizenHistoryPage } from './components/citizen/CitizenHistoryPage'
 import { FavoritesPage } from './components/citizen/FavoritesPage'
 import { ComparisonPage } from './components/citizen/ComparisonPage'
+import { ProfilePage } from './components/auth/ProfilePage'
 
 type ManagerNavId =
   | 'manager-overview'
   | 'manager-realtime'
   | 'manager-map'
   | 'manager-stations'
+  | 'manager-profile'
 
 type CitizenNavId =
   | 'citizen-find'
   | 'citizen-history'
   | 'citizen-favorites'
   | 'citizen-compare'
+  | 'citizen-profile'
 
 function App() {
+  const { user, isLoading } = useAuth()
   const [role, setRole] = useState<'manager' | 'citizen'>('manager')
   const [activeNavId, setActiveNavId] = useState<ManagerNavId | CitizenNavId>('manager-overview')
+
+  useEffect(() => {
+    if (user) {
+      setRole(user.role)
+      if (user.role === 'manager') {
+        setActiveNavId('manager-overview')
+      } else {
+        setActiveNavId('citizen-find')
+      }
+    }
+  }, [user])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-slate-600">Đang tải...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginPage />
+  }
 
   const managerNavItems = [
     { id: 'manager-overview', label: 'Tổng quan' },
     { id: 'manager-realtime', label: 'Phiên sạc thời gian thực' },
     { id: 'manager-map', label: 'Bản đồ & Tra cứu' },
     { id: 'manager-stations', label: 'Trạm sạc & thống kê' },
+    { id: 'manager-profile', label: 'Thông tin cá nhân' },
   ] satisfies { id: ManagerNavId; label: string }[]
 
   const citizenNavItems = [
@@ -42,6 +72,7 @@ function App() {
     { id: 'citizen-history', label: 'Lịch sử sạc' },
     { id: 'citizen-favorites', label: 'Đã lưu' },
     { id: 'citizen-compare', label: 'So sánh' },
+    { id: 'citizen-profile', label: 'Thông tin cá nhân' },
   ] satisfies { id: CitizenNavId; label: string }[]
 
   const navItems = role === 'manager' ? managerNavItems : citizenNavItems
@@ -52,16 +83,20 @@ function App() {
 
   let content
   if (role === 'manager') {
-    let section: 'overview' | 'realtime' | 'map' | 'stations' = 'overview'
-    if (normalizedActiveNavId === 'manager-realtime') {
-      section = 'realtime'
-    } else if (normalizedActiveNavId === 'manager-map') {
-      section = 'map'
-    } else if (normalizedActiveNavId === 'manager-stations') {
-      section = 'stations'
-    }
+    if (normalizedActiveNavId === 'manager-profile') {
+      content = <ProfilePage />
+    } else {
+      let section: 'overview' | 'realtime' | 'map' | 'stations' = 'overview'
+      if (normalizedActiveNavId === 'manager-realtime') {
+        section = 'realtime'
+      } else if (normalizedActiveNavId === 'manager-map') {
+        section = 'map'
+      } else if (normalizedActiveNavId === 'manager-stations') {
+        section = 'stations'
+      }
 
-    content = <DashboardPage section={section} />
+      content = <DashboardPage section={section} />
+    }
   } else if (role === 'citizen') {
     if (normalizedActiveNavId === 'citizen-find') {
       content = <CitizenPage />
@@ -71,18 +106,15 @@ function App() {
       content = <FavoritesPage />
     } else if (normalizedActiveNavId === 'citizen-compare') {
       content = <ComparisonPage />
+    } else if (normalizedActiveNavId === 'citizen-profile') {
+      content = <ProfilePage />
     }
   }
 
   return (
     <AppLayout
       role={role}
-      onRoleChange={(nextRole) => {
-        setRole(nextRole)
-        setActiveNavId(
-          nextRole === 'manager' ? 'manager-overview' : ('citizen-find' as CitizenNavId),
-        )
-      }}
+      onRoleChange={() => {}}
       navItems={navItems}
       activeItemId={normalizedActiveNavId}
       onSelectNavItem={(id) => {

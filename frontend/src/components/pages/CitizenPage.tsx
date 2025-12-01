@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { API_BASE_URL, USER_ID } from '../../config.ts'
+import { apiFetch } from '../../utils/api'
 
 function haversineDistance(
   lat1: number,
@@ -125,11 +126,12 @@ export function CitizenPage() {
   useEffect(() => {
     async function loadFavorites() {
       try {
-        const res = await fetch(`${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}`)
-        if (res.ok) {
-          const favorites = (await res.json()) as Station[]
-          setFavoritedStations(new Set(favorites.map((s) => s.id)))
+        const res = await apiFetch('/citizen/favorites')
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`)
         }
+        const favorites = (await res.json()) as Station[]
+        setFavoritedStations(new Set(favorites.map((s) => s.id)))
       } catch (error) {
         console.error('Error loading favorites:', error)
       }
@@ -140,16 +142,14 @@ export function CitizenPage() {
   async function handleToggleFavorite(stationId: string, favorited: boolean) {
     try {
       if (favorited) {
-        await fetch(
-          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(stationId)}`,
-          { method: 'POST' },
-        )
+        await apiFetch(`/citizen/favorites?station_id=${encodeURIComponent(stationId)}` , {
+          method: 'POST',
+        })
         setFavoritedStations((prev) => new Set(prev).add(stationId))
       } else {
-        await fetch(
-          `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(stationId)}`,
-          { method: 'DELETE' },
-        )
+        await apiFetch(`/citizen/favorites?station_id=${encodeURIComponent(stationId)}` , {
+          method: 'DELETE',
+        })
         setFavoritedStations((prev) => {
           const next = new Set(prev)
           next.delete(stationId)

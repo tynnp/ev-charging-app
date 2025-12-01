@@ -2,6 +2,7 @@
 # Copyright (c) 2025 Nguyễn Ngọc Phú Tỷ
 # This file is part of ev-charging-app and is licensed under the
 # MIT License. See the LICENSE file in the project root for details.
+
 from datetime import datetime
 from typing import Any, List, Optional
 from pydantic import BaseModel
@@ -101,3 +102,31 @@ class CitizenSessionsStats(BaseModel):
     average_session_duration_minutes: float
     average_energy_kwh: float
     average_amount_vnd: float
+
+class UserRegister(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+    role: str = "citizen"  # "citizen" or "manager"
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+    role: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None

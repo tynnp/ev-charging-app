@@ -23,11 +23,12 @@ import {
   TrendingUp,
   LayoutGrid,
   Table2,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react'
 import { getStationStatusLabel } from '../../utils/labels'
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
+import { API_BASE_URL } from '../../config.ts'
+import { apiFetch } from '../../utils/api'
 
 type ComparisonResult = {
   station_id: string
@@ -55,7 +56,9 @@ export function ComparisonPage() {
   const [selectedStation, setSelectedStation] = useState<Station | null>(null)
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null)
+  const [selectedCoordinate, setSelectedCoordinate] = useState<[number, number] | null>(null)
   const [activeTab, setActiveTab] = useState<'search' | 'results'>('search')
+  const [favoritedStations, setFavoritedStations] = useState<Set<string>>(new Set())
 
   // Search states
   const [searchStations, setSearchStations] = useState<Station[]>([])
@@ -89,10 +92,29 @@ export function ComparisonPage() {
           setCurrentLocation([lng, lat])
           setNearLat(String(lat))
           setNearLng(String(lng))
+          setSelectedCoordinate([lng, lat])
         },
         () => {},
       )
     }
+  }, [])
+
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await apiFetch('/citizen/favorites')
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`)
+        }
+        const data = (await res.json()) as Station[]
+        setFavoritedStations(new Set(data.map((station) => station.id)))
+      } catch (loadError) {
+        console.error(loadError)
+        setError('Không thể tải danh sách trạm đã lưu.')
+      }
+    }
+
+    void loadFavorites()
   }, [])
 
   async function handleSearchNearby() {
@@ -121,12 +143,47 @@ export function ComparisonPage() {
       }
       const data = (await res.json()) as Station[]
       setSearchStations(data)
+      setSelectedCoordinate([lng, lat])
     } catch (e) {
       console.error(e)
       setSearchError('Không thể tải dữ liệu trạm sạc.')
       setSearchStations([])
     } finally {
       setLoadingSearch(false)
+    }
+  }
+
+  function handleMapCoordinateSelect(lng: number, lat: number) {
+    setNearLat(String(lat))
+    setNearLng(String(lng))
+    setSelectedCoordinate([lng, lat])
+    setSearchError(null)
+  }
+
+  async function handleToggleFavorite(station: Station) {
+    const favorited = favoritedStations.has(station.id)
+
+    try {
+      const url = `/citizen/favorites?station_id=${encodeURIComponent(station.id)}`
+      const options: RequestInit = favorited ? { method: 'DELETE' } : { method: 'POST' }
+      const res = await apiFetch(url, options)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+
+      setFavoritedStations((prev) => {
+        const next = new Set(prev)
+        if (favorited) {
+          next.delete(station.id)
+        } else {
+          next.add(station.id)
+        }
+        return next
+      })
+      setError(null)
+    } catch (toggleError) {
+      console.error(toggleError)
+      setError('Không thể cập nhật trạng thái lưu trạm. Vui lòng thử lại.')
     }
   }
 
@@ -293,9 +350,11 @@ export function ComparisonPage() {
   }
 
   // Get stations to display on map
-  const mapStations = comparisonResult
+  const mapStations = comparisonResult?.length
     ? selectedStations.filter((s) => comparisonResult.some((r) => r.station_id === s.id))
-    : selectedStations
+    : selectedStations.length > 0
+      ? selectedStations
+      : searchStations
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
@@ -528,6 +587,7 @@ export function ComparisonPage() {
                   <div className="space-y-2">
                   {searchStations.map((station) => {
                     const isSelected = selectedStations.some((s) => s.id === station.id)
+                    const isFavorited = favoritedStations.has(station.id)
                     return (
                       <div
                         key={station.id}
@@ -547,20 +607,38 @@ export function ComparisonPage() {
                               </div>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => addStationToComparison(station)}
-                            disabled={isSelected || selectedStations.length >= 5}
-                            className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
-                              isSelected
-                                ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                                : selectedStations.length >= 5
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => addStationToComparison(station)}
+                              disabled={isSelected || selectedStations.length >= 5}
+                              className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                                isSelected
                                   ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                                  : 'bg-[#CF373D] text-white hover:bg-[#b82e33]'
-                            }`}
-                          >
-                            {isSelected ? 'Đã chọn' : 'Thêm'}
-                          </button>
+                                  : selectedStations.length >= 5
+                                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                    : 'bg-[#CF373D] text-white hover:bg-[#b82e33]'
+                              }`}
+                            >
+                              {isSelected ? 'Đã chọn' : 'Thêm'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleToggleFavorite(station)}
+                              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                                isFavorited
+                                  ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-[#CF373D]/40 hover:text-[#CF373D]'
+                              }`}
+                            >
+                              {isFavorited ? (
+                                <BookmarkCheck className="h-3.5 w-3.5" />
+                              ) : (
+                                <Bookmark className="h-3.5 w-3.5" />
+                              )}
+                              {isFavorited ? 'Đã lưu' : 'Lưu trạm'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )
@@ -763,21 +841,14 @@ export function ComparisonPage() {
 
       {/* Map Area - Always visible on the right */}
       <div className="flex-1 min-w-0 bg-white">
-        <div className="h-full w-full">
-          {mapStations.length > 0 ? (
-            <StationsMap
-              stations={mapStations}
-              currentLocation={currentLocation}
-              onStationClick={setSelectedStation}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-slate-100">
-              <div className="text-center">
-                <BarChart3 className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <p className="text-sm font-medium text-slate-500">Chọn trạm để hiển thị trên bản đồ</p>
-              </div>
-            </div>
-          )}
+        <div className="relative h-full w-full">
+          <StationsMap
+            stations={mapStations}
+            currentLocation={currentLocation}
+            onStationClick={setSelectedStation}
+            onCoordinateSelect={handleMapCoordinateSelect}
+            selectedCoordinate={selectedCoordinate}
+          />
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT
- * Copyright (c) 2025 Nguyen Ngoc Phu Ty
+ * Copyright (c) 2025 Nguyễn Ngọc Phú Tỷ
  * This file is part of ev-charging-app and is licensed under the
  * MIT License. See the LICENSE file in the project root for details.
  */
@@ -12,12 +12,13 @@ import {
   Map,
   Plug,
   Search,
-  User,
-  Briefcase,
   Bookmark,
   Navigation,
   History,
+  LogOut,
+  UserCircle,
 } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 
 type UserRole = 'manager' | 'citizen'
 
@@ -37,12 +38,13 @@ type AppLayoutProps = {
 
 export function AppLayout({
   role,
-  onRoleChange,
   navItems,
   activeItemId,
   onSelectNavItem,
   children,
 }: AppLayoutProps) {
+  const { user, logout } = useAuth()
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 text-slate-900">
       <aside className="fixed left-0 top-0 h-screen w-64 flex flex-col border-r border-slate-200/50 bg-gradient-to-b from-[#124874] via-[#0f3a5a] to-[#124874] text-white shadow-xl z-30">
@@ -92,6 +94,7 @@ export function AppLayout({
                     {item.id.includes('favorites') && <Bookmark className="h-4 w-4" />}
                     {item.id.includes('compare') && <BarChart3 className="h-4 w-4" />}
                     {item.id.includes('route') && <Navigation className="h-4 w-4" />}
+                    {item.id.includes('profile') && <UserCircle className="h-4 w-4" />}
                     <span>{item.label}</span>
                   </button>
                 </li>
@@ -99,37 +102,6 @@ export function AppLayout({
             })}
           </ul>
         </nav>
-        <div className="border-t border-white/10 px-3 py-3 bg-[#0a2d47]/50 flex-shrink-0">
-          <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-100/60">
-            Vai trò
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onRoleChange('manager')}
-              className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                role === 'manager'
-                  ? 'bg-white text-[#124874] shadow-md'
-                  : 'border border-white/20 text-slate-100 hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <Briefcase className="h-3.5 w-3.5 inline mr-1" />
-              Nhà quản lý
-            </button>
-            <button
-              type="button"
-              onClick={() => onRoleChange('citizen')}
-              className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                role === 'citizen'
-                  ? 'bg-[#CF373D] text-white shadow-md hover:bg-[#b82e33]'
-                  : 'border border-white/20 text-slate-100 hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <User className="h-3.5 w-3.5 inline mr-1" />
-              Người dân
-            </button>
-          </div>
-        </div>
       </aside>
       <div className="flex min-h-screen flex-1 flex-col ml-64">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/50 bg-white/80 backdrop-blur-sm px-6 shadow-sm">
@@ -139,14 +111,28 @@ export function AppLayout({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-sm font-medium text-slate-700">
-              {role === 'manager' ? (
-                <Briefcase className="h-4 w-4" />
-              ) : (
-                <User className="h-4 w-4" />
-              )}
-              <span>{role === 'manager' ? 'Chế độ nhà quản lý' : 'Chế độ người dân'}</span>
-            </div>
+            {user && (
+              <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5 text-slate-600" />
+                  <div className="text-sm">
+                    <div className="font-medium text-slate-900">
+                      {user.name || user.username}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {role === 'manager' ? 'Nhà quản lý' : 'Người dân'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="ml-2 rounded-lg p-1.5 text-slate-600 hover:bg-slate-200 transition-colors"
+                  title="Đăng xuất"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
         </header>
         <main className="flex-1 px-6 py-8">
