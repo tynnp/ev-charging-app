@@ -23,7 +23,9 @@ import {
   Zap,
 } from 'lucide-react'
 import type { CitizenProfile, CitizenSessionsStats, Session, Station } from '../../types/ev'
-import { API_BASE_URL, USER_ID } from '../../config.ts'
+import { API_BASE_URL } from '../../config.ts'
+import { useAuth } from '../../contexts/AuthContext'
+import { apiFetch } from '../../utils/api'
 import { formatVehicleType, getStationStatusLabel } from '../../utils/labels'
 
 function formatDateTime(value: string): string {
@@ -67,6 +69,7 @@ function getDurationMinutes(session: Session): number | null {
 }
 
 export function CitizenHistoryPage() {
+  const { user } = useAuth()
   const [profile, setProfile] = useState<CitizenProfile | null>(null)
   const [stats, setStats] = useState<CitizenSessionsStats | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
@@ -82,16 +85,20 @@ export function CitizenHistoryPage() {
   const [endDateFilter, setEndDateFilter] = useState('')
   const [limit, setLimit] = useState(20)
 
+  const userId = user?.id || ''
+
   useEffect(() => {
-    void loadProfile()
-    void loadStats()
-    void loadSessions()
-    void loadStations()
-  }, [])
+    if (userId) {
+      void loadProfile()
+      void loadStats()
+      void loadSessions()
+      void loadStations()
+    }
+  }, [userId])
 
   async function loadStations() {
     try {
-      const res = await fetch(`${API_BASE_URL}/stations/search`)
+      const res = await apiFetch(`/stations/search`)
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -103,9 +110,10 @@ export function CitizenHistoryPage() {
   }
 
   async function loadProfile() {
+    if (!userId) return
     try {
       setLoadingProfile(true)
-      const res = await fetch(`${API_BASE_URL}/citizens/${USER_ID}`)
+      const res = await apiFetch(`/citizens/${userId}`)
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -120,11 +128,12 @@ export function CitizenHistoryPage() {
   }
 
   async function loadStats(params?: URLSearchParams) {
+    if (!userId) return
     try {
       setLoadingStats(true)
       setError(null)
       const query = params ? `?${params.toString()}` : ''
-      const res = await fetch(`${API_BASE_URL}/citizens/${USER_ID}/sessions/stats${query}`)
+      const res = await apiFetch(`/citizens/${userId}/sessions/stats${query}`)
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -139,11 +148,12 @@ export function CitizenHistoryPage() {
   }
 
   async function loadSessions(params?: URLSearchParams) {
+    if (!userId) return
     try {
       setLoadingSessions(true)
       setError(null)
       const query = params ? `?${params.toString()}` : ''
-      const res = await fetch(`${API_BASE_URL}/citizens/${USER_ID}/sessions${query}`)
+      const res = await apiFetch(`/citizens/${userId}/sessions${query}`)
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -272,7 +282,7 @@ export function CitizenHistoryPage() {
     })
 
     return {
-      user_id: USER_ID,
+      user_id: userId,
       total_sessions: totalSessions,
       total_energy_kwh: totalEnergy,
       total_amount_vnd: totalAmount,
@@ -325,44 +335,6 @@ export function CitizenHistoryPage() {
           <span>{error}</span>
         </div>
       ) : null}
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#124874] to-[#0f3a5a] text-white shadow-md">
-            <User className="h-6 w-6" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-slate-900">
-              {loadingProfile && !profile ? 'Đang tải hồ sơ...' : profile?.name ?? 'Người dùng' }
-            </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-              {profile?.email ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 font-medium">
-                  <MailIcon className="h-3.5 w-3.5 text-[#124874]" />
-                  {profile.email.replace(/^mailto:/, '')}
-                </span>
-              ) : null}
-              {profile?.phone_number ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 font-medium">
-                  <PhoneIcon className="h-3.5 w-3.5 text-[#cf373d]" />
-                  {profile.phone_number}
-                </span>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span>Mã người dùng:</span>
-            <span className="rounded bg-slate-100 px-2 py-1 font-semibold text-slate-700">
-              {profile?.id ?? USER_ID}
-            </span>
-          </div>
-        </div>
-        <p className="text-sm text-slate-600">
-          Hệ thống đang mô phỏng người dùng cố định (<code className="font-mono text-xs">citizen_user_1</code>)
-          dựa trên dữ liệu mẫu trong <code className="font-mono text-xs">sessions.jsonld</code>. Trong môi trường
-          thực tế, thông tin này sẽ được lấy từ tài khoản đăng nhập.
-        </p>
-      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">

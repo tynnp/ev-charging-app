@@ -11,15 +11,18 @@ from datetime import datetime, timedelta
 from math import asin, cos, radians, sin, sqrt
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from datetime import timedelta
 from .db import (
     get_citizens_collection,
     get_sessions_collection,
     get_sensors_collection,
     get_stations_collection,
     get_favorites_collection,
+    get_users_collection,
 )
 from .etl import (
     get_default_data_dir,
@@ -34,6 +37,18 @@ from .models import (
     StationBase,
     SessionBase,
     StationRealtime,
+    UserRegister,
+    UserLogin,
+    UserResponse,
+    UserUpdate,
+    Token,
+)
+from .auth import (
+    authenticate_user,
+    create_access_token,
+    get_password_hash,
+    get_current_active_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 app = FastAPI()
@@ -80,6 +95,135 @@ REALTIME_CONTEXT: Any | None = None
 @app.get("/health", tags=["System"], summary="Health check")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+@app.post(
+    "/auth/register",
+    response_model=UserResponse,
+    tags=["Auth"],
+    summary="Register a new user",
+)
+def register(user_data: UserRegister) -> UserResponse:
+    users_collection = get_users_collection()
+    
+    existing_user = users_collection.find_one({"username": user_data.username})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+    
+    if user_data.role not in ["citizen", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role must be 'citizen' or 'manager'",
+        )
+    
+    hashed_password = get_password_hash(user_data.password)
+    user_doc = {
+        "username": user_data.username,
+        "hashed_password": hashed_password,
+        "email": user_data.email,
+        "name": user_data.name,
+        "role": user_data.role,
+        "created_at": datetime.now(),
+    }
+    
+    result = users_collection.insert_one(user_doc)
+    user_doc["_id"] = result.inserted_id
+    
+    return UserResponse(
+        id=str(result.inserted_id),
+        username=user_doc["username"],
+        email=user_doc.get("email"),
+        name=user_doc.get("name"),
+        role=user_doc["role"],
+    )
+
+@app.post(
+    "/auth/login",
+    response_model=Token,
+    tags=["Auth"],
+    summary="Login and get access token",
+)
+def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse(
+            id=str(user.get("_id", user.get("id", ""))),
+            username=user.get("username", ""),
+            email=user.get("email"),
+            name=user.get("name"),
+            role=user.get("role", "citizen"),
+        ),
+    )
+
+@app.get(
+    "/auth/me",
+    response_model=UserResponse,
+    tags=["Auth"],
+    summary="Get current user information",
+)
+def get_current_user_info(
+    current_user: UserResponse = Depends(get_current_active_user),
+) -> UserResponse:
+    return current_user
+
+@app.patch(
+    "/auth/me",
+    response_model=UserResponse,
+    tags=["Auth"],
+    summary="Update current user information",
+)
+def update_current_user_info(
+    user_update: UserUpdate,
+    current_user: UserResponse = Depends(get_current_active_user),
+) -> UserResponse:
+    users_collection = get_users_collection()
+    user_doc = users_collection.find_one({"_id": current_user.id})
+    
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    updates: Dict[str, Any] = {}
+    if user_update.name is not None:
+        updates["name"] = user_update.name
+    if user_update.email is not None:
+        updates["email"] = user_update.email
+    if user_update.phone_number is not None:
+        updates["phone_number"] = user_update.phone_number
+    
+    if not updates:
+        return current_user
+    
+    updates["updated_at"] = datetime.now()
+    users_collection.update_one({"_id": current_user.id}, {"$set": updates})
+    
+    # Fetch updated user
+    updated_doc = users_collection.find_one({"_id": current_user.id})
+    return UserResponse(
+        id=str(updated_doc.get("_id", current_user.id)),
+        username=updated_doc.get("username", current_user.username),
+        email=updated_doc.get("email"),
+        name=updated_doc.get("name"),
+        role=updated_doc.get("role", current_user.role),
+    )
 
 def load_realtime_events() -> List[Dict[str, Any]]:
     global REALTIME_CONTEXT
@@ -238,8 +382,57 @@ async def realtime_worker() -> None:
             await apply_realtime_event(event)
             await asyncio.sleep(REALTIME_SLEEP_SECONDS)
 
+def create_default_users() -> None:
+    """Create default users if they don't exist"""
+    try:
+        users_collection = get_users_collection()
+        
+        default_users = [
+            {
+                "username": "citizen",
+                "password": "citizen123",
+                "name": "Nguyễn Văn A",
+                "email": "citizen1@example.org",
+                "role": "citizen",
+                "user_id": "citizen_user_1",  # Match with sessions.jsonld data
+            },
+            {
+                "username": "manager",
+                "password": "manager123",
+                "name": "Nhà quản lý mẫu",
+                "email": "manager@example.com",
+                "role": "manager",
+                "user_id": None,  # Manager doesn't need to match citizen data
+            },
+        ]
+        
+        for user_data in default_users:
+            existing = users_collection.find_one({"username": user_data["username"]})
+            if not existing:
+                hashed_password = get_password_hash(user_data["password"])
+                user_doc = {
+                    "username": user_data["username"],
+                    "hashed_password": hashed_password,
+                    "email": user_data["email"],
+                    "name": user_data["name"],
+                    "role": user_data["role"],
+                    "created_at": datetime.now(),
+                }
+                # Set _id to match citizen_user_1 for citizen account to align with session data
+                if user_data.get("user_id"):
+                    user_doc["_id"] = user_data["user_id"]
+                    user_doc["id"] = user_data["user_id"]
+                
+                users_collection.insert_one(user_doc)
+                print(f"Created default user: {user_data['username']} (role: {user_data['role']}, id: {user_doc.get('_id', 'auto')})")
+            else:
+                print(f"Default user '{user_data['username']}' already exists")
+    except Exception as e:
+        print(f"Warning: Could not create default users: {e}")
+
 @app.on_event("startup")
 async def on_startup() -> None:
+    create_default_users()
     asyncio.create_task(realtime_worker())
 
 @app.websocket("/ws/realtime")
@@ -934,9 +1127,10 @@ def get_sessions_dataset() -> FileResponse:
     summary="Add a station to favorites",
 )
 def add_favorite(
-    user_id: str = Query(..., description="User identifier"),
     station_id: str = Query(..., description="Station ID to favorite"),
+    current_user: UserResponse = Depends(get_current_active_user),
 ) -> Dict[str, Any]:
+    user_id = current_user.id
     favorites_collection = get_favorites_collection()
     
     # Check if station exists
@@ -966,9 +1160,10 @@ def add_favorite(
     summary="Remove a station from favorites",
 )
 def remove_favorite(
-    user_id: str = Query(..., description="User identifier"),
     station_id: str = Query(..., description="Station ID to unfavorite"),
+    current_user: UserResponse = Depends(get_current_active_user),
 ) -> Dict[str, Any]:
+    user_id = current_user.id
     favorites_collection = get_favorites_collection()
     result = favorites_collection.delete_one({"user_id": user_id, "station_id": station_id})
     
@@ -984,8 +1179,9 @@ def remove_favorite(
     summary="Get user's favorite stations",
 )
 def get_favorites(
-    user_id: str = Query(..., description="User identifier"),
+    current_user: UserResponse = Depends(get_current_active_user),
 ) -> List[StationBase]:
+    user_id = current_user.id
     favorites_collection = get_favorites_collection()
     stations_collection = get_stations_collection()
     
@@ -1004,9 +1200,10 @@ def get_favorites(
     summary="Check if a station is favorited",
 )
 def check_favorite(
-    user_id: str = Query(..., description="User identifier"),
     station_id: str = Query(..., description="Station ID to check"),
+    current_user: UserResponse = Depends(get_current_active_user),
 ) -> Dict[str, bool]:
+    user_id = current_user.id
     favorites_collection = get_favorites_collection()
     favorite = favorites_collection.find_one({"user_id": user_id, "station_id": station_id})
     return {"favorited": favorite is not None}

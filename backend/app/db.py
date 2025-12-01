@@ -2,6 +2,7 @@
 # Copyright (c) 2025 Nguyễn Ngọc Phú Tỷ
 # This file is part of ev-charging-app and is licensed under the
 # MIT License. See the LICENSE file in the project root for details.
+
 import os
 from typing import Optional
 from pymongo import MongoClient
@@ -36,3 +37,6 @@ def get_favorites_collection() -> Collection:
 
 def get_citizens_collection() -> Collection:
     return get_db()["citizens"]
+
+def get_users_collection() -> Collection:
+    return get_db()["users"]

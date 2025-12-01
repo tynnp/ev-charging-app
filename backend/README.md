@@ -23,6 +23,9 @@ Các dependency chính nằm trong `backend/requirements.txt`:
 - `pydantic`
 - `pymongo`
 - `python-dateutil`
+- `python-jose[cryptography]` (JWT authentication)
+- `bcrypt` (password hashing)
+- `python-multipart` (form data parsing)
 
 ## 2. Cấu trúc thư mục backend
 
@@ -263,15 +266,45 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
     - Áp dụng từng event vào DB.
     - Gửi JSON qua tất cả kết nối WebSocket đang mở.
 
-### 8.7. Citizens & Session history
+### 8.7. Authentication
+
+- `POST /auth/register`: Đăng ký tài khoản mới
+  - Body: `{ "username": "...", "password": "...", "email": "...", "name": "...", "role": "citizen" | "manager" }`
+  - Trả về: `UserResponse` với thông tin user đã tạo
+
+- `POST /auth/login`: Đăng nhập và nhận JWT token
+  - Form data: `username`, `password`
+  - Trả về: `{ "access_token": "...", "token_type": "bearer", "user": {...} }`
+
+- `GET /auth/me`: Lấy thông tin user hiện tại (yêu cầu authentication)
+  - Header: `Authorization: Bearer <token>`
+  - Trả về: `UserResponse`
+
+**Tài khoản mặc định:**
+
+Khi server khởi động, hệ thống sẽ tự động tạo 2 tài khoản mặc định nếu chưa tồn tại:
+
+- **Người dân:**
+  - Username: `citizen`
+  - Password: `citizen123`
+  - Role: `citizen`
+
+- **Nhà quản lý:**
+  - Username: `manager`
+  - Password: `manager123`
+  - Role: `manager`
+
+> **Lưu ý:** Các tài khoản mặc định chỉ được tạo một lần khi server khởi động lần đầu. Nếu đã tồn tại, hệ thống sẽ bỏ qua việc tạo lại.
+
+### 8.8. Citizens & Session history
 
 - `GET /citizens/{user_id}`: Lấy thông tin hồ sơ người dùng (tên, email, số điện thoại) đã được ETL từ `sessions.jsonld`.
 - `GET /citizens/{user_id}/sessions`: Liệt kê các phiên sạc của công dân, hỗ trợ filter theo `station_id`, `start_date`, `end_date`, `limit`, `offset`. Kết quả được sắp xếp mới nhất trước.
 - `GET /citizens/{user_id}/sessions/stats`: Tổng hợp thống kê cho công dân (tổng phiên, tổng năng lượng, doanh thu, thuế, thời lượng trung bình...).
-- `POST /citizen/favorites`: Thêm một trạm vào danh sách yêu thích của công dân (lưu trong collection `favorites`).
-- `DELETE /citizen/favorites`: Gỡ một trạm khỏi danh sách yêu thích.
-- `GET /citizen/favorites`: Trả về danh sách trạm yêu thích của người dùng.
-- `GET /citizen/favorites/check`: Kiểm tra xem một trạm đã nằm trong danh sách yêu thích chưa.
+- `POST /citizen/favorites`: Thêm một trạm vào danh sách yêu thích của công dân (yêu cầu authentication, user_id lấy từ token).
+- `DELETE /citizen/favorites`: Gỡ một trạm khỏi danh sách yêu thích (yêu cầu authentication).
+- `GET /citizen/favorites`: Trả về danh sách trạm yêu thích của người dùng (yêu cầu authentication).
+- `GET /citizen/favorites/check`: Kiểm tra xem một trạm đã nằm trong danh sách yêu thích chưa (yêu cầu authentication).
 - `GET /citizen/route`: Tính toán quãng đường, thời gian dự kiến từ vị trí nguồn đến trạm đích sử dụng dịch vụ OSRM (hoặc fallback Haversine nếu OSRM lỗi).
 - `GET /citizen/compare`: So sánh nhanh nhiều trạm (trạng thái, dung lượng, số phiên sạc, năng lượng trung bình mỗi phiên,...).
 

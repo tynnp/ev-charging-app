@@ -17,12 +17,7 @@ import {
   X,
   ChevronRight,
 } from 'lucide-react'
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000'
-
-// Simple user ID - in production, this would come from auth
-const USER_ID = 'citizen_user_1'
+import { apiFetch } from '../../utils/api'
 
 function haversineDistance(
   lat1: number,
@@ -68,7 +63,7 @@ export function FavoritesPage() {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch(`${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}`)
+      const res = await apiFetch('/citizen/favorites')
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -84,10 +79,9 @@ export function FavoritesPage() {
 
   async function removeFavorite(stationId: string) {
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/citizen/favorites?user_id=${USER_ID}&station_id=${encodeURIComponent(stationId)}`,
-        { method: 'DELETE' },
-      )
+      const res = await apiFetch(`/citizen/favorites?station_id=${encodeURIComponent(stationId)}`, {
+        method: 'DELETE',
+      })
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
