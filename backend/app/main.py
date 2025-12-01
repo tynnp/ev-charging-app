@@ -2,11 +2,12 @@
 # Copyright (c) 2025 Nguyễn Ngọc Phú Tỷ
 # This file is part of ev-charging-app and is licensed under the
 # MIT License. See the LICENSE file in the project root for details.
+
 from typing import Any, Dict, List
 import asyncio
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import asin, cos, radians, sin, sqrt
 
 import httpx
@@ -570,6 +571,108 @@ def analytics_overview() -> Dict[str, Any]:
         "total_tax_vnd": total_tax_vnd,
         "stations_count": stations_count,
         "top_stations_by_sessions": top_stations,
+    }
+
+@app.get(
+    "/analytics/revenue-timeline",
+    tags=["Analytics"],
+    summary="Get system-wide revenue statistics by day or week with time milestones",
+)
+def analytics_revenue_timeline(
+    period: str = Query("day", description="Time period: 'day' or 'week'"),
+    start_date: datetime | None = Query(
+        None, description="Start date for filtering (ISO timestamp). If not provided, defaults to last 30 days for 'day' or last 12 weeks for 'week'"
+    ),
+    end_date: datetime | None = Query(
+        None, description="End date for filtering (ISO timestamp). If not provided, defaults to now"
+    ),
+) -> Dict[str, Any]:
+    if period not in ["day", "week"]:
+        raise HTTPException(status_code=400, detail="period must be 'day' or 'week'")
+    
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+    
+    sessions_collection = get_sessions_collection()
+    
+    now = datetime.now()
+    if end_date is None:
+        end_date = now
+    
+    if start_date is None:
+        if period == "day":
+            start_date = now - timedelta(days=30)
+        else:
+            start_date = now - timedelta(weeks=12)
+    
+    query: Dict[str, Any] = {
+        "start_date_time": {
+            "$gte": start_date,
+            "$lte": end_date,
+        }
+    }
+    
+    sessions = list(sessions_collection.find(query))
+    
+    revenue_by_period: Dict[str, Dict[str, Any]] = {}
+    
+    for doc in sessions:
+        start_dt = doc.get("start_date_time")
+        if not isinstance(start_dt, datetime):
+            continue
+        
+        amount = float(doc.get("amount_collected_vnd") or 0.0)
+        tax = float(doc.get("tax_amount_collected_vnd") or 0.0)
+        energy = float(doc.get("power_consumption_kwh") or 0.0)
+        
+        if period == "day":
+            period_key = start_dt.strftime("%Y-%m-%d")
+            period_label = start_dt.strftime("%d/%m/%Y")
+        else:
+            year, week, _ = start_dt.isocalendar()
+            period_key = f"{year}-W{week:02d}"
+            week_start = start_dt - timedelta(days=start_dt.weekday())
+            week_end = week_start + timedelta(days=6)
+            period_label = f"{week_start.strftime('%d/%m')} - {week_end.strftime('%d/%m/%Y')}"
+        
+        if period_key not in revenue_by_period:
+            revenue_by_period[period_key] = {
+                "period": period_key,
+                "period_label": period_label,
+                "timestamp": start_dt.isoformat() if period == "day" else week_start.isoformat(),
+                "total_amount_vnd": 0.0,
+                "total_tax_vnd": 0.0,
+                "total_energy_kwh": 0.0,
+                "session_count": 0,
+            }
+        
+        revenue_by_period[period_key]["total_amount_vnd"] += amount
+        revenue_by_period[period_key]["total_tax_vnd"] += tax
+        revenue_by_period[period_key]["total_energy_kwh"] += energy
+        revenue_by_period[period_key]["session_count"] += 1
+    
+    timeline_data = sorted(
+        list(revenue_by_period.values()),
+        key=lambda x: x["timestamp"]
+    )
+    
+    total_amount = sum(item["total_amount_vnd"] for item in timeline_data)
+    total_tax = sum(item["total_tax_vnd"] for item in timeline_data)
+    total_energy = sum(item["total_energy_kwh"] for item in timeline_data)
+    total_sessions = sum(item["session_count"] for item in timeline_data)
+    
+    return {
+        "period": period,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "timeline": timeline_data,
+        "summary": {
+            "total_amount_vnd": total_amount,
+            "total_tax_vnd": total_tax,
+            "total_energy_kwh": total_energy,
+            "total_sessions": total_sessions,
+            "period_count": len(timeline_data),
+        },
     }
 
 @app.get(
