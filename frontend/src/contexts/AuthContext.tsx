@@ -16,11 +16,23 @@ type User = {
   role: 'citizen' | 'manager'
 }
 
+type RegisterResponse = {
+  message: string
+  otp_expires_in: number
+}
+
 type AuthContextType = {
   user: User | null
   token: string | null
   login: (username: string, password: string) => Promise<void>
-  register: (username: string, password: string, email?: string, name?: string, role?: 'citizen' | 'manager') => Promise<void>
+  register: (
+    username: string,
+    password: string,
+    email?: string,
+    name?: string,
+    role?: 'citizen' | 'manager'
+  ) => Promise<RegisterResponse>
+  verifyRegistration: (username: string, otp: string, password: string) => Promise<void>
   logout: () => void
   isLoading: boolean
 }
@@ -102,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email?: string,
     name?: string,
     role: 'citizen' | 'manager' = 'citizen'
-  ) => {
+  ): Promise<RegisterResponse> => {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
@@ -122,6 +134,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.detail || 'Đăng ký thất bại')
     }
 
+    return response.json()
+  }
+
+  const verifyRegistration = async (username: string, otp: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/register/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, otp }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Xác thực OTP thất bại' }))
+      throw new Error(error.detail || 'Xác thực OTP thất bại')
+    }
+
     await login(username, password)
   }
 
@@ -133,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register, verifyRegistration, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

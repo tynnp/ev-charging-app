@@ -4,9 +4,9 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { Zap, User, Lock, Mail, UserCircle } from 'lucide-react'
+import { User, Lock, Mail, UserCircle, KeyRound, TimerReset } from 'lucide-react'
 
 export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -16,26 +16,93 @@ export function LoginPage() {
   const [name, setName] = useState('')
   const [role, setRole] = useState<'citizen' | 'manager'>('citizen')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [otpStep, setOtpStep] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null)
+  const [remainingSeconds, setRemainingSeconds] = useState(0)
 
-  const { login, register } = useAuth()
+  const { login, register, verifyRegistration } = useAuth()
+
+  useEffect(() => {
+    if (!otpStep || !otpExpiresAt) {
+      setRemainingSeconds(0)
+      return
+    }
+    const updateRemaining = () => {
+      const diff = Math.max(0, Math.ceil((otpExpiresAt - Date.now()) / 1000))
+      setRemainingSeconds(diff)
+    }
+    updateRemaining()
+    const timer = setInterval(updateRemaining, 1000)
+    return () => clearInterval(timer)
+  }, [otpStep, otpExpiresAt])
+
+  const formattedCountdown = useMemo(() => {
+    const minutes = Math.floor(remainingSeconds / 60)
+    const seconds = remainingSeconds % 60
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }, [remainingSeconds])
+
+  const validateEmail = (value: string) => {
+    if (!value.trim()) {
+      throw new Error('Vui lòng nhập email xác thực')
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(value.trim())) {
+      throw new Error('Email không hợp lệ')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setInfo('')
     setIsLoading(true)
 
     try {
       if (isLogin) {
         await login(username, password)
+      } else if (!otpStep) {
+        validateEmail(email)
+        const response = await register(
+          username,
+          password,
+          email || undefined,
+          name || undefined,
+          role
+        )
+        setInfo(response.message)
+        setOtpStep(true)
+        setOtp('')
+        setOtpExpiresAt(Date.now() + response.otp_expires_in * 1000)
       } else {
-        await register(username, password, email || undefined, name || undefined, role)
+        if (!otp.trim()) {
+          throw new Error('Vui lòng nhập mã OTP')
+        }
+        await verifyRegistration(username, otp.trim(), password)
+        setInfo('Đăng ký thành công! Bạn đã được đăng nhập.')
+        setOtpStep(false)
+        setOtp('')
+        setOtpExpiresAt(null)
+        setRemainingSeconds(0)
+        setIsLogin(true)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const resetStates = () => {
+    setError('')
+    setInfo('')
+    setOtpStep(false)
+    setOtp('')
+    setOtpExpiresAt(null)
+    setRemainingSeconds(0)
   }
 
   return (
@@ -54,7 +121,7 @@ export function LoginPage() {
 
         <div className="rounded-2xl bg-white p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
+            {!isLogin && !otpStep && (
               <>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -82,8 +149,9 @@ export function LoginPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      required
                       className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
-                      placeholder="Nhập email (tùy chọn)"
+                      placeholder="Email xác thực"
                     />
                   </div>
                 </div>
@@ -120,6 +188,30 @@ export function LoginPage() {
               </>
             )}
 
+            {!isLogin && otpStep && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Mã OTP
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                    placeholder="Nhập mã OTP gồm 6 chữ số"
+                  />
+                </div>
+                {remainingSeconds > 0 && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                    <TimerReset className="h-4 w-4" />
+                    <span>Mã OTP sẽ hết hạn sau {formattedCountdown}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Tên đăng nhập
@@ -154,6 +246,12 @@ export function LoginPage() {
               </div>
             </div>
 
+            {info && (
+              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700">
+                {info}
+              </div>
+            )}
+
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                 {error}
@@ -165,7 +263,13 @@ export function LoginPage() {
               disabled={isLoading}
               className="w-full rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Đang xử lý...' : isLogin ? 'Đăng nhập' : 'Đăng ký'}
+              {isLoading
+                ? 'Đang xử lý...'
+                : isLogin
+                  ? 'Đăng nhập'
+                  : otpStep
+                    ? 'Xác thực OTP'
+                    : 'Gửi mã OTP'}
             </button>
           </form>
 
@@ -174,7 +278,7 @@ export function LoginPage() {
               type="button"
               onClick={() => {
                 setIsLogin(!isLogin)
-                setError('')
+                resetStates()
               }}
               className="text-sm text-slate-600 hover:text-[#124874]"
             >
