@@ -78,6 +78,62 @@ npm run dev           # mặc định http://localhost:5173
 
 Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích hợp bản đồ. Chi tiết cấu trúc và tính năng tại [`frontend/README.md`](frontend/README.md).
 
+### 3.4. Triển khai bằng Docker
+
+> Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản hỗ trợ Compose v2.
+
+1. **Khởi động toàn bộ stack** (MongoDB + backend FastAPI + frontend Nginx):
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+   - Frontend: http://localhost:5173
+   - Backend API/Swagger: http://localhost:8000 (`/docs`, `/redoc`)
+   - MongoDB: localhost:27017 (volume `mongo_data`)
+
+2. **Theo dõi log** một service cụ thể (ví dụ backend):
+
+   ```bash
+   docker compose logs -f backend
+   ```
+
+3. **Dừng và gỡ stack** (giữ lại dữ liệu MongoDB trong volume):
+
+   ```bash
+   docker compose down
+   ```
+
+#### Tuỳ chỉnh khi build/chạy
+
+- **Backend** (`docker-compose.yml`):
+  - `SECRET_KEY`: thay giá trị mạnh cho môi trường thật.
+  - `RUN_ETL=false`: bỏ qua bước nạp dữ liệu mẫu khi container khởi động.
+  - `EV_OPEN_DATA_DIR`: trỏ tới thư mục dữ liệu khác nếu cần.
+- **Frontend**: thay `build.args.VITE_API_BASE_URL` để trỏ tới API ở domain/port khác; có thể đặt env tại runtime bằng cách rebuild image.
+- **MongoDB**: đổi map port hoặc volume nếu dùng instance bên ngoài.
+
+#### Build/chạy từng thành phần riêng (tuỳ chọn)
+
+- Backend:
+
+  ```bash
+  docker build -f backend/Dockerfile -t ev-charging-backend .
+  docker run --rm -p 8000:8000 \
+    -e MONGODB_URI=mongodb://host.docker.internal:27017 \
+    ev-charging-backend
+  ```
+
+- Frontend:
+
+  ```bash
+  docker build -f frontend/Dockerfile -t ev-charging-frontend \
+    --build-arg VITE_API_BASE_URL=http://localhost:8000 .
+  docker run --rm -p 5173:80 ev-charging-frontend
+  ```
+
+Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-compose.yml`.
+
 ## 4. Tài khoản mẫu & truy cập
 
 | Vai trò        | Tên đăng nhập | Mật khẩu     |
