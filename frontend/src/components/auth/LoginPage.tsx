@@ -42,11 +42,6 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mb-4 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#124874] to-[#0f3a5a] shadow-lg">
-              <Zap className="h-8 w-8 text-white" />
-            </div>
-          </div>
           <h1 className="text-3xl font-bold text-slate-900">
             {isLogin ? 'Đăng nhập' : 'Đăng ký'}
           </h1>
