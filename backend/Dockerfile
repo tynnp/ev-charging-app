@@ -29,7 +29,8 @@ COPY backend/app ./app
 
 # Entrypoint
 COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+  && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV EV_OPEN_DATA_DIR=/opt/open-data/data
 EXPOSE 8000
