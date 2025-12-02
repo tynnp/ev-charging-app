@@ -26,7 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { API_BASE_URL, USER_ID } from '../../config.ts'
+import { API_BASE_URL } from '../../config.ts'
 import { apiFetch } from '../../utils/api'
 
 function haversineDistance(

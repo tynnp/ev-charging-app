@@ -19,11 +19,9 @@ import {
   RefreshCw,
   Search,
   TrendingUp,
-  User,
   Zap,
 } from 'lucide-react'
 import type { CitizenProfile, CitizenSessionsStats, Session, Station } from '../../types/ev'
-import { API_BASE_URL } from '../../config.ts'
 import { useAuth } from '../../contexts/AuthContext'
 import { apiFetch } from '../../utils/api'
 import { formatVehicleType, getStationStatusLabel } from '../../utils/labels'
@@ -70,7 +68,7 @@ function getDurationMinutes(session: Session): number | null {
 
 export function CitizenHistoryPage() {
   const { user } = useAuth()
-  const [profile, setProfile] = useState<CitizenProfile | null>(null)
+  const [, setProfile] = useState<CitizenProfile | null>(null)
   const [stats, setStats] = useState<CitizenSessionsStats | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [stations, setStations] = useState<Station[]>([])
@@ -579,46 +577,6 @@ export function CitizenHistoryPage() {
         ) : null}
       </section>
     </div>
-  )
-}
-
-function MailIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 0 8 6 8-6"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function PhoneIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M6.6 3h2.2a1 1 0 0 1 1 1v2.6a1 1 0 0 1-.3.7l-1.5 1.5a12 12 0 0 0 4.4 4.4l1.5-1.5c.2-.2.5-.3.7-.3h2.6a1 1 0 0 1 1 1v2.2a1 1 0 0 1-1 1c-8 0-14.5-6.5-14.5-14.5a1 1 0 0 1 1-1Z"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   )
 }
 

@@ -15,7 +15,7 @@ type ProfileSettingsModalProps = {
 }
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')

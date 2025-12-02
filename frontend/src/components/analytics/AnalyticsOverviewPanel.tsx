@@ -16,7 +16,6 @@ import {
   Trophy,
   Loader2,
   TrendingUp,
-  Calendar,
   Filter,
   ChevronLeft,
   ChevronRight,
