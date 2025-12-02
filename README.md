@@ -55,8 +55,10 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Cấu hình biến môi trường (tùy chỉnh SECRET_KEY, OSRM_URL nếu cần)
+# Cấu hình SMTP để gửi OTP email (bắt buộc)
 cp env.example .env
+# Mở .env và cập nhật SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM
+# Cấu hình biến môi trường (tùy chỉnh SECRET_KEY, OSRM_URL nếu cần)
 
 # Chạy ETL dữ liệu JSON-LD
 python -m app.etl
@@ -66,6 +68,8 @@ uvicorn app.main:app --reload
 ```
 
 Backend cung cấp REST, NGSI-LD, WebSocket realtime và bộ test cơ bản (`pytest` hoặc `python -m unittest`). Xem thêm trong [`backend/README.md`](backend/README.md).
+
+> **Lưu ý:** chức năng đăng ký người dùng yêu cầu gửi OTP qua email. Bạn phải cung cấp thông tin SMTP hợp lệ trong file `.env` (xem `backend/env.example`) trước khi chạy server.
 
 ### 3.3. Thiết lập frontend
 

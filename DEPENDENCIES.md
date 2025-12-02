@@ -15,6 +15,7 @@ Tài liệu liệt kê các thư viện, phiên bản, giấy phép, mô tả v�
 | python-jose[cryptography] | 3.5.0 | MIT | JWT & JOSE cho Python | https://python-jose.readthedocs.io |
 | bcrypt | 5.0.0 | Apache-2.0 | Thuật toán băm mật khẩu | https://pypi.org/project/bcrypt |
 | python-multipart | 0.0.20 | Apache-2.0 | Xử lý form-data multipart | https://andrew-d.github.io/python-multipart |
+| pydantic | 2.11.9 | MIT | Data validation & settings management | https://docs.pydantic.dev
 
 (*) Phiên bản từ `pip list` vào thời điểm cập nhật (căn cứ `requirements.txt`).
 
