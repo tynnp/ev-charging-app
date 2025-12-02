@@ -67,6 +67,9 @@ export function CitizenPage() {
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'route'>('search')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [selectedCoordinate, setSelectedCoordinate] = useState<[number, number] | null>(null)
+  const [originWhenSearched, setOriginWhenSearched] = useState<{ lat: number; lng: number } | null>(
+    null,
+  )
 
   // Route planning states
   const [fromLat, setFromLat] = useState('10.7769')
@@ -83,6 +86,7 @@ export function CitizenPage() {
   } | null>(null)
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [routeError, setRouteError] = useState<string | null>(null)
+  const [routeMapReady, setRouteMapReady] = useState(false)
 
   // Map refs for route
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
@@ -220,6 +224,9 @@ export function CitizenPage() {
     setNearLat(String(lat))
     setNearLng(String(lng))
     setSelectedCoordinate([lng, lat])
+    setFromLat(String(lat))
+    setFromLng(String(lng))
+    setOriginWhenSearched({ lat, lng })
   }
 
   async function handleSearchNearby() {
@@ -250,6 +257,9 @@ export function CitizenPage() {
       setStations(data)
 
       setSelectedCoordinate([lng, lat])
+      setFromLat(String(lat))
+      setFromLng(String(lng))
+      setOriginWhenSearched({ lat, lng })
 
       if (data.length === 0) {
         setError('Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.')
@@ -320,6 +330,11 @@ export function CitizenPage() {
         setError('Không tìm được trạm phù hợp với bộ lọc.')
       } else {
         setActiveTab('results')
+        if (selectedCoordinate) {
+          setFromLat(String(selectedCoordinate[1]))
+          setFromLng(String(selectedCoordinate[0]))
+          setOriginWhenSearched({ lat: selectedCoordinate[1], lng: selectedCoordinate[0] })
+        }
       }
     } catch (e) {
       setError('Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.')
@@ -352,6 +367,11 @@ export function CitizenPage() {
     setToStationId(station.id)
     setRouteError(null)
     setActiveTab('route')
+
+    const coordinates = station.location?.coordinates
+    if (Array.isArray(coordinates) && coordinates.length === 2 && mapRef.current) {
+      mapRef.current.easeTo({ center: [coordinates[0], coordinates[1]], duration: 600 })
+    }
   }
 
   async function handleFindRoute() {
@@ -365,17 +385,18 @@ export function CitizenPage() {
       setLoadingRoute(true)
       setRouteError(null)
 
-      const lat = Number(fromLat)
-      const lng = Number(fromLng)
+      const origin = originWhenSearched ?? (selectedCoordinate ? { lat: selectedCoordinate[1], lng: selectedCoordinate[0] } : null)
+      const effectiveLat = origin?.lat ?? Number(fromLat)
+      const effectiveLng = origin?.lng ?? Number(fromLng)
 
-      if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      if (Number.isNaN(effectiveLat) || Number.isNaN(effectiveLng)) {
         setRouteError('Tọa độ xuất phát không hợp lệ.')
         return
       }
 
       const params = new URLSearchParams()
-      params.append('from_lat', String(lat))
-      params.append('from_lng', String(lng))
+      params.append('from_lat', String(effectiveLat))
+      params.append('from_lng', String(effectiveLng))
       params.append('to_station_id', targetStationId)
 
       const res = await fetch(`${API_BASE_URL}/citizen/route?${params.toString()}`)
@@ -398,9 +419,57 @@ export function CitizenPage() {
     }
   }
 
+  useEffect(() => {
+    if (activeTab !== 'route' || routeInfo || !routeMapReady || !mapRef.current) return
+
+    routeMarkersRef.current.forEach((marker) => marker.remove())
+    routeMarkersRef.current = []
+    if (routeLineRef.current && mapRef.current.getLayer('route')) {
+      mapRef.current.removeLayer('route')
+      mapRef.current.removeSource('route')
+      routeLineRef.current = null
+    }
+
+    const origin = originWhenSearched ?? (selectedCoordinate ? { lat: selectedCoordinate[1], lng: selectedCoordinate[0] } : null)
+    const destinationCoords = selectedRouteStation?.location?.coordinates
+
+    async function placePreviewMarkers() {
+      const map = mapRef.current
+      if (!map) return
+
+      if (origin) {
+        const originMarker = new maplibregl.Marker({ color: '#3b82f6' })
+          .setLngLat([origin.lng, origin.lat])
+          .setPopup(new Popup().setText('Điểm xuất phát dự kiến'))
+          .addTo(map)
+        routeMarkersRef.current.push(originMarker)
+      }
+
+      if (Array.isArray(destinationCoords) && destinationCoords.length === 2) {
+        const [lng, lat] = destinationCoords
+        const destinationMarker = new maplibregl.Marker({ color: '#CF373D' })
+          .setLngLat([lng, lat])
+          .setPopup(new Popup().setText(selectedRouteStation?.name ?? 'Trạm đích dự kiến'))
+          .addTo(map)
+        routeMarkersRef.current.push(destinationMarker)
+
+        if (origin) {
+          const bounds = new maplibregl.LngLatBounds()
+          bounds.extend([origin.lng, origin.lat])
+          bounds.extend([lng, lat])
+          map.fitBounds(bounds, { padding: 80, duration: 600 })
+        } else {
+          map.easeTo({ center: [lng, lat], duration: 600 })
+        }
+      }
+    }
+
+    void placePreviewMarkers()
+  }, [activeTab, routeInfo, originWhenSearched, selectedCoordinate, selectedRouteStation, routeMapReady])
+
   // Handle route display on map
   useEffect(() => {
-    if (!routeInfo || !mapRef.current || activeTab !== 'route') return
+    if (!routeInfo || !mapRef.current || !routeMapReady || activeTab !== 'route') return
 
     // Clear existing markers and route
     routeMarkersRef.current.forEach((marker) => marker.remove())
@@ -463,18 +532,47 @@ export function CitizenPage() {
 
   // Initialize map for route
   useEffect(() => {
-    if (!mapContainerRef.current || activeTab !== 'route') return
+    if (!mapContainerRef.current || activeTab !== 'route') {
+      setRouteMapReady(false)
+      return
+    }
+
+    let cleanupLoad: (() => void) | undefined
 
     if (!mapRef.current) {
-      mapRef.current = new maplibregl.Map({
+      setRouteMapReady(false)
+      const map = new maplibregl.Map({
         container: mapContainerRef.current,
         style: MAP_STYLE,
         center: [106.7009, 10.7769],
         zoom: 13,
       })
+      mapRef.current = map
+      const handleLoad = () => {
+        setRouteMapReady(true)
+      }
+      map.once('load', handleLoad)
+      cleanupLoad = () => {
+        map.off('load', handleLoad)
+      }
+    } else {
+      const map = mapRef.current
+      if (map.loaded()) {
+        setRouteMapReady(true)
+      } else {
+        setRouteMapReady(false)
+        const handleLoad = () => {
+          setRouteMapReady(true)
+        }
+        map.once('load', handleLoad)
+        cleanupLoad = () => {
+          map.off('load', handleLoad)
+        }
+      }
     }
 
     return () => {
+      cleanupLoad?.()
       routeMarkersRef.current.forEach((marker) => marker.remove())
       routeMarkersRef.current = []
       if (mapRef.current && mapRef.current.getLayer('route')) {
