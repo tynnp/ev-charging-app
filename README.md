@@ -88,6 +88,8 @@ Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích h�
 
 1. **Khởi động toàn bộ stack** (MongoDB + backend FastAPI + frontend Nginx):
 
+   > **Chuẩn bị trước:** sao chép `backend/env.example` thành `backend/.env` và cập nhật cấu hình SMTP (SMTP_HOST, SMTP_PORT, v.v.) cùng các biến bí mật khác. File `.env` này sẽ được `docker-compose` nạp vào container backend để gửi email OTP.
+
    ```bash
    docker compose up -d --build
    ```
