@@ -20,42 +20,80 @@ Các dependency chính nằm trong `backend/requirements.txt`:
 
 - `fastapi`
 - `uvicorn[standard]`
-- `pydantic`
 - `pymongo`
 - `python-dateutil`
 - `httpx`
 - `python-jose[cryptography]` (JWT authentication)
 - `bcrypt` (password hashing)
 - `python-multipart` (form data parsing)
+- `pydantic[email]` (validator cho trường email OTP)
 
 ## 2. Cấu trúc thư mục backend
 
-Trong thư mục `backend/`:
-
 ```text
 backend/
-├─ app/
-│  ├─ __init__.py
-│  ├─ db.py               # Kết nối MongoDB, trả về các collection
-│  ├─ etl.py              # ETL nạp dữ liệu JSON-LD vào MongoDB
-│  ├─ main.py             # FastAPI app, định nghĩa toàn bộ endpoints
-│  └─ models.py           # Pydantic models (Station, Session, Sensor, ...)
-├─ ev-charging-open-data/ # Kho dữ liệu mở clone về (JSON-LD, README, LICENSE)
-│  ├─ data/
-│  │  ├─ stations.jsonld
-│  │  ├─ observations.jsonld
-│  │  └─ realtime_sample.json
-│  └─ README.md / LICENSE
-├─ tests/
-│  └─ test_app_basic.py   # Unit tests cho một số endpoint và utilities
-├─ env.example            # Ví dụ biến môi trường cho MongoDB
-├─ requirements.txt       # Danh sách dependency Python
-└─ .env                   # (tùy chọn) file cấu hình thực tế, không commit
+│
+├── app/                         # Ứng dụng chính
+│   ├── __init__.py              # Khởi tạo ứng dụng
+│   ├── main.py                  # Điểm vào chính của ứng dụng FastAPI
+│   ├── auth.py                  # Xác thực và ủy quyền (JWT, OAuth2)
+│   ├── db.py                    # Kết nối MongoDB và quản lý collections
+│   ├── etl.py                   # ETL dữ liệu từ JSON-LD vào MongoDB
+│   ├── models.py                # Pydantic models và database schemas
+│   └── email.py                 # Xử lý gửi email (OTP, thông báo)
+│
+├── ev-charging-open-data/       # Dữ liệu mở (clone từ repo riêng)
+│   ├── data/
+│   │   ├── stations.jsonld      # Danh sách trạm sạc (NGSI-LD)
+│   │   ├── observations.jsonld  # Dữ liệu quan trắc (SOSA/SSN)
+│   │   ├── sessions.jsonld      # Lịch sử phiên sạc
+│   │   └── realtime_sample.json # Dữ liệu mẫu cho realtime
+│   ├── README.md                # Tài liệu dữ liệu
+│   └── LICENSE                  # Giấy phép dữ liệu
+│
+├── tests/                       # Kiểm thử tự động
+│   ├── __init__.py
+│   ├── test_app_basic.py        # Kiểm thử các endpoint cơ bản
+│   └── conftest.py              # Cấu hình test fixtures
+│
+├── .dockerignore                # Bỏ qua file khi build Docker
+├── .env.example                 # Mẫu cấu hình môi trường
+├── .gitignore                   # Bỏ qua file trong git
+├── Dockerfile                   # Cấu hình Docker cho backend
+├── README.md                    # Tài liệu này
+├── docker-entrypoint.sh         # Script khởi tạo Docker
+└── requirements.txt             # Danh sách thư viện phụ thuộc
 ```
+
+### 2.1. Giải thích chi tiết
+
+#### Thư mục `app/`
+- `main.py`: Định nghĩa ứng dụng FastAPI, các routes và endpoints API
+- `auth.py`: Xử lý xác thực người dùng, JWT, và phân quyền
+- `db.py`: Quản lý kết nối MongoDB và các collection
+- `etl.py`: Trích xuất, biến đổi và tải dữ liệu từ JSON-LD vào MongoDB
+- `models.py`: Định nghĩa các model Pydantic cho dữ liệu
+- `email.py`: Gửi email xác thực và thông báo
+
+#### Thư mục `ev-charging-open-data/`
+Chứa dữ liệu mẫu dưới dạng JSON-LD, tuân thủ chuẩn NGSI-LD và SOSA/SSN:
+- `stations.jsonld`: Thông tin các trạm sạc
+- `observations.jsonld`: Dữ liệu quan trắc từ cảm biến
+- `sessions.jsonld`: Lịch sử các phiên sạc
+- `realtime_sample.json`: Dữ liệu mẫu cho cập nhật thời gian thực
+
+#### Thư mục `tests/`
+- `test_app_basic.py`: Các test case cho API endpoints
+- `conftest.py`: Cấu hình test fixtures và dữ liệu mẫu
+
+#### File cấu hình
+- `.env.example`: Mẫu cấu hình môi trường (sao chép thành `.env` để sử dụng)
+- `requirements.txt`: Danh sách các gói Python cần thiết
+- `Dockerfile` & `docker-entrypoint.sh`: Cấu hình triển khai với Docker
 
 > **Lưu ý quan trọng:** Thư mục `ev-charging-open-data` là **clone từ một repo open data riêng**, dùng làm nguồn dữ liệu mẫu cho backend. Thư mục này **không được commit** trong kho mã nguồn chính (đã được thêm vào `.gitignore`); mỗi người dùng cần tự clone về khi setup project lần đầu, đồng thời **giữ nguyên LICENSE và README** của kho dữ liệu này và tôn trọng giấy phép của bộ dữ liệu.
 
-### 2.1. Clone repo dữ liệu mở `ev-charging-open-data`
+### 2.2. Clone repo dữ liệu mở `ev-charging-open-data`
 
 Để chuẩn bị dữ liệu mẫu cho backend, từ thư mục gốc của project hãy chạy:
 
@@ -115,6 +153,12 @@ File ví dụ: `env.example`:
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=ev_charging
 SECRET_KEY=change-me-in-production
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+SMTP_USE_TLS=true
+EMAIL_FROM=no-reply@example.com
 ```
 
 Các biến:
@@ -128,8 +172,9 @@ Các biến:
   ev-charging-open-data/data
   ```
 - `OSRM_URL` (tùy chọn) – endpoint dịch vụ định tuyến OSRM cho API `/citizen/route`. Mặc định dùng public demo server: `http://router.project-osrm.org/route/v1/driving`.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, `EMAIL_FROM` – cấu hình SMTP phục vụ gửi email OTP khi đăng ký tài khoản. Cần cung cấp thông tin dịch vụ mail thực tế trước khi chạy backend.
 
-### 5.1. Sử dụng file `.env`
+### Sử dụng file `.env`
 
 Trên môi trường phát triển có thể tạo file `.env` từ `env.example` và để `uvicorn` load:
 
@@ -182,7 +227,57 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env
   - Kiểm tra tình trạng service.
   - Trả về: `{ "status": "ok" }`.
 
-### 8.2. Stations
+### 8.2. Authentication & User Management
+
+#### Đăng ký tài khoản
+- `POST /auth/register`
+  - Đăng ký tài khoản mới (yêu cầu xác minh OTP qua email).
+  - Body: `UserRegister` (username, password, email, name, role).
+  - Trả về: `OTPInitiateResponse` với thời gian hết hạn OTP.
+
+- `POST /auth/verify`
+  - Xác nhận đăng ký bằng OTP.
+  - Body: `UserRegisterVerify` (username, otp).
+  - Trả về: `UserResponse` và access token nếu thành công.
+
+#### Đăng nhập
+- `POST /auth/token`
+  - Đăng nhập bằng username/password.
+  - Form data: `username`, `password`.
+  - Trả về: `{ "access_token": "...", "token_type": "bearer", "user": {...} }`
+
+#### Quản lý tài khoản
+- `GET /users/me`
+  - Lấy thông tin người dùng hiện tại.
+  - Yêu cầu xác thực.
+  - Trả về: `UserResponse`.
+
+- `PATCH /users/me`
+  - Cập nhật thông tin cá nhân.
+  - Yêu cầu xác thực.
+  - Body: `UserUpdate` (name, email, phone_number).
+  - Trả về: `UserResponse` đã cập nhật.
+
+#### Lưu trạm
+- `POST /favorites?station_id=<station_id>`
+  - Thêm trạm vào danh sách đã lưu.
+  - Yêu cầu xác thực.
+
+- `DELETE /favorites?station_id=<station_id>`
+  - Xóa trạm khỏi danh sách đã lưu.
+  - Yêu cầu xác thực.
+
+- `GET /favorites`
+  - Lấy danh sách trạm đã lưu.
+  - Yêu cầu xác thực.
+  - Trả về: Danh sách `StationBase`.
+
+- `GET /favorites/check?station_id=<station_id>`
+  - Kiểm tra xem trạm có trong danh sách đã lưu không.
+  - Yêu cầu xác thực.
+  - Trả về: `{ "is_favorite": boolean }`.
+
+### 8.3. Stations
 
 - `GET /stations` Liệt kê trạm sạc, hỗ trợ filter:
     - `status`: trạng thái trạm.
@@ -313,7 +408,22 @@ Khi server khởi động, hệ thống sẽ tự động tạo 2 tài khoản m
 
 Các trường trả về được chuẩn hóa theo Pydantic model `SessionBase`/`CitizenSessionsStats` nên đồng nhất với dữ liệu của các endpoint phân tích.
 
-## 9. Chạy test
+## 9. WebSocket Realtime
+
+Backend cung cấp kết nối WebSocket để nhận cập nhật thời gian thực:
+
+- `ws://localhost:8000/ws/realtime`
+  - Kết nối để nhận cập nhật trạng thái trạm và phiên sạc mới.
+  - Dữ liệu gửi về theo định dạng:
+    ```json
+    {
+      "type": "station_update" | "new_session",
+      "data": { ... }  // StationRealtime hoặc SessionBase
+    }
+    ```
+  - Tự động gửi cập nhật mỗi 2 giây.
+
+## 10. Chạy test
 
 Các test cơ bản sử dụng `unittest` và FastAPI `TestClient`, đồng thời mock lớp truy cập DB bằng các collection giả.
 

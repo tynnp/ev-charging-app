@@ -7,3 +7,4 @@ httpx
 python-jose[cryptography]
 bcrypt>=4.0.0
 python-multipart
+pydantic[email]

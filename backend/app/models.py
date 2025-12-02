@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from typing import Any, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 class Address(BaseModel):
     streetAddress: Optional[str] = None
@@ -106,9 +106,17 @@ class CitizenSessionsStats(BaseModel):
 class UserRegister(BaseModel):
     username: str
     password: str
-    email: Optional[str] = None
+    email: EmailStr
     name: Optional[str] = None
     role: str = "citizen"  # "citizen" or "manager"
+
+class UserRegisterVerify(BaseModel):
+    username: str
+    otp: str
+
+class OTPInitiateResponse(BaseModel):
+    message: str
+    otp_expires_in: int
 
 class UserLogin(BaseModel):
     username: str

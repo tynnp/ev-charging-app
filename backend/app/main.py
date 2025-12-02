@@ -6,7 +6,9 @@
 from typing import Any, Dict, List
 import asyncio
 import json
+import logging
 import os
+import re
 from datetime import datetime, timedelta
 from math import asin, cos, radians, sin, sqrt
 
@@ -15,7 +17,8 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
+import secrets
+
 from .db import (
     get_citizens_collection,
     get_sessions_collection,
@@ -23,6 +26,7 @@ from .db import (
     get_stations_collection,
     get_favorites_collection,
     get_users_collection,
+    get_pending_registrations_collection,
 )
 from .etl import (
     get_default_data_dir,
@@ -39,9 +43,11 @@ from .models import (
     StationRealtime,
     UserRegister,
     UserLogin,
+    UserRegisterVerify,
     UserResponse,
     UserUpdate,
     Token,
+    OTPInitiateResponse,
 )
 from .auth import (
     authenticate_user,
@@ -50,6 +56,115 @@ from .auth import (
     get_current_active_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
+from .email import send_otp_email
+
+OTP_EXPIRATION_SECONDS = 5 * 60  # 5 minutes
+logger = logging.getLogger(__name__)
+
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+def _ensure_email_available(email: str, username: str) -> None:
+    normalized_email = _normalize_email(email)
+    users_collection = get_users_collection()
+    pending_collection = get_pending_registrations_collection()
+
+    email_pattern = re.compile(f"^{re.escape(email)}$", re.IGNORECASE)
+
+    existing_user = users_collection.find_one({"email": email_pattern})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email đã tồn tại",
+        )
+
+    existing_pending = pending_collection.find_one({"email": email_pattern})
+    if existing_pending and existing_pending.get("username") != username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email đang được sử dụng cho một đăng ký khác",
+        )
+
+def _dispatch_otp(username: str, email: str, otp: str) -> bool:
+    sent = send_otp_email(username, email, otp)
+    if not sent:
+        logger.error("Dispatching OTP email failed for %s (%s)", username, email)
+    return sent
+
+def _generate_otp() -> str:
+    return f"{secrets.randbelow(1000000):06d}"
+
+def _store_pending_registration(user_data: UserRegister, otp: str) -> int:
+    pending_collection = get_pending_registrations_collection()
+    now = datetime.utcnow()
+    pending_collection.update_one(
+        {"username": user_data.username},
+        {
+            "$set": {
+                "username": user_data.username,
+                "password": user_data.password,
+                "email": user_data.email,
+                "email_normalized": _normalize_email(user_data.email),
+                "name": user_data.name,
+                "role": user_data.role,
+                "otp": otp,
+                "created_at": now,
+                "expires_at": now + timedelta(seconds=OTP_EXPIRATION_SECONDS),
+            }
+        },
+        upsert=True,
+    )
+    return OTP_EXPIRATION_SECONDS
+
+def _validate_pending_registration(username: str, otp: str) -> dict:
+    pending_collection = get_pending_registrations_collection()
+    pending = pending_collection.find_one({"username": username})
+    if not pending or pending.get("otp") != otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP không hợp lệ",
+        )
+    expires_at = pending.get("expires_at")
+    if expires_at and expires_at < datetime.utcnow():
+        pending_collection.delete_one({"_id": pending["_id"]})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP đã hết hạn",
+        )
+    return pending
+
+def _finalize_registration(pending: dict) -> UserResponse:
+    users_collection = get_users_collection()
+    existing_user = users_collection.find_one({"username": pending["username"]})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+
+    _ensure_email_available(pending.get("email", ""), pending["username"])
+
+    hashed_password = get_password_hash(pending["password"])
+    user_doc = {
+        "username": pending["username"],
+        "hashed_password": hashed_password,
+        "email": pending.get("email"),
+        "email_normalized": pending.get("email_normalized") or _normalize_email(pending.get("email", "")),
+        "name": pending.get("name"),
+        "role": pending.get("role", "citizen"),
+        "created_at": datetime.utcnow(),
+    }
+
+    result = users_collection.insert_one(user_doc)
+    get_pending_registrations_collection().delete_one({"_id": pending["_id"]})
+
+    return UserResponse(
+        id=str(result.inserted_id),
+        username=user_doc["username"],
+        email=user_doc.get("email"),
+        name=user_doc.get("name"),
+        role=user_doc["role"],
+    )
 
 app = FastAPI()
 
@@ -98,46 +213,52 @@ def health() -> Dict[str, str]:
 
 @app.post(
     "/auth/register",
-    response_model=UserResponse,
+    response_model=OTPInitiateResponse,
     tags=["Auth"],
-    summary="Register a new user",
+    summary="Initiate registration and send OTP",
 )
-def register(user_data: UserRegister) -> UserResponse:
+def register(user_data: UserRegister) -> OTPInitiateResponse:
     users_collection = get_users_collection()
-    
+
     existing_user = users_collection.find_one({"username": user_data.username})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
         )
-    
+
     if user_data.role not in ["citizen", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Role must be 'citizen' or 'manager'",
         )
-    
-    hashed_password = get_password_hash(user_data.password)
-    user_doc = {
-        "username": user_data.username,
-        "hashed_password": hashed_password,
-        "email": user_data.email,
-        "name": user_data.name,
-        "role": user_data.role,
-        "created_at": datetime.now(),
-    }
-    
-    result = users_collection.insert_one(user_doc)
-    user_doc["_id"] = result.inserted_id
-    
-    return UserResponse(
-        id=str(result.inserted_id),
-        username=user_doc["username"],
-        email=user_doc.get("email"),
-        name=user_doc.get("name"),
-        role=user_doc["role"],
+
+    _ensure_email_available(user_data.email, user_data.username)
+
+    otp = _generate_otp()
+    expires_in = _store_pending_registration(user_data, otp)
+
+    sent = _dispatch_otp(user_data.username, user_data.email, otp)
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể gửi OTP, vui lòng thử lại",
+        )
+
+    return OTPInitiateResponse(
+        message="OTP đã được gửi tới email xác thực. Vui lòng kiểm tra và xác nhận.",
+        otp_expires_in=expires_in,
     )
+
+@app.post(
+    "/auth/register/verify",
+    response_model=UserResponse,
+    tags=["Auth"],
+    summary="Verify OTP and complete registration",
+)
+def verify_registration(payload: UserRegisterVerify) -> UserResponse:
+    pending = _validate_pending_registration(payload.username, payload.otp)
+    return _finalize_registration(pending)
 
 @app.post(
     "/auth/login",

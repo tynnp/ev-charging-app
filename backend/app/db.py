@@ -40,3 +40,6 @@ def get_citizens_collection() -> Collection:
 
 def get_users_collection() -> Collection:
     return get_db()["users"]
+
+def get_pending_registrations_collection() -> Collection:
+    return get_db()["pending_registrations"]
