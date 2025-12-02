@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Nguyễn Ngọc Phú Tỷ
+# This file is part of ev-charging-app and is licensed under the
+# MIT License. See the LICENSE file in the project root for details.
+
+version: "3.9"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB_NAME=ev_charging
+      - SECRET_KEY=change-me-in-production
+      - EV_OPEN_DATA_DIR=/opt/open-data/data
+      - RUN_ETL=true
+      - PORT=8000
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mongo_data:
