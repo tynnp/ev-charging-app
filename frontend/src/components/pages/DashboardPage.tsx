@@ -154,7 +154,8 @@ function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect, select
         .setLngLat([lon, lat])
         .setPopup(new Popup({ offset: 12 }).setText(station.name))
 
-      marker.getElement().addEventListener('click', () => {
+      marker.getElement().addEventListener('click', (event) => {
+        event.stopPropagation()
         marker.togglePopup()
         onSelectStation(station.id)
       })
