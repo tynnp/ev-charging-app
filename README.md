@@ -29,7 +29,21 @@ Chi tiết mỗi phần xem thêm tại:
 - [`frontend/README.md`](frontend/README.md)
 - [`DEPENDENCIES.md`](DEPENDENCIES.md)
 
-## 2. Dữ liệu và giấy phép
+## 2. Giao diện ứng dụng
+
+### 2.1. Dashboard cho nhà quản lý
+
+![Dashboard Nhà quản lý](assets/screenshots/manager-dashboard.png)
+
+Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tích dữ liệu.
+
+### 2.2. Giao diện người dân
+
+![Giao diện người dân](assets/screenshots/citizen-interface.png)
+
+Tìm kiếm, lọc và sử dụng các trạm sạc xe điện.
+
+## 3. Dữ liệu và giấy phép
 
 | Tài nguyên                         | Giấy phép | Ghi chú |
 |-----------------------------------|-----------|--------|
