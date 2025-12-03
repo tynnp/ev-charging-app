@@ -359,7 +359,7 @@ export function ComparisonPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Left Panel: Tabs for Search & Results */}
-      <div className="flex flex-col w-[60%] border-r border-slate-200 bg-white min-h-0">
+      <div className="flex flex-col w-[50%] border-r border-slate-200 bg-white min-h-0">
         {/* Header with Tabs */}
         <div className="flex-shrink-0 border-b border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">

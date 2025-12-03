@@ -587,7 +587,7 @@ export function CitizenPage() {
       {/* Left Panel: Tabs for Search, Results & Route */}
       <div
         className={`flex flex-col border-r border-slate-200 bg-white min-h-0 transition-all duration-300 ${
-          sidebarOpen ? 'w-[60%]' : 'w-0'
+          sidebarOpen ? 'w-[50%]' : 'w-0'
         } overflow-hidden`}
       >
         {sidebarOpen && (
