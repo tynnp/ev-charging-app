@@ -16,7 +16,7 @@ import type {
   RevenueTimeline,
 } from '../../types/ev'
 import { MAP_STYLE } from '../../mapConfig'
-import { formatVehicleType } from '../../utils/labels'
+import { formatVehicleType, getStationStatusLabel } from '../../utils/labels'
 import { AnalyticsOverviewPanel } from '../analytics/AnalyticsOverviewPanel'
 import { StationFilters } from '../stations/StationFilters'
 import { StationList } from '../stations/StationList'
@@ -649,7 +649,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
     : []
   const locationSummary = locationParts.length > 0 ? locationParts.join(', ') : null
 
-  const statusText = stationRealtime?.status ?? displayStation?.status ?? 'Không rõ'
+  const statusText = getStationStatusLabel(stationRealtime?.status ?? displayStation?.status)
   const availableCapacityValue =
     stationRealtime?.available_capacity ?? displayStation?.available_capacity ?? null
   const instantaneousPowerValue =
