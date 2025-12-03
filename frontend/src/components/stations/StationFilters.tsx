@@ -4,6 +4,8 @@
  * MIT License. See the LICENSE file in the project root for details.
  */
 
+import { useState } from 'react'
+
 import {
   Search,
   BarChart3,
@@ -13,6 +15,8 @@ import {
   Zap,
   Plug,
   CreditCard,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 
 const NETWORK_OPTIONS = [
@@ -91,13 +95,35 @@ export function StationFilters({
   onMaxCapacityChange,
   onApplyFilters,
 }: StationFiltersProps) {
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false)
+
   return (
     <section className="mb-4 rounded-xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
-        <Search className="h-5 w-5 text-[#124874]" />
-        <h3 className="text-sm font-bold text-slate-900">Bộ lọc tìm kiếm</h3>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Search className="h-5 w-5 text-[#124874]" />
+          <h3 className="text-sm font-bold text-slate-900">Bộ lọc tìm kiếm</h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-all hover:border-[#124874] hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+        >
+          {isFiltersVisible ? (
+            <>
+              <ChevronUp className="h-3.5 w-3.5" />
+              Ẩn bộ lọc
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-3.5 w-3.5" />
+              Hiện bộ lọc
+            </>
+          )}
+        </button>
       </div>
-      <div className="flex flex-wrap items-end gap-3">
+      {isFiltersVisible && (
+        <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
             <BarChart3 className="h-3.5 w-3.5" />
@@ -248,7 +274,8 @@ export function StationFilters({
         >
           Áp dụng
         </button>
-      </div>
+        </div>
+      )}
     </section>
   )
 }
