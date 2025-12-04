@@ -17,14 +17,14 @@ import {
   Car,
   RefreshCw,
   Loader2,
+  History,
   Battery,
   DollarSign,
   FileText,
   Clock,
   TrendingUp,
-  History,
 } from 'lucide-react'
-import { formatVehicleTypes, getStationStatusLabel } from '../../utils/labels'
+import { formatVehicleType, getStationStatusLabel, formatVehicleTypes } from '../../utils/labels'
 
 type StationDetailsProps = {
   station?: Station | null
@@ -168,7 +168,7 @@ export function StationDetails({
                 <BarChart3 className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                 Trạng thái
               </div>
-              <div className="font-bold text-sm sm:text-base text-slate-900 break-words">{getStationStatusLabel(station.status)}</div>
+              <div className="font-bold text-sm sm:text-base text-slate-900">{getStationStatusLabel(station.status) || 'Không xác định'}</div>
             </div>
             {station.available_capacity != null ? (
               <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 p-2.5 sm:p-3 border border-emerald-200">
@@ -213,7 +213,7 @@ export function StationDetails({
               </div>
               <div className="font-bold text-sm sm:text-base text-orange-900 break-words">
                 {station.allowed_vehicle_types && station.allowed_vehicle_types.length > 0
-                  ? formatVehicleTypes(station.allowed_vehicle_types)
+                  ? station.allowed_vehicle_types.map(formatVehicleType).join(', ')
                   : 'Không có dữ liệu'}
               </div>
             </div>
@@ -398,7 +398,7 @@ export function StationDetails({
                         {analytics.vehicle_type_breakdown.map((item, index) => (
                           <tr key={item.vehicle_type} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                             <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                              {item.vehicle_type}
+                              {formatVehicleType(item.vehicle_type)}
                             </td>
                             <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
                               {item.session_count.toLocaleString('vi-VN')}
@@ -485,7 +485,7 @@ export function StationDetails({
                         {formatDateTime(session.end_date_time)}
                       </td>
                       <td className="border-b border-slate-100 px-3 py-2 font-medium text-slate-700">
-                        {session.vehicle_type ?? 'unknown'}
+                        {formatVehicleType(session.vehicle_type)}
                       </td>
                       <td className="border-b border-slate-100 px-3 py-2 text-right font-semibold text-slate-700">
                         {formatNumber(session.power_consumption_kwh)}
