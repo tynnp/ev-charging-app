@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { User, Lock, Mail, UserCircle, KeyRound, TimerReset } from 'lucide-react'
+import { User, Lock, Mail, UserCircle, KeyRound, TimerReset, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -18,6 +18,7 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [otpStep, setOtpStep] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null)
@@ -207,13 +208,24 @@ export function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                   placeholder="Nhập mật khẩu"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -224,7 +236,7 @@ export function LoginPage() {
             )}
 
             {error && (
-              <div className="rounded-lg bg-[#0f3a5a] border border-[#124874] p-3 text-sm text-[#124874]">
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
                 {error}
               </div>
             )}
