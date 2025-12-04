@@ -70,16 +70,16 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Thông tin cá nhân</h1>
-          <p className="mt-2 text-slate-600">Quản lý thông tin tài khoản của bạn</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Thông tin cá nhân</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-600">Quản lý thông tin tài khoản của bạn</p>
         </div>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl"
           >
             <Edit2 className="h-4 w-4" />
             Chỉnh sửa
@@ -87,9 +87,9 @@ export function ProfilePage() {
         )}
       </div>
 
-      <div className="rounded-2xl bg-white p-8 shadow-xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="rounded-2xl bg-white p-4 sm:p-6 lg:p-8 shadow-xl">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Tên đăng nhập
@@ -192,7 +192,7 @@ export function ProfilePage() {
           )}
 
           {isEditing && (
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
               <button
                 type="button"
                 onClick={() => {
@@ -205,14 +205,14 @@ export function ProfilePage() {
                     setPhoneNumber('')
                   }
                 }}
-                className="flex-1 rounded-lg border border-slate-300 bg-white py-2.5 font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex-1 rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-2.5 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
