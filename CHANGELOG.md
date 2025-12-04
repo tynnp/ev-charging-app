@@ -37,3 +37,20 @@ Phát hành phiên bản đầu tiên với đầy đủ tính năng:
 - NGSI-LD compatibility
 - CC BY 4.0 license cho dữ liệu
 - MIT license cho mã nguồn
+
+## [v1.1.0] - 2025-12-05
+Cải tiến giao diện người dùng và trải nghiệm:
+
+### Cải tiến
+- Tối ưu hóa responsive cho mọi kích thước màn hình
+- Cải thiện trải nghiệm người dùng trên thiết bị di động
+- Làm mới giao diện với các thành phần UI/UX thân thiện hơn
+
+### Thay đổi
+- Chuyển đổi tất cả thông báo lỗi sang tiếng Việt
+- Cập nhật nhãn và văn bản giao diện sang tiếng Việt
+- Cải thiện hiển thị thông tin trạm sạc và lịch sử sạc
+
+### Sửa lỗi
+- Sửa lỗi hiển thị trên một số thiết bị di động
+- Cập nhật thông báo lỗi rõ ràng và thân thiện hơn
