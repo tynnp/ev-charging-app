@@ -9,17 +9,17 @@ import type { SVGProps } from 'react'
 import {
   AlertTriangle,
   BarChart3,
-  CalendarClock,
+  Battery,
   CalendarRange,
   Clock,
   DollarSign,
   History,
   Loader2,
-  MapPin,
   RefreshCw,
   Search,
   TrendingUp,
   Zap,
+  CalendarClock,
 } from 'lucide-react'
 import type { CitizenProfile, CitizenSessionsStats, Session, Station } from '../../types/ev'
 import { useAuth } from '../../contexts/AuthContext'
@@ -71,12 +71,11 @@ export function CitizenHistoryPage() {
   const [, setProfile] = useState<CitizenProfile | null>(null)
   const [stats, setStats] = useState<CitizenSessionsStats | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
-  const [stations, setStations] = useState<Station[]>([])
-
-  const [loadingProfile, setLoadingProfile] = useState(false)
-  const [loadingStats, setLoadingStats] = useState(false)
-  const [loadingSessions, setLoadingSessions] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [loadingSessions, setLoadingSessions] = useState(true)
+  const [loadingStats, setLoadingStats] = useState(true)
+  const [hasFilters, setHasFilters] = useState(false)
 
   const [stationSearchFilter, setStationSearchFilter] = useState('')
   const [startDateFilter, setStartDateFilter] = useState('')
@@ -90,22 +89,8 @@ export function CitizenHistoryPage() {
       void loadProfile()
       void loadStats()
       void loadSessions()
-      void loadStations()
     }
   }, [userId])
-
-  async function loadStations() {
-    try {
-      const res = await apiFetch(`/stations/search`)
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
-      const data = (await res.json()) as Station[]
-      setStations(data)
-    } catch (err) {
-      console.error(err)
-    }
-  }
 
   async function loadProfile() {
     if (!userId) return
@@ -167,7 +152,9 @@ export function CitizenHistoryPage() {
       console.error(err)
       const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
         ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
-        : 'Không tải được lịch sử phiên sạc.'
+        : err instanceof Error && err.message.includes('404')
+          ? 'Bạn chưa có lịch sử sạc nào.'
+          : `Không tải được lịch sử phiên sạc: ${err instanceof Error ? err.message : 'Lỗi không xác định'}`
       setError(errorMessage)
       setSessions([])
     } finally {
@@ -177,25 +164,23 @@ export function CitizenHistoryPage() {
 
   const stationNameLookup = useMemo<Record<string, string>>(() => {
     const entries = new globalThis.Map<string, string>()
-    stations.forEach((station) => entries.set(station.id, station.name))
     sessions.forEach((session) => {
       if (session.station_id && session.station_name) {
         entries.set(session.station_id, session.station_name)
       }
     })
     return Object.fromEntries(entries) as Record<string, string>
-  }, [stations, sessions])
+  }, [sessions])
 
   const stationNameSuggestions = useMemo(() => {
     const names = new Set<string>()
-    stations.forEach((station) => names.add(station.name))
     sessions.forEach((session) => {
       if (session.station_name) {
         names.add(session.station_name)
       }
     })
     return Array.from(names).sort((a, b) => a.localeCompare(b, 'vi'))
-  }, [stations, sessions])
+  }, [sessions])
 
   function normalizeText(value: string): string {
     return value
@@ -204,32 +189,16 @@ export function CitizenHistoryPage() {
       .replace(/\p{Diacritic}/gu, '')
   }
 
-  function resolveStationId(search: string): string | null {
-    const normalized = normalizeText(search.trim())
-    if (!normalized) {
-      return null
-    }
-    for (const [id, name] of Object.entries(stationNameLookup)) {
-      if (normalizeText(name) === normalized) {
-        return id
-      }
-    }
-    // allow direct ID entry
-    const directMatch = stations.find((station) => normalizeText(station.id) === normalized)
-    return directMatch?.id ?? null
-  }
 
   function buildQueryParams() {
     const params = new URLSearchParams()
-    params.append('limit', String(limit))
-    if (stationSearchFilter.trim()) {
-      const stationId = resolveStationId(stationSearchFilter)
-      if (stationId) {
-        params.append('station_id', stationId)
-      } else {
-        params.append('station_name', stationSearchFilter.trim())
-      }
-    }
+    if (startDateFilter) params.set('start_date', startDateFilter)
+    if (endDateFilter) params.set('end_date', endDateFilter)
+    if (stationSearchFilter) params.set('station_name', stationSearchFilter)
+    params.set('limit', limit.toString())
+
+    // Update hasFilters state based on whether any filters are active
+    setHasFilters(!!startDateFilter || !!endDateFilter || !!stationSearchFilter)
     if (startDateFilter) {
       const startIso = new Date(`${startDateFilter}T00:00:00Z`).toISOString()
       params.append('start_date', startIso)
@@ -523,9 +492,16 @@ export function CitizenHistoryPage() {
         ) : null}
 
         {!loadingSessions && sessions.length === 0 ? (
-          <div className="flex items-start gap-2 rounded-lg sm:rounded-xl border border-blue-200 bg-blue-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-blue-700">
-            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5" />
-            <span className="break-words">Chưa có phiên sạc nào thỏa điều kiện lọc.</span>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg sm:rounded-xl border border-blue-200 bg-blue-50 p-4 sm:p-6 text-center">
+            <Battery className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500" />
+            <div>
+              <h3 className="text-sm sm:text-base font-medium text-blue-800">Chưa có phiên sạc nào</h3>
+              <p className="mt-1 text-xs sm:text-sm text-blue-700">
+                {hasFilters
+                  ? 'Không tìm thấy phiên sạc nào phù hợp với bộ lọc hiện tại. Vui lòng thử lại với điều kiện khác.'
+                  : 'Bạn chưa có phiên sạc nào. Hãy bắt đầu sạc xe để xem lịch sử tại đây.'}
+              </p>
+            </div>
           </div>
         ) : null}
 
