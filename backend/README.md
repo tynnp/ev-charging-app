@@ -53,8 +53,7 @@ backend/
 │
 ├── tests/                       # Kiểm thử tự động
 │   ├── __init__.py
-│   ├── test_app_basic.py        # Kiểm thử các endpoint cơ bản
-│   └── conftest.py              # Cấu hình test fixtures
+│   └── test_app_basic.py        # Kiểm thử các endpoint cơ bản
 │
 ├── .dockerignore                # Bỏ qua file khi build Docker
 ├── .env.example                 # Mẫu cấu hình môi trường
