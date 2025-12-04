@@ -21,7 +21,7 @@ import {
   Zap,
   CalendarClock,
 } from 'lucide-react'
-import type { CitizenProfile, CitizenSessionsStats, Session, Station } from '../../types/ev'
+import type { CitizenSessionsStats, Session, Station } from '../../types/ev'
 import { useAuth } from '../../contexts/AuthContext'
 import { apiFetch } from '../../utils/api'
 import { formatVehicleType, getStationStatusLabel } from '../../utils/labels'
@@ -68,11 +68,9 @@ function getDurationMinutes(session: Session): number | null {
 
 export function CitizenHistoryPage() {
   const { user } = useAuth()
-  const [, setProfile] = useState<CitizenProfile | null>(null)
   const [stats, setStats] = useState<CitizenSessionsStats | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [loadingProfile, setLoadingProfile] = useState(true)
   const [loadingSessions, setLoadingSessions] = useState(true)
   const [loadingStats, setLoadingStats] = useState(true)
   const [hasFilters, setHasFilters] = useState(false)
@@ -92,32 +90,10 @@ export function CitizenHistoryPage() {
 
   useEffect(() => {
     if (userId) {
-      void loadProfile()
       void loadStats()
       void loadSessions()
     }
   }, [userId])
-
-  async function loadProfile() {
-    if (!userId) return
-    try {
-      setLoadingProfile(true)
-      const res = await apiFetch(`/citizens/${userId}`)
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
-      const data = (await res.json()) as CitizenProfile
-      setProfile(data)
-    } catch (err) {
-      console.error(err)
-      const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
-        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
-        : 'Không tải được thông tin người dùng.'
-      setError(errorMessage)
-    } finally {
-      setLoadingProfile(false)
-    }
-  }
 
   async function loadStats(params?: URLSearchParams) {
     if (!userId) return
@@ -126,6 +102,20 @@ export function CitizenHistoryPage() {
       setError(null)
       const query = params ? `?${params.toString()}` : ''
       const res = await apiFetch(`/citizens/${userId}/sessions/stats${query}`)
+      if (res.status === 404) {
+        setStats({
+          user_id: userId,
+          total_sessions: 0,
+          total_energy_kwh: 0,
+          total_amount_vnd: 0,
+          total_tax_vnd: 0,
+          total_duration_minutes: 0,
+          average_session_duration_minutes: 0,
+          average_energy_kwh: 0,
+          average_amount_vnd: 0,
+        })
+        return
+      }
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
       }
@@ -135,7 +125,9 @@ export function CitizenHistoryPage() {
       console.error(err)
       const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
         ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
-        : 'Không tải được thống kê phiên sạc.'
+        : err instanceof Error && err.message.includes('404')
+          ? 'Bạn chưa có lịch sử sạc nào.'
+          : 'Không tải được thống kê phiên sạc.'
       setError(errorMessage)
     } finally {
       setLoadingStats(false)
@@ -258,7 +250,7 @@ export function CitizenHistoryPage() {
 
   async function handleRefresh() {
     const params = buildQueryParams()
-    await Promise.all([loadProfile(), loadSessions(params), loadStats(params)])
+    await Promise.all([loadSessions(params), loadStats(params)])
   }
 
   const filteredSessions = useMemo(() => {
@@ -328,7 +320,7 @@ export function CitizenHistoryPage() {
           }}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:border-transparent hover:bg-[#124874] hover:text-white min-h-[40px] sm:min-h-[44px]"
         >
-          {loadingProfile || loadingSessions || loadingStats ? (
+          {loadingSessions || loadingStats ? (
             <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
           ) : (
             <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
