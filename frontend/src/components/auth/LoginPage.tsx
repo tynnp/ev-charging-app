@@ -14,7 +14,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState<'citizen' | 'manager'>('citizen')
+  const role = 'citizen' // Mặc định là người dân
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -106,20 +106,20 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-[#124874]/5 to-slate-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-[#124874]">
             {isLogin ? 'Đăng nhập' : 'Đăng ký'}
           </h1>
           <p className="mt-2 text-slate-600">
             {isLogin
-              ? 'Chào mừng bạn trở lại'
+              ? 'Chào mừng bạn đến với hệ thống'
               : 'Tạo tài khoản mới để bắt đầu'}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-8 shadow-xl">
+        <div className="w-full rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && !otpStep && (
               <>
@@ -156,35 +156,6 @@ export function LoginPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Vai trò
-                  </label>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setRole('citizen')}
-                      className={`flex-1 rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
-                        role === 'citizen'
-                          ? 'border-[#CF373D] bg-[#CF373D] text-white'
-                          : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                      }`}
-                    >
-                      Người dân
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRole('manager')}
-                      className={`flex-1 rounded-lg border-2 py-2.5 px-4 text-sm font-medium transition-all ${
-                        role === 'manager'
-                          ? 'border-[#124874] bg-[#124874] text-white'
-                          : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
-                      }`}
-                    >
-                      Nhà quản lý
-                    </button>
-                  </div>
-                </div>
               </>
             )}
 
@@ -253,7 +224,7 @@ export function LoginPage() {
             )}
 
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              <div className="rounded-lg bg-[#0f3a5a] border border-[#124874] p-3 text-sm text-[#124874]">
                 {error}
               </div>
             )}
@@ -261,7 +232,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-3 font-semibold text-white shadow-sm transition-all hover:from-[#0f3a5a] hover:to-[#0d2e47] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#124874]/20 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading
                 ? 'Đang xử lý...'
@@ -280,7 +251,7 @@ export function LoginPage() {
                 setIsLogin(!isLogin)
                 resetStates()
               }}
-              className="text-sm text-slate-600 hover:text-[#124874]"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-[#124874] hover:underline"
             >
               {isLogin
                 ? 'Chưa có tài khoản? Đăng ký ngay'
