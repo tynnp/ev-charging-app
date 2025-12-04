@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.0.0] - 2025-12-03
+## [v1.0.0] - 2025-12-04
 Phát hành phiên bản đầu tiên với đầy đủ tính năng:
 
 ### Backend (FastAPI + MongoDB)

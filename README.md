@@ -11,7 +11,7 @@
 │   └─ ETL dữ liệu mở từ ev-charging-open-data
 ├─ frontend/ (React 19 + TypeScript + Vite + Tailwind)
 │   ├─ Dashboard cho nhà quản lý (overview, realtime, bản đồ, thống kê)
-│   └─ Trải nghiệm người dân (tìm trạm, lịch sử, yêu thích, so sánh)
+│   └─ Trải nghiệm người dân (tìm trạm, lịch sử, trạm đã lưu, so sánh)
 ├─ ev-charging-open-data/ (submodule dữ liệu JSON-LD – CC BY 4.0)
 └─ README.md, DEPENDENCIES.md, LICENSE
 ```
@@ -52,16 +52,16 @@ Tìm kiếm, lọc và sử dụng các trạm sạc xe điện.
 
 Ứng dụng hỗ trợ tải về bộ dữ liệu JSON-LD qua các endpoint `/datasets/*.jsonld`, đảm bảo tuân thủ yêu cầu FAIR/5-star open data.
 
-## 3. Chuẩn bị môi trường
+## 4. Chuẩn bị môi trường
 
-### 3.1. Yêu cầu chung
+### 4.1. Yêu cầu chung
 
 - **Python 3.11+** và `pip`
 - **Node.js 20+** và `npm`
 - **MongoDB** đang chạy tại `mongodb://localhost:27017` (có thể cấu hình lại)
 - Git để clone và quản lý submodule dữ liệu
 
-### 3.2. Thiết lập backend
+### 4.2. Thiết lập backend
 
 ```bash
 cd backend
