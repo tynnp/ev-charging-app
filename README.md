@@ -98,7 +98,22 @@ Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích h�
 
 ### 3.4. Triển khai bằng Docker
 
-> Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản hỗ trợ Compose v2.
+Dự án đã được Docker hóa sẵn, hỗ trợ chạy trên cả Windows và Unix/Linux. Bạn có thể sử dụng các file script có sẵn để khởi động nhanh ứng dụng:
+
+#### Windows
+```bash
+start-docker-windows.bat
+```
+
+#### Unix/Linux/MacOS
+```bash
+chmod +x start-docker-unix.sh
+./start-docker-unix.sh
+```
+
+### Hoặc chạy trực tiếp bằng docker-compose:
+
+Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản hỗ trợ Compose v2.
 
 1. **Khởi động toàn bộ stack** (MongoDB + backend FastAPI + frontend Nginx):
 
