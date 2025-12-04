@@ -312,11 +312,11 @@ export function CitizenHistoryPage() {
   }, [filteredSessions, stats, stationSearchFilter])
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Lịch sử sạc của tôi</h1>
-          <p className="text-sm text-slate-500">
+    <div className="flex flex-col gap-4 sm:gap-6 min-w-0 w-full">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 min-w-0">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 break-words">Lịch sử sạc của tôi</h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 break-words">
             Theo dõi các phiên sạc đã thực hiện, thống kê năng lượng và chi phí theo thời gian.
           </p>
         </div>
@@ -325,34 +325,35 @@ export function CitizenHistoryPage() {
           onClick={() => {
             void handleRefresh()
           }}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-transparent hover:bg-[#124874] hover:text-white"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:border-transparent hover:bg-[#124874] hover:text-white min-h-[40px] sm:min-h-[44px]"
         >
           {loadingProfile || loadingSessions || loadingStats ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
           ) : (
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           )}
-          Làm mới
+          <span className="hidden sm:inline">Làm mới</span>
+          <span className="sm:hidden">Mới</span>
         </button>
       </div>
 
       {error ? (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          <AlertTriangle className="h-4 w-4" />
-          <span>{error}</span>
+        <div className="flex items-start gap-2 sm:gap-3 rounded-lg sm:rounded-xl border border-amber-200 bg-amber-50 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-amber-700">
+          <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5" />
+          <span className="break-words">{error}</span>
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-          <BarChart3 className="h-5 w-5 text-[#124874]" />
+      <section className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 md:p-6 shadow-sm">
+        <h2 className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base font-bold text-slate-900">
+          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
           Thống kê tổng hợp
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-xs sm:text-sm text-slate-500 break-words">
           Các số liệu dưới đây phản ánh các phiên sạc đã chọn theo bộ lọc.
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
               label: 'Tổng phiên sạc',
@@ -407,24 +408,24 @@ export function CitizenHistoryPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 md:p-6 shadow-sm overflow-hidden min-w-0">
         <form
-          className="grid gap-4 md:grid-cols-[repeat(5,minmax(0,1fr))]"
+          className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-[repeat(5,minmax(0,1fr))] min-w-0"
           onSubmit={handleApplyFilters}
         >
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2 md:col-span-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Trạm sạc
             </label>
             <div className="mt-1 flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-2 sm:left-3 top-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   list="station-options"
                   value={stationSearchFilter}
                   onChange={(e) => setStationSearchFilter(e.target.value)}
                   placeholder="Nhập tên trạm..."
-                  className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
+                  className="w-full rounded-lg border border-slate-200 bg-white py-1.5 sm:py-2 pl-7 sm:pl-9 pr-2 sm:pr-3 text-xs sm:text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
                 />
                 <datalist id="station-options">
                   {stationNameSuggestions.map((name) => (
@@ -439,13 +440,13 @@ export function CitizenHistoryPage() {
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Từ ngày
             </label>
-            <div className="mt-1 flex items-center gap-2">
-              <CalendarRange className="h-4 w-4 text-slate-400" />
+            <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+              <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 flex-shrink-0" />
               <input
                 type="date"
                 value={startDateFilter}
                 onChange={(e) => setStartDateFilter(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
               />
             </div>
           </div>
@@ -454,13 +455,13 @@ export function CitizenHistoryPage() {
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Đến ngày
             </label>
-            <div className="mt-1 flex items-center gap-2">
-              <CalendarRange className="h-4 w-4 rotate-180 text-slate-400" />
+            <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+              <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4 rotate-180 text-slate-400 flex-shrink-0" />
               <input
                 type="date"
                 value={endDateFilter}
                 onChange={(e) => setEndDateFilter(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
               />
             </div>
           </div>
@@ -472,7 +473,7 @@ export function CitizenHistoryPage() {
             <select
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/10"
             >
               {[10, 20, 50].map((value) => (
                 <option key={value} value={value}>
@@ -482,12 +483,12 @@ export function CitizenHistoryPage() {
             </select>
           </div>
 
-          <div className="flex items-end gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
             <button
               type="submit"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#124874] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f3a5a]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-lg bg-[#124874] px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f3a5a] min-h-[40px] sm:min-h-[44px]"
             >
-              <FilterIcon className="h-4 w-4" />
+              <FilterIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Áp dụng
             </button>
             <button
@@ -495,7 +496,7 @@ export function CitizenHistoryPage() {
               onClick={() => {
                 void handleResetFilters()
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#df3a3d] hover:text-[#df3a3d]"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#df3a3d] hover:text-[#df3a3d] min-h-[40px] sm:min-h-[44px]"
             >
               Đặt lại
             </button>
@@ -503,44 +504,45 @@ export function CitizenHistoryPage() {
         </form>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-            <History className="h-5 w-5 text-[#124874]" />
-            Lịch sử phiên sạc
+      <section className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 md:p-6 shadow-sm overflow-hidden min-w-0">
+        <div className="mb-3 sm:mb-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 min-w-0">
+          <h2 className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base font-bold text-slate-900 min-w-0">
+            <History className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
+            <span className="break-words">Lịch sử phiên sạc</span>
           </h2>
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-slate-500 whitespace-nowrap flex-shrink-0">
             {filteredSessions.length} phiên được hiển thị
           </span>
         </div>
 
         {loadingSessions ? (
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Đang tải dữ liệu phiên sạc...</span>
+          <div className="flex items-center gap-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-slate-600">
+            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin flex-shrink-0" />
+            <span className="break-words">Đang tải dữ liệu phiên sạc...</span>
           </div>
         ) : null}
 
         {!loadingSessions && sessions.length === 0 ? (
-          <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-            <MapPin className="h-4 w-4" />
-            <span>Chưa có phiên sạc nào thỏa điều kiện lọc.</span>
+          <div className="flex items-start gap-2 rounded-lg sm:rounded-xl border border-blue-200 bg-blue-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-blue-700">
+            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5" />
+            <span className="break-words">Chưa có phiên sạc nào thỏa điều kiện lọc.</span>
           </div>
         ) : null}
 
         {filteredSessions.length > 0 ? (
-          <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full border-collapse text-sm">
+          <div className="mt-3 w-full overflow-x-auto rounded-lg sm:rounded-xl border border-slate-200">
+            <div className="min-w-[700px] sm:min-w-[800px]">
+              <table className="w-full border-collapse text-xs sm:text-sm">
               <thead className="bg-gradient-to-r from-slate-50 to-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Bắt đầu</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Kết thúc</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Trạm</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Loại xe</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Trạng thái</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-right">Thời lượng</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-right">kWh</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-right">Chi phí (VND)</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-left">Bắt đầu</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-left">Kết thúc</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-left">Trạm</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-left">Loại xe</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-left">Trạng thái</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right">Thời lượng</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right">kWh</th>
+                  <th className="border-b border-slate-200 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right">Chi phí (VND)</th>
                 </tr>
               </thead>
               <tbody>
@@ -551,37 +553,38 @@ export function CitizenHistoryPage() {
                       key={session.id}
                       className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}
                     >
-                      <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {formatDateTime(session.start_date_time)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {formatDateTime(session.end_date_time)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
-                        <span className="font-semibold text-slate-800">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 min-w-0">
+                        <span className="font-semibold text-slate-800 break-words text-xs">
                           {stationNameLookup[session.station_id] ?? session.station_name ?? session.station_id}
                         </span>
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {formatVehicleType(session.vehicle_type)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {getStationStatusLabel(session.session_status)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-right font-semibold text-slate-800">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-slate-800 text-xs">
                         {formatDuration(duration)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-right font-semibold text-slate-800">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-slate-800 text-xs">
                         {formatNumber(session.power_consumption_kwh, 1)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-3 text-right font-semibold text-slate-800">
+                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-slate-800 text-xs">
                         {formatCurrency(session.amount_collected_vnd)}
                       </td>
                     </tr>
                   )
                 })}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         ) : null}
       </section>

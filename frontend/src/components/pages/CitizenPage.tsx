@@ -596,29 +596,30 @@ export function CitizenPage() {
   }, [activeTab])
 
   return (
-    <div className="relative flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-hidden">
       {/* Left Panel: Tabs for Search, Results & Route */}
       <div
         className={`flex flex-col border-r border-slate-200 bg-white min-h-0 transition-all duration-300 ${
-          sidebarOpen ? 'w-[50%]' : 'w-0'
-        } overflow-hidden`}
+          sidebarOpen ? 'w-full lg:w-[50%]' : 'w-0'
+        } overflow-hidden absolute lg:relative z-30 lg:z-auto h-full`}
       >
         {sidebarOpen && (
           <>
             {/* Header with Tabs */}
             <div className="flex-shrink-0 border-b border-slate-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-slate-200">
                 <div className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-[#CF373D]" />
-                  <h3 className="text-base font-bold text-slate-900">Tìm kiếm trạm</h3>
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-[#CF373D]" />
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">Tìm kiếm trạm</h3>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {/* Results Count - Always visible */}
                   {stations.length > 0 && activeTab !== 'route' && (
-                    <div className="rounded-lg bg-emerald-50 px-3 py-1.5 border border-emerald-200">
+                    <div className="rounded-lg bg-emerald-50 px-2 sm:px-3 py-1 sm:py-1.5 border border-emerald-200">
                       <span className="text-xs font-semibold text-emerald-800">
-                        Tìm thấy {stations.length} trạm
+                        <span className="hidden sm:inline">Tìm thấy {stations.length} trạm</span>
+                        <span className="sm:hidden">{stations.length}</span>
                       </span>
                     </div>
                   )}
@@ -697,40 +698,42 @@ export function CitizenPage() {
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto min-h-0">
               {activeTab === 'search' && (
-            <div className="p-4 bg-slate-50/30">
+            <div className="p-3 sm:p-4 bg-slate-50/30">
               {/* Search Mode Toggle */}
-              <div className="mb-4 flex gap-2">
+              <div className="mb-3 sm:mb-4 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setSearchMode('nearby')}
-                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                  className={`flex-1 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all ${
                     searchMode === 'nearby'
                       ? 'bg-[#CF373D] text-white shadow-sm'
                       : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  Tìm gần đây
+                  <span className="hidden sm:inline">Tìm gần đây</span>
+                  <span className="sm:hidden">Gần đây</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSearchMode('advanced')}
-                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                  className={`flex-1 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all ${
                     searchMode === 'advanced'
                       ? 'bg-[#CF373D] text-white shadow-sm'
                       : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  Tìm kiếm nâng cao
+                  <span className="hidden sm:inline">Tìm kiếm nâng cao</span>
+                  <span className="sm:hidden">Nâng cao</span>
                 </button>
         </div>
 
             {/* Search Form */}
               {searchMode === 'nearby' ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                      <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                    <label className="mb-1 sm:mb-1.5 block text-xs font-semibold text-slate-700">
+                      <MapPin className="inline h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                       Vĩ độ
                 </label>
                 <input
@@ -738,12 +741,12 @@ export function CitizenPage() {
                   step="0.0001"
                   value={nearLat}
                       onChange={(e) => setNearLat(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                 />
               </div>
               <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                      <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                    <label className="mb-1 sm:mb-1.5 block text-xs font-semibold text-slate-700">
+                      <MapPin className="inline h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                       Kinh độ
                 </label>
                 <input
@@ -751,13 +754,13 @@ export function CitizenPage() {
                   step="0.0001"
                   value={nearLng}
                       onChange={(e) => setNearLng(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                 />
                     </div>
               </div>
               <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                      <Ruler className="inline h-3.5 w-3.5 mr-1" />
+                    <label className="mb-1 sm:mb-1.5 block text-xs font-semibold text-slate-700">
+                      <Ruler className="inline h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                   Bán kính (km)
                 </label>
                 <input
@@ -766,7 +769,7 @@ export function CitizenPage() {
                   step={0.5}
                   value={nearRadiusKm}
                       onChange={(e) => setNearRadiusKm(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                 />
               </div>
                   {currentLocation && (
@@ -777,9 +780,9 @@ export function CitizenPage() {
                         setNearLng(String(currentLocation[0]))
                         setSelectedCoordinate(currentLocation)
                       }}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                     >
-                      <Navigation className="h-4 w-4" />
+                      <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Dùng vị trí hiện tại
                     </button>
                   )}
@@ -787,9 +790,9 @@ export function CitizenPage() {
                     type="button"
                     onClick={() => void handleSearchNearby()}
                 disabled={loading}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     {loading ? 'Đang tìm...' : 'Tìm trạm'}
               </button>
             </div>
@@ -821,12 +824,12 @@ export function CitizenPage() {
 
               {/* Info Messages */}
               {!error && stations.length === 0 && !loading && (
-                <div className="mt-4 rounded-lg bg-blue-50 p-3 border border-blue-200">
-                  <p className="flex items-center gap-2 text-xs font-medium text-blue-800">
-                    <Lightbulb className="h-3.5 w-3.5" />
-                    {searchMode === 'nearby'
+                <div className="mt-3 sm:mt-4 rounded-lg bg-blue-50 p-2.5 sm:p-3 border border-blue-200">
+                  <p className="flex items-start gap-2 text-xs font-medium text-blue-800 break-words">
+                    <Lightbulb className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{searchMode === 'nearby'
                       ? 'Nhập toạ độ và bấm "Tìm trạm" để xem các trạm sạc.'
-                      : 'Sử dụng bộ lọc ở trên để tìm kiếm trạm sạc.'}
+                      : 'Sử dụng bộ lọc ở trên để tìm kiếm trạm sạc.'}</span>
               </p>
             </div>
               )}
@@ -837,17 +840,17 @@ export function CitizenPage() {
               {/* Results Tab Content */}
               {filteredStations.length > 0 ? (
                 <>
-                  <div className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900">
+                  <div className="flex-shrink-0 border-b border-slate-200 bg-white px-3 sm:px-4 py-2 sm:py-3 shadow-sm">
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 break-words">
                       Danh sách ({filteredStations.length})
                     </h4>
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 w-full xs:w-auto">
+                      <ArrowUpDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-500 flex-shrink-0" />
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortOption)}
-                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-medium focus:border-[#CF373D] focus:ring-1 focus:ring-[#CF373D]/20"
+                        className="flex-1 xs:flex-none rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-medium focus:border-[#CF373D] focus:ring-1 focus:ring-[#CF373D]/20 min-w-[120px]"
                       >
                         <option value="distance">Khoảng cách</option>
                         <option value="status">Trạng thái</option>
@@ -857,7 +860,7 @@ export function CitizenPage() {
                     </div>
                   </div>
                 </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-slate-50/50">
+                  <div className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3 min-h-0 bg-slate-50/50">
                   {filteredStations.map((station) => (
                       <div key={station.id} className="space-y-2 transition-all hover:scale-[1.01]">
                       <CitizenStationCard
@@ -870,10 +873,11 @@ export function CitizenPage() {
                         <button
                           type="button"
                           onClick={() => handleSelectRouteStation(station)}
-                          className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-[#CF373D] hover:text-[#CF373D]"
+                          className="w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-[#CF373D] hover:text-[#CF373D]"
                         >
-                          <Navigation className="h-3.5 w-3.5" />
-                          Tìm đường tới trạm này
+                          <Navigation className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                          <span className="hidden sm:inline">Tìm đường tới trạm này</span>
+                          <span className="sm:hidden">Tìm đường</span>
                         </button>
                       </div>
                     ))}
@@ -881,9 +885,9 @@ export function CitizenPage() {
                 </>
               ) : (
                 <div className="flex-1 flex items-center justify-center bg-slate-50/50">
-                  <div className="text-center p-6">
-                    <Search className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500">
+                  <div className="text-center p-4 sm:p-6">
+                    <Search className="h-8 w-8 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-2 sm:mb-3" />
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 break-words px-2">
                       {loading ? 'Đang tìm kiếm...' : 'Chưa có kết quả tìm kiếm'}
                     </p>
                   </div>
@@ -892,17 +896,17 @@ export function CitizenPage() {
             </div>
               )}
               {activeTab === 'route' && (
-            <div className="p-4 bg-slate-50/30">
-              <div className="space-y-4">
-                <div className="rounded-xl bg-white p-4 border border-slate-200/50">
-                  <label className="mb-3 block text-sm font-semibold text-slate-700">
+            <div className="p-3 sm:p-4 bg-slate-50/30">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="rounded-lg sm:rounded-xl bg-white p-3 sm:p-4 border border-slate-200/50">
+                  <label className="mb-2 sm:mb-3 block text-xs sm:text-sm font-semibold text-slate-700">
                     Điểm xuất phát
                   </label>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                       <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                          <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                        <label className="mb-1 sm:mb-1.5 block text-xs font-semibold text-slate-600">
+                          <MapPin className="inline h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                           Vĩ độ
                         </label>
                         <input
@@ -910,12 +914,12 @@ export function CitizenPage() {
                           step="0.0001"
                           value={fromLat}
                           onChange={(e) => setFromLat(e.target.value)}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                          className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                         />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                          <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                        <label className="mb-1 sm:mb-1.5 block text-xs font-semibold text-slate-600">
+                          <MapPin className="inline h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                           Kinh độ
                         </label>
                         <input
@@ -923,7 +927,7 @@ export function CitizenPage() {
                           step="0.0001"
                           value={fromLng}
                           onChange={(e) => setFromLng(e.target.value)}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                          className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                         />
                       </div>
                     </div>
@@ -943,8 +947,8 @@ export function CitizenPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-white p-4 border border-slate-200/50">
-                  <label className="mb-3 block text-sm font-semibold text-slate-700">
+                <div className="rounded-lg sm:rounded-xl bg-white p-3 sm:p-4 border border-slate-200/50">
+                  <label className="mb-2 sm:mb-3 block text-xs sm:text-sm font-semibold text-slate-700">
                     Trạm đích
                   </label>
                   {filteredStations.length > 0 ? (
@@ -955,7 +959,7 @@ export function CitizenPage() {
                         setSelectedRouteStation(station ?? null)
                         setToStationId(e.target.value)
                       }}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                     >
                       <option value="">Chọn trạm từ danh sách đã tìm</option>
                       {filteredStations.map((station) => (
@@ -965,7 +969,7 @@ export function CitizenPage() {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 break-words">
                       Chưa có danh sách trạm. Vui lòng tìm kiếm trạm trước tại tab &quot;Tìm kiếm&quot;.
                     </p>
                   )}
@@ -983,48 +987,48 @@ export function CitizenPage() {
                   type="button"
                   onClick={() => void handleFindRoute()}
                   disabled={loadingRoute}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
+                  className="w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
                 >
                   {loadingRoute ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                       Đang tìm...
                     </>
                   ) : (
                     <>
-                      <Search className="h-4 w-4" />
+                      <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Tìm đường
                     </>
                   )}
                 </button>
 
                 {routeInfo && (
-                  <div className="space-y-3">
-                    <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <Ruler className="h-5 w-5 text-emerald-700" />
-                          <div>
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="rounded-lg sm:rounded-xl bg-emerald-50 p-3 sm:p-4 border border-emerald-200">
+                      <div className="space-y-2 sm:space-y-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <Ruler className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-700 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-emerald-700">Khoảng cách</div>
-                            <div className="text-lg font-bold text-emerald-900">
+                            <div className="text-base sm:text-lg font-bold text-emerald-900 break-words">
                               {routeInfo.distance_km.toFixed(1)} km
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Clock className="h-5 w-5 text-emerald-700" />
-                          <div>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-700 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-emerald-700">Thời gian ước tính</div>
-                            <div className="text-lg font-bold text-emerald-900">
+                            <div className="text-base sm:text-lg font-bold text-emerald-900">
                               {Math.round(routeInfo.estimated_time_minutes)} phút
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <MapPin className="h-5 w-5 text-emerald-700" />
-                          <div>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-700 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-emerald-700">Điểm đến</div>
-                            <div className="text-sm font-bold text-emerald-900">
+                            <div className="text-xs sm:text-sm font-bold text-emerald-900 break-words">
                               {routeInfo.to.station_name}
                             </div>
                           </div>
@@ -1033,7 +1037,7 @@ export function CitizenPage() {
                     </div>
                     {routeInfo.osrm_used !== undefined && (
                       <div
-                        className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                        className={`rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium break-words ${
                           routeInfo.osrm_used
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                             : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -1059,19 +1063,19 @@ export function CitizenPage() {
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-4 top-4 z-20 rounded-lg bg-white p-2 shadow-lg transition-colors hover:bg-slate-50"
+          className="absolute left-2 sm:left-4 top-2 sm:top-4 z-20 rounded-lg bg-white p-2 shadow-lg transition-colors hover:bg-slate-50"
           aria-label="Mở lại bảng tìm kiếm"
         >
-          <ChevronRight className="h-5 w-5 text-slate-700" />
+          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" />
         </button>
       )}
 
       {/* Map Area - Always visible on the right */}
-      <div className="flex-1 min-w-0 bg-white relative">
+      <div className="flex-1 min-w-0 bg-white relative h-full overflow-hidden">
         {activeTab === 'route' ? (
-          <div ref={mapContainerRef} className="h-full w-full" />
+          <div ref={mapContainerRef} className="h-full w-full min-h-0" />
         ) : (
-        <div className="h-full w-full">
+        <div className="h-full w-full min-h-0">
           <StationsMap
             stations={filteredStations}
             currentLocation={currentLocation}

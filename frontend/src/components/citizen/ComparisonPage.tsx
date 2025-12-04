@@ -363,21 +363,21 @@ export function ComparisonPage() {
       : searchStations
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-hidden">
       {/* Left Panel: Tabs for Search & Results */}
-      <div className="flex flex-col w-[50%] border-r border-slate-200 bg-white min-h-0">
-        {/* Header with Tabs */}
+      <div className="flex flex-col w-full lg:w-[50%] border-r border-slate-200 bg-white min-h-0 overflow-hidden">
+          {/* Header with Tabs */}
         <div className="flex-shrink-0 border-b border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-slate-200 gap-2">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-[#CF373D]" />
-                  <h3 className="text-base font-bold text-slate-900">So sánh trạm</h3>
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-[#CF373D]" />
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">So sánh trạm</h3>
             </div>
             
             {/* Selected Stations Count & Compare Button - Always visible */}
             {selectedStations.length > 0 && (
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-[#CF373D]/10 px-3 py-1.5">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="rounded-lg bg-[#CF373D]/10 px-2 sm:px-3 py-1 sm:py-1.5">
                   <span className="text-xs font-semibold text-[#CF373D]">
                     Đã chọn: {selectedStations.length} / 5
                   </span>
@@ -389,12 +389,13 @@ export function ComparisonPage() {
                     setActiveTab('results')
                   }}
                   disabled={loading || selectedStations.length < 2}
-                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2 text-xs font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 transition-all"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Đang so sánh...
+                      <span className="hidden sm:inline">Đang so sánh...</span>
+                      <span className="sm:hidden">Đang so sánh</span>
                     </>
                   ) : (
                     <>
@@ -484,14 +485,14 @@ export function ComparisonPage() {
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {activeTab === 'search' ? (
-            <div className="p-4 bg-slate-50/30">
-              <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-900">Tìm kiếm trạm</h4>
-                <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+            <div className="p-3 sm:p-4 bg-slate-50/30">
+              <div className="mb-3 sm:mb-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900">Tìm kiếm trạm</h4>
+                <div className="flex gap-1 rounded-lg bg-slate-100 p-1 w-full xs:w-auto">
                   <button
                     type="button"
                     onClick={() => setSearchMode('nearby')}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`flex-1 xs:flex-none rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold transition-all ${
                       searchMode === 'nearby'
                         ? 'bg-white text-[#CF373D] shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
@@ -502,7 +503,7 @@ export function ComparisonPage() {
                   <button
                     type="button"
                     onClick={() => setSearchMode('advanced')}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`flex-1 xs:flex-none rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold transition-all ${
                       searchMode === 'advanced'
                         ? 'bg-white text-[#CF373D] shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
@@ -522,7 +523,7 @@ export function ComparisonPage() {
                       step="0.0001"
                       value={nearLat}
                       onChange={(e) => setNearLat(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                     />
                   </div>
                   <div>
@@ -532,7 +533,7 @@ export function ComparisonPage() {
                       step="0.0001"
                       value={nearLng}
                       onChange={(e) => setNearLng(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                     />
                   </div>
                   <div>
@@ -543,16 +544,16 @@ export function ComparisonPage() {
                       step={0.5}
                       value={nearRadiusKm}
                       onChange={(e) => setNearRadiusKm(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
+                      className="w-full rounded-lg border border-slate-300 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-[#CF373D] focus:ring-2 focus:ring-[#CF373D]/20"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => void handleSearchNearby()}
                     disabled={loadingSearch}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-4 py-2 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60"
+                    className="w-full inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-60 min-h-[40px] sm:min-h-[44px]"
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     {loadingSearch ? 'Đang tìm...' : 'Tìm trạm'}
                   </button>
                 </div>
@@ -597,7 +598,7 @@ export function ComparisonPage() {
                     return (
                       <div
                         key={station.id}
-                        className={`rounded-lg border-2 p-2.5 transition-all ${
+                        className={`rounded-lg border-2 p-2 sm:p-2.5 transition-all ${
                           isSelected
                             ? 'border-[#CF373D] bg-[#CF373D]/5'
                             : 'border-slate-200 bg-white hover:border-[#CF373D]/50'
@@ -605,20 +606,20 @@ export function ComparisonPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-xs text-slate-900 truncate">{station.name}</div>
+                            <div className="font-semibold text-xs text-slate-900 break-words">{station.name}</div>
                             {station.address?.addressLocality && (
-                              <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                                <MapPin className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{station.address.addressLocality}</span>
+                              <div className="mt-1 flex items-start gap-1 text-xs text-slate-500">
+                                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0 mt-0.5" />
+                                <span className="break-words">{station.address.addressLocality}</span>
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-col items-end gap-2">
+                          <div className="flex flex-col items-end gap-1.5 sm:gap-2 flex-shrink-0">
                             <button
                               type="button"
                               onClick={() => addStationToComparison(station)}
                               disabled={isSelected || selectedStations.length >= 5}
-                              className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                              className={`rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1 text-xs font-semibold transition-all min-w-[60px] ${
                                 isSelected
                                   ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
                                   : selectedStations.length >= 5
@@ -631,18 +632,19 @@ export function ComparisonPage() {
                             <button
                               type="button"
                               onClick={() => void handleToggleFavorite(station)}
-                              className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                              className={`inline-flex items-center gap-0.5 sm:gap-1 rounded-lg border px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-semibold transition-all ${
                                 isFavorited
                                   ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
                                   : 'border-slate-200 bg-white text-slate-600 hover:border-[#CF373D]/40 hover:text-[#CF373D]'
                               }`}
                             >
                               {isFavorited ? (
-                                <BookmarkCheck className="h-3.5 w-3.5" />
+                                <BookmarkCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                               ) : (
-                                <Bookmark className="h-3.5 w-3.5" />
+                                <Bookmark className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                               )}
-                              {isFavorited ? 'Đã lưu' : 'Lưu trạm'}
+                              <span className="hidden sm:inline">{isFavorited ? 'Đã lưu' : 'Lưu trạm'}</span>
+                              <span className="sm:hidden">{isFavorited ? 'Đã lưu' : 'Lưu'}</span>
                             </button>
                           </div>
                         </div>
@@ -653,33 +655,33 @@ export function ComparisonPage() {
               )}
             </div>
           ) : (
-            <div className="p-4 bg-slate-50/30">
+            <div className="p-3 sm:p-4 bg-slate-50/30">
               {/* Results Tab Content */}
-              <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-900">Kết quả so sánh</h4>
+              <div className="mb-3 sm:mb-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900">Kết quả so sánh</h4>
             {comparisonResult && comparisonResult.length > 0 && (
-                  <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+                  <div className="flex gap-1 rounded-lg bg-slate-100 p-1 w-full xs:w-auto">
                     <button
                       type="button"
                       onClick={() => setViewMode('cards')}
-                      className={`rounded-md px-2 py-1 text-xs font-semibold transition-all ${
+                      className={`flex-1 xs:flex-none rounded-md px-2 py-1 text-xs font-semibold transition-all ${
                         viewMode === 'cards'
                           ? 'bg-white text-[#CF373D] shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <LayoutGrid className="h-3.5 w-3.5" />
+                      <LayoutGrid className="h-3 w-3 sm:h-3.5 sm:w-3.5 mx-auto" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setViewMode('table')}
-                      className={`rounded-md px-2 py-1 text-xs font-semibold transition-all ${
+                      className={`flex-1 xs:flex-none rounded-md px-2 py-1 text-xs font-semibold transition-all ${
                         viewMode === 'table'
                           ? 'bg-white text-[#CF373D] shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <Table2 className="h-3.5 w-3.5" />
+                      <Table2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mx-auto" />
                     </button>
                   </div>
                 )}
@@ -688,34 +690,35 @@ export function ComparisonPage() {
               {comparisonResult && comparisonResult.length > 0 ? (
                 <div>
                 {viewMode === 'cards' ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                     {comparisonResult.map((result) => {
                       const station = getStationFromResult(result)
                       return (
                         <div
                           key={result.station_id}
-                          className="group rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-[#CF373D]/40 hover:shadow-md"
+                          className="group rounded-lg sm:rounded-xl border-2 border-slate-200 bg-white p-3 sm:p-4 shadow-sm transition-all hover:border-[#CF373D]/40 hover:shadow-md"
                         >
-                          <div className="mb-4 flex items-start justify-between gap-2">
+                          <div className="mb-3 sm:mb-4 flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <h5 className="text-sm font-bold text-slate-900 group-hover:text-[#CF373D] transition-colors truncate">
+                              <h5 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#CF373D] transition-colors break-words">
                                 {result.station_name}
                               </h5>
                               {result.network && (
-                                <p className="mt-1 text-xs text-slate-500 truncate">{result.network}</p>
+                                <p className="mt-1 text-xs text-slate-500 break-words">{result.network}</p>
                               )}
                             </div>
                             <div
-                              className={`flex-shrink-0 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold ${getStatusColor(
+                              className={`flex-shrink-0 inline-flex items-center gap-0.5 sm:gap-1 rounded-lg border px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-semibold ${getStatusColor(
                                 result.status,
                               )}`}
                             >
-                              {getStatusIcon(result.status) && getStatusIcon(result.status)}
-                              <span className="whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
+                              {getStatusIcon(result.status) && <span className="flex-shrink-0">{getStatusIcon(result.status)}</span>}
+                              <span className="hidden xs:inline whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
+                              <span className="xs:hidden">...</span>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                             <div className="rounded-lg bg-emerald-50/50 p-3 border border-emerald-100 hover:bg-emerald-50 transition-colors">
                               <div className="text-xs font-medium text-emerald-600 mb-1">Chỗ trống</div>
                               <div className="text-lg font-bold text-emerald-700">
@@ -755,17 +758,18 @@ export function ComparisonPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-                    <table className="w-full border-collapse text-xs">
+                  <div className="w-full overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                    <div className="min-w-[600px]">
+                      <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="border-b-2 border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100/50">
-                          <th className="px-4 py-3 text-left font-bold text-slate-700">Trạm</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">Trạng thái</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">Chỗ trống</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">Công suất</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">Số phiên</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">kWh/phiên</th>
-                          <th className="px-4 py-3 text-center font-bold text-slate-700">Thao tác</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-slate-700">Trạm</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">Trạng thái</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">Chỗ trống</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">Công suất</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">Số phiên</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">kWh/phiên</th>
+                          <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700">Thao tác</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -778,43 +782,44 @@ export function ComparisonPage() {
                                 index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
                               }`}
                             >
-                              <td className="px-4 py-3">
-                                <div className="font-semibold text-slate-900 text-xs">{result.station_name}</div>
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
+                                <div className="font-semibold text-slate-900 text-xs break-words">{result.station_name}</div>
                                 {result.network && (
-                                  <div className="text-xs text-slate-500 mt-0.5">{result.network}</div>
+                                  <div className="text-xs text-slate-500 mt-0.5 break-words">{result.network}</div>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
                                 <div
-                                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold ${getStatusColor(
+                                  className={`inline-flex items-center gap-0.5 sm:gap-1 rounded-lg border px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-semibold ${getStatusColor(
                                     result.status,
                                   )}`}
                                 >
-                                  {getStatusIcon(result.status) && getStatusIcon(result.status)}
-                                  <span className="whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
+                                  {getStatusIcon(result.status) && <span className="flex-shrink-0">{getStatusIcon(result.status)}</span>}
+                                  <span className="hidden xs:inline whitespace-nowrap">{getStationStatusLabel(result.status)}</span>
+                                  <span className="xs:hidden">...</span>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-700">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700 text-xs">
                                 {result.available_capacity != null ? result.available_capacity : '-'}
                               </td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-700">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700 text-xs">
                                 {result.capacity != null ? `${result.capacity}kW` : '-'}
                               </td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-700">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700 text-xs">
                                 {result.total_sessions}
                               </td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-700">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-slate-700 text-xs">
                                 {result.avg_energy_per_session_kwh.toFixed(1)}
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
                                 {station && (
                                   <button
                                     type="button"
                                     onClick={() => setSelectedStation(station)}
-                                    className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md transition-all"
+                                    className="inline-flex items-center gap-0.5 sm:gap-1 rounded-lg bg-gradient-to-r from-[#CF373D] to-[#b82e33] px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-white shadow-sm hover:shadow-md transition-all"
                                   >
-                                    <Eye className="h-3 w-3" />
-                                    Xem
+                                    <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                                    <span className="hidden sm:inline">Xem</span>
                                   </button>
                                 )}
                               </td>
@@ -822,15 +827,16 @@ export function ComparisonPage() {
                           )
                         })}
                       </tbody>
-                    </table>
+                      </table>
+                    </div>
                   </div>
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500">
+                <div className="flex items-center justify-center py-8 sm:py-12">
+                  <div className="text-center px-4">
+                    <BarChart3 className="h-8 w-8 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-2 sm:mb-3" />
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 break-words">
                       {selectedStations.length === 0
                         ? 'Chọn ít nhất 2 trạm để so sánh'
                         : selectedStations.length === 1
@@ -846,8 +852,8 @@ export function ComparisonPage() {
       </div>
 
       {/* Map Area - Always visible on the right */}
-      <div className="flex-1 min-w-0 bg-white">
-        <div className="relative h-full w-full">
+      <div className="flex-1 min-w-0 bg-white overflow-hidden">
+        <div className="relative h-full w-full min-h-0">
           <StationsMap
             stations={mapStations}
             currentLocation={currentLocation}

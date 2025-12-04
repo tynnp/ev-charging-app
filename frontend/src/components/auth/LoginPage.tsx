@@ -115,51 +115,51 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-[#124874]/5 to-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-[#124874]/5 to-slate-50 px-3 sm:px-4 py-6 sm:py-8 md:py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-[#124874]">
+        <div className="mb-4 sm:mb-6 md:mb-8 text-center">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#124874] break-words">
             {isLogin ? 'Đăng nhập' : 'Đăng ký'}
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-slate-600 break-words px-2">
             {isLogin
               ? 'Chào mừng bạn đến với hệ thống'
               : 'Tạo tài khoản mới để bắt đầu'}
           </p>
         </div>
 
-        <div className="w-full rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="w-full rounded-xl sm:rounded-2xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50/50 p-4 sm:p-6 md:p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-5">
             {!isLogin && !otpStep && (
               <>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-1 sm:mb-1.5 md:mb-2 block text-xs sm:text-sm font-medium text-slate-700">
                     Họ và tên
                   </label>
                   <div className="relative">
-                    <UserCircle className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <UserCircle className="absolute left-2.5 sm:left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                      className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-8 sm:pl-9 md:pl-10 pr-3 sm:pr-4 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                       placeholder="Nhập họ và tên"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-700">
                     Email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-slate-400" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                      className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-4 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                       placeholder="Email xác thực"
                     />
                   </div>
@@ -170,22 +170,22 @@ export function LoginPage() {
 
             {!isLogin && otpStep && (
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-700">
                   Mã OTP
                 </label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-4 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                     placeholder="Nhập mã OTP gồm 6 chữ số"
                   />
                 </div>
                 {remainingSeconds > 0 && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-                    <TimerReset className="h-4 w-4" />
+                  <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+                    <TimerReset className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>Mã OTP sẽ hết hạn sau {formattedCountdown}</span>
                   </div>
                 )}
@@ -193,34 +193,34 @@ export function LoginPage() {
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-700">
                 Tên đăng nhập
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <User className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-4 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                   placeholder="Nhập tên đăng nhập"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-700">
                 Mật khẩu
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-10 text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-10 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                   placeholder="Nhập mật khẩu"
                 />
                 <button
@@ -229,22 +229,22 @@ export function LoginPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </div>
             </div>
 
             {info && (
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700">
+              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 sm:p-2.5 md:p-3 text-xs sm:text-sm text-emerald-700 break-words">
                 {info}
               </div>
             )}
 
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              <div className="rounded-lg bg-red-50 border border-red-200 p-2 sm:p-2.5 md:p-3 text-xs sm:text-sm text-red-700 break-words">
                 {error}
               </div>
             )}
@@ -252,7 +252,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-3 font-semibold text-white shadow-sm transition-all hover:from-[#0f3a5a] hover:to-[#0d2e47] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#124874]/20 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-gradient-to-r from-[#124874] to-[#0f3a5a] py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white shadow-sm transition-all hover:from-[#0f3a5a] hover:to-[#0d2e47] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#124874]/20 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               {isLoading
                 ? 'Đang xử lý...'
@@ -264,14 +264,14 @@ export function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-3 sm:mt-4 md:mt-6 text-center px-2">
             <button
               type="button"
               onClick={() => {
                 setIsLogin(!isLogin)
                 resetStates()
               }}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-[#124874] hover:underline"
+              className="text-xs sm:text-sm font-medium text-slate-600 transition-colors hover:text-[#124874] hover:underline break-words"
             >
               {isLogin
                 ? 'Chưa có tài khoản? Đăng ký ngay'

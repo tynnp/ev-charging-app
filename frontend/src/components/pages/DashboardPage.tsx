@@ -223,7 +223,7 @@ function MiniStationsMap({ stations, onSelectStation, onCoordinateSelect, select
     }
   }, [selectedCoordinate])
 
-  return <div ref={mapContainerRef} className="h-96 w-full rounded-md" />
+  return <div ref={mapContainerRef} className="h-64 sm:h-80 md:h-96 w-full rounded-md" />
 }
 
 type DashboardSection = 'overview' | 'realtime' | 'map' | 'stations'
@@ -694,10 +694,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
   const paginatedStations = stations.slice(pageStartIndex, pageStartIndex + STATIONS_PER_PAGE)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6 min-w-0 w-full">
       {section === 'overview' ? (
         <>
-          <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
+          <section className="rounded-xl sm:rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-3 sm:p-4 md:p-6 shadow-lg overflow-hidden min-w-0">
             <AnalyticsOverviewPanel
             overview={overview}
             revenueTimeline={revenueTimeline}
@@ -715,60 +715,64 @@ export function DashboardPage({ section }: DashboardPageProps) {
       {error ? (
         <div
           role="alert"
-          className="flex items-center gap-3 rounded-xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-red-100 px-5 py-4 text-sm font-semibold text-red-800 shadow-md"
+          className="flex items-start gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-red-100 px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm font-semibold text-red-800 shadow-md"
         >
-          <AlertTriangle className="h-5 w-5" />
-          <span>{error}</span>
+          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 mt-0.5" />
+          <span className="break-words">{error}</span>
         </div>
       ) : null}
 
       {section === 'realtime' ? (
-        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
-          <div className="mb-4 flex items-center gap-2">
-            <Zap className="h-6 w-6 text-[#124874]" />
-            <h2 className="text-xl font-bold text-slate-900">
+        <section className="rounded-xl sm:rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-3 sm:p-4 md:p-6 shadow-lg overflow-hidden">
+          <div className="mb-3 sm:mb-4 flex items-center gap-2">
+            <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-[#124874] flex-shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 break-words">
               Phiên sạc realtime gần đây
             </h2>
           </div>
           {recentSessions.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-6 text-center">
-              <p className="text-base font-medium text-slate-600">
+            <div className="rounded-lg sm:rounded-xl bg-slate-50 p-4 sm:p-6 text-center">
+              <p className="text-sm sm:text-base font-medium text-slate-600 break-words">
                 Chưa có phiên sạc realtime nào trong phiên làm việc này.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-              <table className="w-full border-collapse text-sm">
+            <div className="w-full overflow-x-auto rounded-lg sm:rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="min-w-[600px] sm:min-w-[640px]">
+                <table className="w-full border-collapse text-xs sm:text-sm">
                 <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
                   <tr>
-                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
-                        Thời gian bắt đầu
+                    <th className="border-b border-slate-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Thời gian bắt đầu</span>
+                        <span className="sm:hidden">Thời gian</span>
                       </span>
                     </th>
-                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                      <span className="flex items-center gap-1.5">
-                        <Plug className="h-4 w-4" />
+                    <th className="border-b border-slate-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <Plug className="h-3 w-3 sm:h-4 sm:w-4" />
                         Trạm
                       </span>
                     </th>
-                    <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                      <span className="flex items-center gap-1.5">
-                        <Car className="h-4 w-4" />
-                        Loại phương tiện
+                    <th className="border-b border-slate-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-slate-700">
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <Car className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Loại phương tiện</span>
+                        <span className="sm:hidden">Loại xe</span>
                       </span>
                     </th>
-                    <th className="border-b border-slate-200 px-4 py-3 text-right font-semibold text-slate-700">
-                      <span className="flex items-center justify-end gap-1.5">
-                        <Zap className="h-4 w-4" />
+                    <th className="border-b border-slate-200 px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1 sm:gap-1.5">
+                        <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
                         kWh
                       </span>
                     </th>
-                    <th className="border-b border-slate-200 px-4 py-3 text-right font-semibold text-slate-700">
-                      <span className="flex items-center justify-end gap-1.5">
-                        <DollarSign className="h-4 w-4" />
-                        Doanh thu (VND)
+                    <th className="border-b border-slate-200 px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
+                      <span className="flex items-center justify-end gap-1 sm:gap-1.5">
+                        <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Doanh thu (VND)</span>
+                        <span className="sm:hidden">VND</span>
                       </span>
                     </th>
                   </tr>
@@ -779,23 +783,23 @@ export function DashboardPage({ section }: DashboardPageProps) {
                       key={item.session_id ?? `${item.station_id}-${item.start_date_time}`}
                       className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}
                     >
-                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-4 py-2 sm:py-2.5 font-medium text-slate-700 text-xs sm:text-sm break-words min-w-0">
                         {formatDateTime(item.start_date_time)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-4 py-2 sm:py-2.5 font-medium text-slate-700 text-xs sm:text-sm break-words min-w-0">
                         {stationNameLookup[item.station_id ?? ''] ?? item.station_id ?? '-'}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-2.5 font-medium text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-4 py-2 sm:py-2.5 font-medium text-slate-700 text-xs sm:text-sm break-words min-w-0">
                         {formatVehicleType(item.vehicle_type)}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-2.5 text-right font-semibold text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-4 py-2 sm:py-2.5 text-right font-semibold text-slate-700 text-xs sm:text-sm">
                         {item.power_consumption_kwh != null
                           ? item.power_consumption_kwh.toLocaleString('vi-VN', {
                               maximumFractionDigits: 1,
                             })
                           : '-'}
                       </td>
-                      <td className="border-b border-slate-100 px-4 py-2.5 text-right font-semibold text-slate-700">
+                      <td className="border-b border-slate-100 px-2 sm:px-4 py-2 sm:py-2.5 text-right font-semibold text-slate-700 text-xs sm:text-sm">
                         {item.amount_collected_vnd != null
                           ? item.amount_collected_vnd.toLocaleString('vi-VN')
                           : '-'}
@@ -803,23 +807,26 @@ export function DashboardPage({ section }: DashboardPageProps) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
           )}
         </section>
       ) : null}
 
       {section === 'map' ? (
-        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
-          <div className="mb-4 flex items-center gap-2">
-            <Map className="h-6 w-6 text-[#124874]" />
-            <h2 className="text-xl font-bold text-slate-900">
-              Bản đồ trạm sạc &amp; Tra cứu tọa độ gần đây
+        <section className="rounded-xl sm:rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-3 sm:p-4 md:p-6 shadow-lg overflow-hidden min-w-0">
+          <div className="mb-3 sm:mb-4 flex items-center gap-2">
+            <Map className="h-5 w-5 sm:h-6 sm:w-6 text-[#124874] flex-shrink-0" />
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 break-words">
+              <span className="hidden md:inline">Bản đồ trạm sạc &amp; Tra cứu tọa độ gần đây</span>
+              <span className="hidden sm:inline md:hidden">Bản đồ &amp; Tra cứu</span>
+              <span className="sm:hidden">Bản đồ</span>
             </h2>
           </div>
-          <div className="mb-4 rounded-xl bg-gradient-to-br from-slate-50 to-white p-4 border border-slate-200/50">
-            <div className="mb-3 flex flex-wrap items-end gap-3 text-base">
-              <div>
+          <div className="mb-3 sm:mb-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-slate-50 to-white p-3 sm:p-4 border border-slate-200/50">
+            <div className="mb-3 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3 text-sm sm:text-base">
+              <div className="flex-1 sm:flex-none">
                 <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                   <MapPin className="h-3.5 w-3.5" />
                   Vĩ độ (lat)
@@ -829,10 +836,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   step="0.0001"
                   value={nearLat}
                   onChange={(event) => setNearLat(event.target.value)}
-                  className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full sm:w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 />
               </div>
-              <div>
+              <div className="flex-1 sm:flex-none">
                 <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                   <MapPin className="h-3.5 w-3.5" />
                   Kinh độ (lng)
@@ -842,10 +849,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   step="0.0001"
                   value={nearLng}
                   onChange={(event) => setNearLng(event.target.value)}
-                  className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full sm:w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 />
               </div>
-              <div>
+              <div className="flex-1 sm:flex-none">
                 <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                   <Ruler className="h-3.5 w-3.5" />
                   Bán kính (km)
@@ -856,7 +863,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   step="0.5"
                   value={nearRadiusKm}
                   onChange={(event) => setNearRadiusKm(event.target.value)}
-                  className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full sm:w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 />
               </div>
               <button
@@ -865,7 +872,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   void loadNearbyStations()
                 }}
                 disabled={loadingNearby}
-                className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-transparent bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#124874] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
               >
                 <Search className="h-4 w-4" />
                 {loadingNearby ? 'Đang tìm...' : 'Tìm trạm gần đây'}
@@ -890,7 +897,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
             ) : null}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-md">
+          <div className="mt-3 sm:mt-4 overflow-hidden rounded-lg sm:rounded-xl border-2 border-slate-200 bg-white shadow-md h-64 sm:h-80 md:h-96">
             <MiniStationsMap
               stations={nearbyStations}
               onSelectStation={handleSelectStation}
@@ -900,24 +907,24 @@ export function DashboardPage({ section }: DashboardPageProps) {
           </div>
 
           {selectedStationId ? (
-            <div className="mt-4 rounded-2xl border border-[#124874]/15 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 shadow-xl">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#124874]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#124874]">
-                    <Map className="h-3.5 w-3.5" />
+            <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl border border-[#124874]/15 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-3 sm:p-4 md:p-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#124874]/10 px-2 sm:px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#124874]">
+                    <Map className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     Trạm được chọn
                   </div>
-                  <h3 className="mt-3 text-xl font-bold text-slate-900">
+                  <h3 className="mt-3 text-lg sm:text-xl font-bold text-slate-900 break-words">
                     {displayStation?.name ?? 'Đang tải thông tin trạm...'}
                   </h3>
-                  <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-[#124874]/10 px-3 py-1 text-xs font-semibold text-[#124874]">
-                    <Plug className="h-3.5 w-3.5" />
-                    <span>{selectedStationId}</span>
+                  <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-[#124874]/10 px-2 sm:px-3 py-1 text-xs font-semibold text-[#124874] break-all">
+                    <Plug className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                    <span className="truncate">{selectedStationId}</span>
                   </p>
                   {locationSummary ? (
-                    <p className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-600">
-                      <MapPin className="h-4 w-4 text-[#cf373d]" />
-                      <span>{locationSummary}</span>
+                    <p className="mt-3 flex items-start gap-2 text-xs sm:text-sm font-medium text-slate-600">
+                      <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#cf373d] flex-shrink-0 mt-0.5" />
+                      <span className="break-words">{locationSummary}</span>
                     </p>
                   ) : null}
                   {totalCapacityValue != null ? (
@@ -927,14 +934,14 @@ export function DashboardPage({ section }: DashboardPageProps) {
                   ) : null}
                 </div>
                 {(loadingStationDetails || loadingStationRealtime) && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#124874]/10 to-[#0f3a5a]/10 px-4 py-1.5 text-xs font-semibold text-[#124874]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#124874]/10 to-[#0f3a5a]/10 px-3 sm:px-4 py-1.5 text-xs font-semibold text-[#124874]">
+                    <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                     <span>Đang tải...</span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-4 sm:mt-5 grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-500/15 via-blue-400/10 to-blue-500/5 p-4 text-blue-800 shadow-sm">
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
                     <CheckCircle2 className="h-3 w-3" />
@@ -1027,10 +1034,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       ) : null}
 
       {section === 'stations' ? (
-        <section className="rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-lg">
-          <div className="mb-4 flex items-center gap-2">
-            <Plug className="h-6 w-6 text-[#124874]" />
-            <h2 className="text-xl font-bold text-slate-900">Trạm sạc</h2>
+        <section className="rounded-xl sm:rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-3 sm:p-4 md:p-6 shadow-lg overflow-hidden min-w-0">
+          <div className="mb-3 sm:mb-4 flex items-center gap-2">
+            <Plug className="h-5 w-5 sm:h-6 sm:w-6 text-[#124874] flex-shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">Trạm sạc</h2>
           </div>
           <StationFilters
             status={statusFilter}
@@ -1053,30 +1060,32 @@ export function DashboardPage({ section }: DashboardPageProps) {
             onMaxCapacityChange={setMaxCapacityFilter}
             onApplyFilters={handleApplyFilters}
           />
-          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-            <div>
-              <div className="mb-3 flex items-center justify-between text-xs font-medium text-slate-600">
-                <span>
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 lg:items-start">
+            <div className="min-w-0">
+              <div className="mb-2 sm:mb-3 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 text-xs font-medium text-slate-600">
+                <span className="break-words">
                   Hiển thị {stations.length === 0 ? 0 : pageStartIndex + 1}–
                   {Math.min(pageStartIndex + paginatedStations.length, stations.length)} / {stations.length}
                 </span>
-                <div className="inline-flex items-center gap-1">
+                <div className="inline-flex items-center gap-1 w-full xs:w-auto">
                   <button
                     type="button"
                     onClick={() => setStationPage((prev) => Math.max(1, prev - 1))}
                     disabled={stationPage === 1}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
+                    className="flex-1 xs:flex-none rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
                   >
-                    Trang trước
+                    <span className="hidden sm:inline">Trang trước</span>
+                    <span className="sm:hidden">Trước</span>
                   </button>
-                  <span className="px-2 py-1">{stationPage} / {totalStationPages}</span>
+                  <span className="px-2 py-1 text-xs whitespace-nowrap">{stationPage} / {totalStationPages}</span>
                   <button
                     type="button"
                     onClick={() => setStationPage((prev) => Math.min(totalStationPages, prev + 1))}
                     disabled={stationPage >= totalStationPages}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
+                    className="flex-1 xs:flex-none rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874]"
                   >
-                    Trang sau
+                    <span className="hidden sm:inline">Trang sau</span>
+                    <span className="sm:hidden">Sau</span>
                   </button>
                 </div>
               </div>
@@ -1087,7 +1096,7 @@ export function DashboardPage({ section }: DashboardPageProps) {
                 onSelectStation={handleSelectStation}
               />
             </div>
-            <div>
+            <div className="lg:sticky lg:top-4 min-w-0">
               <StationDetails
                 station={displayStation}
                 realtime={stationRealtime}

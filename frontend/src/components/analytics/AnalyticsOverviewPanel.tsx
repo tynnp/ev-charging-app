@@ -95,38 +95,38 @@ export function AnalyticsOverviewPanel({
   }
 
   return (
-    <section className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#124874] via-[#0f3a5a] to-[#124874] px-6 py-5 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+    <section className="space-y-4 sm:space-y-6 min-w-0 w-full">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 min-w-0">
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#124874] via-[#0f3a5a] to-[#124874] px-4 sm:px-5 md:px-6 py-4 sm:py-5 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
           <div className="absolute right-0 top-0 -mr-4 -mt-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           <div className="relative">
-            <div className="mb-2 flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-white" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-100/90">
+            <div className="mb-2 flex items-center gap-1.5 sm:gap-2">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-100/90 break-words">
                 Doanh thu toàn hệ thống
               </p>
             </div>
-            <p className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold break-words">
               {formatCurrency(overview.total_amount_vnd)}
             </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-100/80">
+            <p className="mt-2 text-xs leading-relaxed text-slate-100/80 break-words">
               Tổng doanh thu thu được từ tất cả các phiên sạc.
             </p>
           </div>
         </div>
-        <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#CF373D] via-[#b82e33] to-[#CF373D] px-6 py-5 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#CF373D] via-[#b82e33] to-[#CF373D] px-4 sm:px-5 md:px-6 py-4 sm:py-5 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
           <div className="absolute right-0 top-0 -mr-4 -mt-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           <div className="relative">
-            <div className="mb-2 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-white" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-100/90">
+            <div className="mb-2 flex items-center gap-1.5 sm:gap-2">
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-100/90 break-words">
                 Thuế thu được
               </p>
             </div>
-            <p className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold break-words">
               {formatCurrency(overview.total_tax_vnd)}
             </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-100/80">
+            <p className="mt-2 text-xs leading-relaxed text-slate-100/80 break-words">
               Số thuế ước tính đã thu từ doanh thu trạm sạc.
             </p>
           </div>
@@ -134,40 +134,40 @@ export function AnalyticsOverviewPanel({
       </div>
 
             {/* Revenue Timeline Section */}
-      <div className="rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-[#124874]" />
-            <p className="text-sm font-bold text-slate-900">
+      <div className="rounded-lg sm:rounded-xl border border-slate-200/50 bg-white px-3 sm:px-4 md:px-5 py-3 sm:py-4 shadow-sm overflow-hidden min-w-0">
+        <div className="mb-3 sm:mb-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
+            <p className="text-xs sm:text-sm font-bold text-slate-900 break-words">
               Doanh thu toàn hệ thống theo thời gian
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowRevenueDetails(!showRevenueDetails)}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-[#124874]/40 hover:text-[#124874] hover:bg-slate-50"
+            className="w-full xs:w-auto flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border border-slate-300 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-[#124874]/40 hover:text-[#124874] hover:bg-slate-50"
           >
             Chi tiết
             {showRevenueDetails ? (
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             ) : (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
           </button>
         </div>
 
         {showRevenueDetails && (
           <>
-            <div className="mb-4 flex items-center justify-end">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-500" />
+            <div className="mb-3 sm:mb-4 flex items-center justify-end">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-500 flex-shrink-0" />
                 <label className="text-xs font-semibold text-slate-700">
                   Xem theo:
                 </label>
                 <select
                   value={period}
                   onChange={(e) => onPeriodChange(e.target.value as 'day' | 'week')}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="rounded-lg border border-slate-300 bg-white px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium shadow-sm transition-all focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
                 >
                   <option value="day">Theo ngày</option>
                   <option value="week">Theo tuần</option>
@@ -178,27 +178,29 @@ export function AnalyticsOverviewPanel({
             {loadingTimeline ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-[#124874]" />
-            <p className="ml-2 text-sm text-slate-600">Đang tải dữ liệu doanh thu...</p>
+            <p className="ml-2 text-xs sm:text-sm text-slate-600">Đang tải dữ liệu doanh thu...</p>
           </div>
         ) : revenueTimeline && timelineItems.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[600px]">
+                <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-slate-700">
                       {revenueTimeline.period === 'day' ? 'Ngày' : 'Tuần'}
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
                       Doanh thu
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
                       Thuế
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
-                      Năng lượng (kWh)
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
+                      <span className="hidden sm:inline">Năng lượng (kWh)</span>
+                      <span className="sm:hidden">kWh</span>
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                    <th className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-700">
                       Số phiên
                     </th>
                   </tr>
@@ -209,19 +211,19 @@ export function AnalyticsOverviewPanel({
                       key={item.period}
                       className="transition-colors hover:bg-slate-50/50"
                     >
-                      <td className="px-4 py-3 font-medium text-slate-800">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 font-medium text-slate-800 break-words min-w-0">
                         {item.period_label}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-slate-900 whitespace-nowrap">
                         {formatCurrency(item.total_amount_vnd)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-slate-600 whitespace-nowrap">
                         {formatCurrency(item.total_tax_vnd)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-slate-600 whitespace-nowrap">
                         {formatNumber(item.total_energy_kwh, 2)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600">
+                      <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-slate-600 whitespace-nowrap">
                         {item.session_count.toLocaleString('vi-VN')}
                       </td>
                     </tr>
@@ -249,36 +251,39 @@ export function AnalyticsOverviewPanel({
                     </tr>
                   </tfoot>
                 )}
-              </table>
+                </table>
+              </div>
             </div>
 
             {/* Phân trang  */}
-            <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-              <span className="text-xs font-medium text-slate-600">
+            <div className="mt-3 sm:mt-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 border-t border-slate-200 pt-3 sm:pt-4">
+              <span className="text-xs font-medium text-slate-600 break-words">
                 Hiển thị {timelineItems.length === 0 ? 0 : pageStartIndex + 1}–
                 {Math.min(pageStartIndex + paginatedItems.length, timelineItems.length)} / {timelineItems.length} {period === 'day' ? 'ngày' : 'tuần'}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full xs:w-auto">
                 <button
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1 || totalPages <= 1}
-                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200"
+                  className="flex-1 xs:flex-none flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200 min-h-[36px] sm:min-h-[40px]"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Trang trước
+                  <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Trang trước</span>
+                  <span className="sm:hidden">Trước</span>
                 </button>
-                <span className="px-3 py-1.5 text-xs font-medium text-slate-700">
+                <span className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-slate-700 whitespace-nowrap">
                   Trang {currentPage} / {totalPages}
                 </span>
                 <button
                   type="button"
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage >= totalPages || totalPages <= 1}
-                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200"
+                  className="flex-1 xs:flex-none flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-[#124874]/40 hover:text-[#124874] disabled:hover:border-slate-200 min-h-[36px] sm:min-h-[40px]"
                 >
-                  Trang sau
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="hidden sm:inline">Trang sau</span>
+                  <span className="sm:hidden">Sau</span>
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
@@ -292,66 +297,66 @@ export function AnalyticsOverviewPanel({
         )}
       </div>
 
-      <div className="rounded-xl bg-white/60 p-5 backdrop-blur-sm">
-        <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-          <BarChart3 className="h-5 w-5 text-[#124874]" />
+      <div className="rounded-lg sm:rounded-xl bg-white/60 p-3 sm:p-4 md:p-5 backdrop-blur-sm">
+        <h2 className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl font-bold text-slate-900">
+          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
           Tổng quan hệ thống
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-xs sm:text-sm text-slate-600 break-words">
           Một số chỉ số chính về tải hệ thống, năng lượng và số lượng trạm sạc đang hoạt động.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="group rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
-          <div className="mb-2 flex items-center gap-2">
-            <Zap className="h-5 w-5 text-[#124874]" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        <div className="group rounded-lg sm:rounded-xl border border-slate-200/50 bg-white px-3 sm:px-4 md:px-5 py-3 sm:py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
+          <div className="mb-2 flex items-center gap-1.5 sm:gap-2">
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 break-words">
               Tổng số phiên sạc
             </p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 break-words">
             {overview.total_sessions.toLocaleString('vi-VN')}
           </p>
-          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          <p className="mt-2 text-xs leading-relaxed text-slate-500 break-words">
             Số phiên sạc đã ghi nhận trong hệ thống.
           </p>
         </div>
-        <div className="group rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
-          <div className="mb-2 flex items-center gap-2">
-            <Battery className="h-5 w-5 text-[#124874]" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="group rounded-lg sm:rounded-xl border border-slate-200/50 bg-white px-3 sm:px-4 md:px-5 py-3 sm:py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
+          <div className="mb-2 flex items-center gap-1.5 sm:gap-2">
+            <Battery className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 break-words">
               Tổng năng lượng (kWh)
             </p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 break-words">
             {formatNumber(overview.total_energy_kwh)}
           </p>
-          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          <p className="mt-2 text-xs leading-relaxed text-slate-500 break-words">
             Tổng kWh đã cung cấp cho các phiên sạc.
           </p>
         </div>
-        <div className="group rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
-          <div className="mb-2 flex items-center gap-2">
-            <Plug className="h-5 w-5 text-[#124874]" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="group rounded-lg sm:rounded-xl border border-slate-200/50 bg-white px-3 sm:px-4 md:px-5 py-3 sm:py-4 shadow-sm transition-all duration-200 hover:border-[#124874]/30 hover:shadow-md">
+          <div className="mb-2 flex items-center gap-1.5 sm:gap-2">
+            <Plug className="h-4 w-4 sm:h-5 sm:w-5 text-[#124874] flex-shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 break-words">
               Số trạm sạc
             </p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 break-words">
             {overview.stations_count.toLocaleString('vi-VN')}
           </p>
-          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          <p className="mt-2 text-xs leading-relaxed text-slate-500 break-words">
             Số trạm sạc đang được hệ thống quản lý.
           </p>
         </div>
       </div>
 
       {overview.top_stations_by_sessions.length > 0 ? (
-        <div className="rounded-xl border border-slate-200/50 bg-white px-5 py-4 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            <p className="text-sm font-bold text-slate-900">
+        <div className="rounded-lg sm:rounded-xl border border-slate-200/50 bg-white px-3 sm:px-4 md:px-5 py-3 sm:py-4 shadow-sm">
+          <div className="mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+            <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 flex-shrink-0" />
+            <p className="text-xs sm:text-sm font-bold text-slate-900 break-words">
               Top trạm theo số phiên sạc
             </p>
           </div>
@@ -359,17 +364,17 @@ export function AnalyticsOverviewPanel({
             {overview.top_stations_by_sessions.map((item, index) => (
               <li
                 key={item.station_id}
-                className="flex items-center justify-between py-3 text-sm transition-colors hover:bg-slate-50/50"
+                className="flex items-center justify-between py-2 sm:py-3 text-xs sm:text-sm transition-colors hover:bg-slate-50/50 gap-2"
               >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#124874] to-[#0f3a5a] text-xs font-bold text-white">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#124874] to-[#0f3a5a] text-xs font-bold text-white flex-shrink-0">
                     {index + 1}
                   </span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-slate-800 truncate">
                     {stationNameLookup?.[item.station_id] ?? item.station_id}
                   </span>
                 </div>
-                <span className="rounded-full bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                <span className="rounded-full bg-gradient-to-r from-[#124874] to-[#0f3a5a] px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-semibold text-white shadow-sm whitespace-nowrap flex-shrink-0">
                   {item.session_count.toLocaleString('vi-VN')} phiên
                 </span>
               </li>

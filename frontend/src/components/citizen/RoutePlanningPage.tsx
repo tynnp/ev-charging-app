@@ -186,7 +186,7 @@ export function RoutePlanningPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-hidden">
       {/* Sidebar */}
       <div
         className={`relative flex flex-col border-r border-slate-200 bg-white transition-all duration-300 ${
