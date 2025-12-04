@@ -76,6 +76,7 @@ export function CitizenHistoryPage() {
   const [loadingSessions, setLoadingSessions] = useState(true)
   const [loadingStats, setLoadingStats] = useState(true)
   const [hasFilters, setHasFilters] = useState(false)
+  const [stations, setStations] = useState<Station[]>([])
 
   const [stationSearchFilter, setStationSearchFilter] = useState('')
   const [startDateFilter, setStartDateFilter] = useState('')
@@ -83,6 +84,11 @@ export function CitizenHistoryPage() {
   const [limit, setLimit] = useState(20)
 
   const userId = user?.id || ''
+
+  useEffect(() => {
+    void handleRefresh()
+    void loadStations()
+  }, [])
 
   useEffect(() => {
     if (userId) {
@@ -162,25 +168,51 @@ export function CitizenHistoryPage() {
     }
   }
 
+  async function loadStations() {
+    try {
+      const res = await apiFetch('/stations/search')
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as Station[]
+      setStations(data)
+    } catch (err) {
+      console.error('Failed to load stations:', err)
+    }
+  }
+
   const stationNameLookup = useMemo<Record<string, string>>(() => {
     const entries = new globalThis.Map<string, string>()
+    stations.forEach((station) => {
+      if (station.id && station.name) {
+        entries.set(station.id, station.name)
+      }
+    })
+    
     sessions.forEach((session) => {
-      if (session.station_id && session.station_name) {
+      if (session.station_id && session.station_name && !entries.has(session.station_id)) {
         entries.set(session.station_id, session.station_name)
       }
     })
     return Object.fromEntries(entries) as Record<string, string>
-  }, [sessions])
+  }, [stations, sessions])
 
   const stationNameSuggestions = useMemo(() => {
     const names = new Set<string>()
+
+    stations.forEach((station) => {
+      if (station.name) {
+        names.add(station.name)
+      }
+    })
+
     sessions.forEach((session) => {
       if (session.station_name) {
         names.add(session.station_name)
       }
     })
     return Array.from(names).sort((a, b) => a.localeCompare(b, 'vi'))
-  }, [sessions])
+  }, [stations, sessions])
 
   function normalizeText(value: string): string {
     return value
@@ -535,10 +567,8 @@ export function CitizenHistoryPage() {
                       <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {formatDateTime(session.end_date_time)}
                       </td>
-                      <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 min-w-0">
-                        <span className="font-semibold text-slate-800 break-words text-xs">
-                          {stationNameLookup[session.station_id] ?? session.station_name ?? session.station_id}
-                        </span>
+                      <td className="whitespace-nowrap px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs">
+                        {session.station_name || stationNameLookup[session.station_id] || `Trạm ${session.station_id}`}
                       </td>
                       <td className="border-b border-slate-100 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 text-slate-700 text-xs break-words min-w-0">
                         {formatVehicleType(session.vehicle_type)}
