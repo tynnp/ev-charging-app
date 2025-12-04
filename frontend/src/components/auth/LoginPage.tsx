@@ -220,7 +220,7 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-10 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20"
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2 sm:py-2.5 pl-9 sm:pl-10 pr-10 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:border-[#124874] focus:outline-none focus:ring-2 focus:ring-[#124874]/20 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   placeholder="Nhập mật khẩu"
                 />
                 <button
