@@ -87,25 +87,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (username: string, password: string) => {
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('password', password)
+    try {
+      const formData = new FormData()
+      formData.append('username', username)
+      formData.append('password', password)
 
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      body: formData,
-    })
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        body: formData,
+      })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Đăng nhập thất bại' }))
-      throw new Error(error.detail || 'Đăng nhập thất bại')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Đăng nhập thất bại' }))
+        throw new Error(error.detail || 'Đăng nhập thất bại')
+      }
+
+      const data = await response.json()
+      setToken(data.access_token)
+      setUser(data.user)
+      localStorage.setItem('auth_token', data.access_token)
+      localStorage.setItem('auth_user', JSON.stringify(data.user))
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.')
+        }
+        throw error
+      }
+      throw new Error('Đăng nhập thất bại')
     }
 
-    const data = await response.json()
-    setToken(data.access_token)
-    setUser(data.user)
-    localStorage.setItem('auth_token', data.access_token)
-    localStorage.setItem('auth_user', JSON.stringify(data.user))
   }
 
   const register = async (
@@ -115,43 +126,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name?: string,
     role: 'citizen' | 'manager' = 'citizen'
   ): Promise<RegisterResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username,
-        password,
-        email,
-        name,
-        role,
-      }),
-    })
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          email,
+          name,
+          role,
+        }),
+      })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Đăng ký thất bại' }))
-      throw new Error(error.detail || 'Đăng ký thất bại')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Đăng ký thất bại' }))
+        throw new Error(error.detail || 'Đăng ký thất bại')
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.')
+        }
+        throw error
+      }
+      throw new Error('Đăng ký thất bại')
     }
-
-    return response.json()
   }
 
   const verifyRegistration = async (username: string, otp: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, otp }),
-    })
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, otp }),
+      })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Xác thực OTP thất bại' }))
-      throw new Error(error.detail || 'Xác thực OTP thất bại')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Xác thực OTP thất bại' }))
+        throw new Error(error.detail || 'Xác thực OTP thất bại')
+      }
+
+      await login(username, password)
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.')
+        }
+        throw error
+      }
+      throw new Error('Xác thực OTP thất bại')
     }
-
-    await login(username, password)
   }
 
   const logout = () => {

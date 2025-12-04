@@ -139,7 +139,7 @@ def _finalize_registration(pending: dict) -> UserResponse:
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
+            detail="Tên đăng nhập đã được đăng ký",
         )
 
     _ensure_email_available(pending.get("email", ""), pending["username"])
@@ -224,13 +224,13 @@ def register(user_data: UserRegister) -> OTPInitiateResponse:
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
+            detail="Tên đăng nhập đã được đăng ký",
         )
 
     if user_data.role not in ["citizen", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Role must be 'citizen' or 'manager'",
+            detail="Vai trò phải là 'citizen' hoặc 'manager'",
         )
 
     _ensure_email_available(user_data.email, user_data.username)
@@ -271,7 +271,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Tên đăng nhập hoặc mật khẩu không đúng",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -319,7 +319,7 @@ def update_current_user_info(
     if not user_doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            detail="Không tìm thấy người dùng",
         )
     
     updates: Dict[str, Any] = {}
@@ -380,7 +380,7 @@ def _get_citizen_profile_or_404(user_id: str) -> CitizenProfile:
     if not doc:
         doc = collection.find_one({"id": user_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Citizen not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy công dân")
     return CitizenProfile(**doc)
 
 def _apply_citizen_time_filters(
@@ -683,7 +683,7 @@ def get_station(station_id: str) -> StationBase:
     collection = get_stations_collection()
     doc = collection.find_one({"_id": station_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Station not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm sạc")
     return StationBase(**doc)
 
 @app.get(
@@ -696,7 +696,7 @@ def get_station_realtime(station_id: str) -> StationRealtime:
     collection = get_stations_collection()
     doc = collection.find_one({"_id": station_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Station not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm sạc")
     return StationRealtime(
         id=doc.get("id", station_id),
         status=doc.get("status"),
@@ -752,7 +752,7 @@ def list_citizen_sessions(
     offset: int = Query(0, ge=0),
 ) -> List[SessionBase]:
     if start_date and end_date and start_date > end_date:
-        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+        raise HTTPException(status_code=400, detail="Ngày bắt đầu phải trước ngày kết thúc")
 
     _get_citizen_profile_or_404(user_id)
 
@@ -787,7 +787,7 @@ def get_citizen_sessions_stats(
     ),
 ) -> CitizenSessionsStats:
     if start_date and end_date and start_date > end_date:
-        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+        raise HTTPException(status_code=400, detail="Ngày bắt đầu phải trước ngày kết thúc")
 
     _get_citizen_profile_or_404(user_id)
 
@@ -902,10 +902,10 @@ def analytics_revenue_timeline(
     ),
 ) -> Dict[str, Any]:
     if period not in ["day", "week"]:
-        raise HTTPException(status_code=400, detail="period must be 'day' or 'week'")
+        raise HTTPException(status_code=400, detail="Chu kỳ phải là 'day' hoặc 'week'")
     
     if start_date and end_date and start_date > end_date:
-        raise HTTPException(status_code=400, detail="start_date must be before end_date")
+        raise HTTPException(status_code=400, detail="Ngày bắt đầu phải trước ngày kết thúc")
     
     sessions_collection = get_sessions_collection()
     
@@ -1000,7 +1000,7 @@ def analytics_station(station_id: str) -> Dict[str, Any]:
 
     station_doc = stations_collection.find_one({"_id": station_id})
     if not station_doc:
-        raise HTTPException(status_code=404, detail="Station not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm sạc")
 
     sessions = list(sessions_collection.find({"station_id": station_id}))
 
@@ -1074,10 +1074,10 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 def ngsi_upsert_entity(entity: Dict[str, Any]) -> JSONResponse:
     entity_type = entity.get("type")
     if not entity_type:
-        raise HTTPException(status_code=400, detail="Missing 'type' in entity")
+        raise HTTPException(status_code=400, detail="Thiếu trường 'type' trong entity")
     entity_id = entity.get("id")
     if not entity_id:
-        raise HTTPException(status_code=400, detail="Missing 'id' in entity")
+        raise HTTPException(status_code=400, detail="Thiếu trường 'id' trong entity")
 
     if entity_type == "EVChargingStation":
         collection = get_stations_collection()
@@ -1089,11 +1089,11 @@ def ngsi_upsert_entity(entity: Dict[str, Any]) -> JSONResponse:
         collection = get_sensors_collection()
         import_sensor_entity(entity, collection)
     else:
-        raise HTTPException(status_code=400, detail="Unsupported entity type")
+        raise HTTPException(status_code=400, detail="Loại entity không được hỗ trợ")
 
     doc = collection.find_one({"_id": entity_id})
     if not doc:
-        raise HTTPException(status_code=500, detail="Failed to upsert entity")
+        raise HTTPException(status_code=500, detail="Không thể cập nhật hoặc tạo entity")
     ngsi_entity = _doc_to_ngsi_entity(doc)
     return JSONResponse(
         content=ngsi_entity,
@@ -1120,7 +1120,7 @@ def ngsi_list_entities(
     elif entity_type == "Sensor":
         collection = get_sensors_collection()
     else:
-        raise HTTPException(status_code=400, detail="Unsupported entity type")
+        raise HTTPException(status_code=400, detail="Loại entity không được hỗ trợ")
 
     query: Dict[str, Any] = {}
     if entity_id is not None:
@@ -1148,7 +1148,7 @@ def ngsi_get_entity(entity_id: str) -> JSONResponse:
             entity = _doc_to_ngsi_entity(doc)
             return JSONResponse(content=entity, media_type="application/ld+json")
 
-    raise HTTPException(status_code=404, detail="Entity not found")
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
 
 @app.patch(
     "/ngsi-ld/v1/entities/{entity_id}/attrs",
@@ -1173,7 +1173,7 @@ async def ngsi_update_entity_attrs(
     collection = get_stations_collection()
     doc = collection.find_one({"_id": entity_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Entity not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy entity")
     entity = _doc_to_ngsi_entity(doc)
     return JSONResponse(content=entity, media_type="application/ld+json")
 
@@ -1258,12 +1258,12 @@ def add_favorite(
     stations_collection = get_stations_collection()
     station = stations_collection.find_one({"_id": station_id})
     if not station:
-        raise HTTPException(status_code=404, detail="Station not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm sạc")
     
     # Check if already favorited
     existing = favorites_collection.find_one({"user_id": user_id, "station_id": station_id})
     if existing:
-        return {"message": "Station already in favorites", "favorited": True}
+        return {"message": "Trạm đã có trong danh sách yêu thích", "favorited": True}
     
     # Add to favorites
     favorite_doc = {
@@ -1273,7 +1273,7 @@ def add_favorite(
     }
     favorites_collection.insert_one(favorite_doc)
     
-    return {"message": "Station added to favorites", "favorited": True}
+    return {"message": "Đã thêm trạm vào danh sách yêu thích", "favorited": True}
 
 @app.delete(
     "/citizen/favorites",
@@ -1289,9 +1289,9 @@ def remove_favorite(
     result = favorites_collection.delete_one({"user_id": user_id, "station_id": station_id})
     
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Favorite not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm trong danh sách yêu thích")
     
-    return {"message": "Station removed from favorites", "favorited": False}
+    return {"message": "Đã xóa trạm khỏi danh sách yêu thích", "favorited": False}
 
 @app.get(
     "/citizen/favorites",
@@ -1343,12 +1343,12 @@ async def get_route(
     station = stations_collection.find_one({"_id": to_station_id})
     
     if not station:
-        raise HTTPException(status_code=404, detail="Station not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy trạm sạc")
     
     location = station.get("location") or {}
     coordinates = location.get("coordinates")
     if not isinstance(coordinates, list) or len(coordinates) != 2:
-        raise HTTPException(status_code=400, detail="Station location invalid")
+        raise HTTPException(status_code=400, detail="Vị trí trạm sạc không hợp lệ")
     
     to_lon, to_lat = coordinates
     
@@ -1439,7 +1439,7 @@ def compare_stations(
         missing = set(station_ids) - found_ids
         raise HTTPException(
             status_code=404,
-            detail=f"Stations not found: {', '.join(missing)}",
+            detail=f"Không tìm thấy các trạm: {', '.join(missing)}",
         )
     
     comparison = []

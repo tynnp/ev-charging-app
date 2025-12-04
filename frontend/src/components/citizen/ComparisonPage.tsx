@@ -240,7 +240,10 @@ export function ComparisonPage() {
       setSearchStations(data)
     } catch (e) {
       console.error(e)
-      setSearchError('Không thể tải dữ liệu trạm sạc.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tải dữ liệu trạm sạc.'
+      setSearchError(errorMessage)
       setSearchStations([])
     } finally {
       setLoadingSearch(false)
@@ -284,7 +287,10 @@ export function ComparisonPage() {
       setComparisonResult(data.stations)
     } catch (e) {
       console.error(e)
-      setError('Không thể so sánh các trạm. Vui lòng thử lại.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể so sánh các trạm. Vui lòng thử lại.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

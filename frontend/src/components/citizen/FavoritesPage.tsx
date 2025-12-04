@@ -71,7 +71,10 @@ export function FavoritesPage() {
       setFavorites(data)
     } catch (e) {
       console.error(e)
-      setError('Không thể tải danh sách trạm đã lưu.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tải danh sách trạm đã lưu.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -89,7 +92,10 @@ export function FavoritesPage() {
       void loadFavorites()
     } catch (e) {
       console.error(e)
-      setError('Không thể xóa trạm khỏi danh sách đã lưu.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể xóa trạm khỏi danh sách đã lưu.'
+      setError(errorMessage)
     }
   }
 

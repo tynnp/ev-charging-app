@@ -55,7 +55,10 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
       setDatasets(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được danh sách datasets.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được danh sách datasets.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -79,7 +82,10 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
       document.body.removeChild(a)
     } catch (error) {
       console.error(error)
-      setError(`Không tải được dataset: ${dataset.title}`)
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : `Không tải được dataset: ${dataset.title}`
+      setError(errorMessage)
     } finally {
       setDownloading((prev) => {
         const next = new Set(prev)
@@ -112,7 +118,10 @@ export function DatasetsPanel({ className }: DatasetsPanelProps) {
       setPreviewContent(formatted)
     } catch (error) {
       console.error(error)
-      setPreviewError('Không thể xem trước dataset. Vui lòng thử lại sau.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể xem trước dataset. Vui lòng thử lại sau.'
+      setPreviewError(errorMessage)
     } finally {
       setPreviewing((prev) => {
         const next = new Set(prev)

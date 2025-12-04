@@ -385,7 +385,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setOverview(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được thống kê tổng quan.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được thống kê tổng quan.'
+      setError(errorMessage)
     } finally {
       setLoadingOverview(false)
     }
@@ -404,6 +407,12 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setRevenueTimeline(data)
     } catch (error) {
       console.error('Không tải được dữ liệu doanh thu theo thời gian:', error)
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : null
+      if (errorMessage) {
+        setError(errorMessage)
+      }
     } finally {
       setLoadingTimeline(false)
     }
@@ -479,7 +488,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       }
     } catch (error) {
       console.error(error)
-      setError('Không tải được danh sách trạm sạc.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được danh sách trạm sạc.'
+      setError(errorMessage)
     } finally {
       setLoadingStations(false)
     }
@@ -499,7 +511,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setStationAnalytics(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được thống kê cho trạm này.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được thống kê cho trạm này.'
+      setError(errorMessage)
     } finally {
       setLoadingStationAnalytics(false)
     }
@@ -517,7 +532,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setSelectedStation(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được chi tiết trạm sạc.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được chi tiết trạm sạc.'
+      setError(errorMessage)
     } finally {
       setLoadingStationDetails(false)
     }
@@ -537,7 +555,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setStationRealtime(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được trạng thái realtime của trạm.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được trạng thái realtime của trạm.'
+      setError(errorMessage)
     } finally {
       setLoadingStationRealtime(false)
     }
@@ -557,7 +578,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setStationSessions(data)
     } catch (error) {
       console.error(error)
-      setError('Không tải được danh sách phiên sạc cho trạm này.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được danh sách phiên sạc cho trạm này.'
+      setError(errorMessage)
     } finally {
       setLoadingSessions(false)
     }
@@ -590,7 +614,10 @@ export function DashboardPage({ section }: DashboardPageProps) {
       setSelectedCoordinate([lng, lat])
     } catch (error) {
       console.error(error)
-      setNearbyError('Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.')
+      const errorMessage = error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tìm được trạm phù hợp với toạ độ / bán kính đã nhập.'
+      setNearbyError(errorMessage)
       setNearbyStations([])
     } finally {
       setLoadingNearby(false)

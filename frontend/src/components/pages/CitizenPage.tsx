@@ -267,7 +267,12 @@ export function CitizenPage() {
         setActiveTab('results')
       }
     } catch (e) {
-      setError('Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.')
+      const errorMessage = e instanceof Error && e.message.includes('HTTP')
+        ? 'Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.'
+        : e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.'
+      setError(errorMessage)
       setStations([])
     } finally {
       setLoading(false)
@@ -337,7 +342,12 @@ export function CitizenPage() {
         }
       }
     } catch (e) {
-      setError('Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.')
+      const errorMessage = e instanceof Error && e.message.includes('HTTP')
+        ? 'Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.'
+        : e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tải dữ liệu trạm sạc. Vui lòng thử lại.'
+      setError(errorMessage)
       setStations([])
     } finally {
       setLoading(false)
@@ -413,7 +423,10 @@ export function CitizenPage() {
       }
     } catch (e) {
       console.error(e)
-      setRouteError('Không thể tìm đường. Vui lòng kiểm tra lại thông tin.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tìm đường. Vui lòng kiểm tra lại thông tin.'
+      setRouteError(errorMessage)
     } finally {
       setLoadingRoute(false)
     }

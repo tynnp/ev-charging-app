@@ -176,7 +176,10 @@ export function RoutePlanningPage() {
       setRouteInfo(data)
     } catch (e) {
       console.error(e)
-      setError('Không thể tìm đường. Vui lòng kiểm tra lại thông tin.')
+      const errorMessage = e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không thể tìm đường. Vui lòng kiểm tra lại thông tin.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

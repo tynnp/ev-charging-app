@@ -119,7 +119,10 @@ export function CitizenHistoryPage() {
       setProfile(data)
     } catch (err) {
       console.error(err)
-      setError('Không tải được thông tin người dùng.')
+      const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được thông tin người dùng.'
+      setError(errorMessage)
     } finally {
       setLoadingProfile(false)
     }
@@ -139,7 +142,10 @@ export function CitizenHistoryPage() {
       setStats(data)
     } catch (err) {
       console.error(err)
-      setError('Không tải được thống kê phiên sạc.')
+      const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được thống kê phiên sạc.'
+      setError(errorMessage)
     } finally {
       setLoadingStats(false)
     }
@@ -159,7 +165,10 @@ export function CitizenHistoryPage() {
       setSessions(data)
     } catch (err) {
       console.error(err)
-      setError('Không tải được lịch sử phiên sạc.')
+      const errorMessage = err instanceof Error && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        : 'Không tải được lịch sử phiên sạc.'
+      setError(errorMessage)
       setSessions([])
     } finally {
       setLoadingSessions(false)

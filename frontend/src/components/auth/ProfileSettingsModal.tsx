@@ -59,7 +59,15 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
         window.location.reload()
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+      let errorMessage = 'Có lỗi xảy ra'
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
