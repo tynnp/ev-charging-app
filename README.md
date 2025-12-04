@@ -85,7 +85,7 @@ Backend cung cấp REST, NGSI-LD, WebSocket realtime và bộ test cơ bản (`p
 
 > **Lưu ý:** chức năng đăng ký người dùng yêu cầu gửi OTP qua email. Bạn phải cung cấp thông tin SMTP hợp lệ trong file `.env` (xem `backend/env.example`) trước khi chạy server.
 
-### 3.3. Thiết lập frontend
+### 4.3. Thiết lập frontend
 
 ```bash
 cd frontend
@@ -96,7 +96,7 @@ npm run dev           # mặc định http://localhost:5173
 
 Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích hợp bản đồ. Chi tiết cấu trúc và tính năng tại [`frontend/README.md`](frontend/README.md).
 
-### 3.4. Triển khai bằng Docker
+### 4.4. Triển khai bằng Docker
 
 Dự án đã được Docker hóa sẵn, hỗ trợ chạy trên cả Windows và Unix/Linux. Bạn có thể sử dụng các file script có sẵn để khởi động nhanh ứng dụng:
 
@@ -169,7 +169,7 @@ Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản h�
 
 Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-compose.yml`.
 
-## 4. Tài khoản mẫu & truy cập
+## 5. Tài khoản mẫu & truy cập
 
 | Vai trò        | Tên đăng nhập | Mật khẩu     |
 |----------------|---------------|--------------|
@@ -178,19 +178,19 @@ Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-com
 
 Các tài khoản được tạo tự động khi backend khởi động lần đầu (`create_default_users`).
 
-## 5. Kiểm thử & chất lượng
+## 6. Kiểm thử & chất lượng
 
 - Backend: `python -m unittest` (xem `backend/tests/test_app_basic.py`)
 - Frontend: sử dụng ESLint (`npm run lint`) và Vite build để kiểm tra type (`npm run build`)
 - Có thể bổ sung Vitest/React Testing Library cho frontend trong tương lai
 
-## 6. Quy trình phát hành
+## 7. Quy trình phát hành
 
 1. **Mã nguồn công khai**: GitHub `tynnp/ev-charging-app`
 2. **Giấy phép OSI**: MIT (mã nguồn) + CC BY 4.0 (dữ liệu)
 3. **Build instructions**: mô tả ở README backend/frontend và mục 3 ở đây
 
-## 7. Đóng góp & phát triển tiếp
+## 8. Đóng góp & phát triển tiếp
 
 - Tuân thủ style code (PEP8 cho Python, ESLint + Prettier conventions cho frontend)
 - Tạo tính năng mới cần cập nhật tài liệu (README, DEPENDENCIES)
