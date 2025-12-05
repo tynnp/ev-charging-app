@@ -22,6 +22,7 @@ import {
   X,
   Users,
   Database,
+  Code,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -125,6 +126,7 @@ export function AppLayout({
                     {item.id.includes('profile') && <UserCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     {item.id.includes('admin-users') && <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     {item.id.includes('admin-datasets') && <Database className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
+                    {item.id.includes('admin-ngsi-ld') && <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     <span className="truncate">{item.label}</span>
                   </button>
                 </li>

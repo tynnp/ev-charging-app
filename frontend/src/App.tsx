@@ -35,6 +35,7 @@ type CitizenNavId =
 type AdminNavId =
   | 'admin-users'
   | 'admin-datasets'
+  | 'admin-ngsi-ld'
   | 'admin-profile'
 
 function App() {
@@ -86,6 +87,7 @@ function App() {
   const adminNavItems = [
     { id: 'admin-users', label: 'Quản lý người dùng' },
     { id: 'admin-datasets', label: 'Datasets' },
+    { id: 'admin-ngsi-ld', label: 'NGSI-LD APIs' },
     { id: 'admin-profile', label: 'Thông tin cá nhân' },
   ] satisfies { id: AdminNavId; label: string }[]
 
@@ -105,9 +107,11 @@ function App() {
     if (normalizedActiveNavId === 'admin-profile') {
       content = <ProfilePage />
     } else {
-      let section: 'users' | 'datasets' = 'users'
+      let section: 'users' | 'datasets' | 'ngsi-ld' = 'users'
       if (normalizedActiveNavId === 'admin-datasets') {
         section = 'datasets'
+      } else if (normalizedActiveNavId === 'admin-ngsi-ld') {
+        section = 'ngsi-ld'
       }
       content = <AdminPage section={section} />
     }

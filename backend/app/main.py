@@ -1196,6 +1196,82 @@ def ngsi_get_entity(entity_id: str) -> JSONResponse:
 
     raise HTTPException(status_code=404, detail="Không tìm thấy entity")
 
+@app.delete(
+    "/ngsi-ld/v1/entities/{entity_id}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Delete a NGSI-LD entity",
+)
+def ngsi_delete_entity(
+    entity_id: str,
+    current_user: UserResponse = Depends(get_current_admin),
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    deleted = False
+    for collection in collections:
+        result = collection.delete_one({"_id": entity_id})
+        if result.deleted_count > 0:
+            deleted = True
+            break
+    
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+    
+    return JSONResponse(
+        content={"message": "Entity đã được xóa"},
+        media_type="application/json",
+    )
+
+@app.get(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get all attributes of a NGSI-LD entity",
+)
+def ngsi_get_entity_attrs(entity_id: str) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            entity = _doc_to_ngsi_entity(doc)
+            attrs = {k: v for k, v in entity.items() if k not in ["id", "type", "@context"]}
+            return JSONResponse(content=attrs, media_type="application/ld+json")
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.get(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get a specific attribute of a NGSI-LD entity",
+)
+def ngsi_get_entity_attr(entity_id: str, attr_name: str) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            entity = _doc_to_ngsi_entity(doc)
+            if attr_name not in entity:
+                raise HTTPException(status_code=404, detail=f"Không tìm thấy attribute '{attr_name}'")
+            return JSONResponse(
+                content={attr_name: entity[attr_name]},
+                media_type="application/ld+json",
+            )
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
 @app.patch(
     "/ngsi-ld/v1/entities/{entity_id}/attrs",
     response_class=JSONResponse,
@@ -1222,6 +1298,141 @@ async def ngsi_update_entity_attrs(
         raise HTTPException(status_code=404, detail="Không tìm thấy entity")
     entity = _doc_to_ngsi_entity(doc)
     return JSONResponse(content=entity, media_type="application/ld+json")
+
+@app.patch(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Update a specific attribute of a NGSI-LD entity",
+)
+async def ngsi_update_entity_attr(
+    entity_id: str,
+    attr_name: str,
+    attr_value: Dict[str, Any],
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            event = {
+                "operation": "update",
+                "entity": {
+                    "id": entity_id,
+                    "type": doc.get("type", "EVChargingStation"),
+                    attr_name: attr_value,
+                },
+            }
+            await apply_realtime_event(event)
+            
+            updated_doc = collection.find_one({"_id": entity_id})
+            entity = _doc_to_ngsi_entity(updated_doc)
+            return JSONResponse(
+                content={attr_name: entity.get(attr_name)},
+                media_type="application/ld+json",
+            )
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.post(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Append new attributes to a NGSI-LD entity",
+)
+async def ngsi_append_entity_attrs(
+    entity_id: str,
+    attrs: Dict[str, Any],
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            event = {
+                "operation": "update",
+                "entity": {
+                    "id": entity_id,
+                    "type": doc.get("type", "EVChargingStation"),
+                    **attrs,
+                },
+            }
+            await apply_realtime_event(event)
+            
+            updated_doc = collection.find_one({"_id": entity_id})
+            entity = _doc_to_ngsi_entity(updated_doc)
+            return JSONResponse(content=entity, media_type="application/ld+json")
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.get(
+    "/ngsi-ld/v1/types",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="List all entity types",
+)
+def ngsi_list_types() -> JSONResponse:
+    types_info = [
+        {
+            "type": "EVChargingStation",
+            "description": "Trạm sạc xe điện",
+            "count": get_stations_collection().count_documents({}),
+        },
+        {
+            "type": "EVChargingSession",
+            "description": "Phiên sạc xe điện",
+            "count": get_sessions_collection().count_documents({}),
+        },
+        {
+            "type": "Sensor",
+            "description": "Cảm biến",
+            "count": get_sensors_collection().count_documents({}),
+        },
+    ]
+    return JSONResponse(content=types_info, media_type="application/json")
+
+@app.get(
+    "/ngsi-ld/v1/types/{type_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get information about an entity type",
+)
+def ngsi_get_type(type_name: str) -> JSONResponse:
+    if type_name == "EVChargingStation":
+        collection = get_stations_collection()
+    elif type_name == "EVChargingSession":
+        collection = get_sessions_collection()
+    elif type_name == "Sensor":
+        collection = get_sensors_collection()
+    else:
+        raise HTTPException(status_code=404, detail="Loại entity không được hỗ trợ")
+    
+    count = collection.count_documents({})
+    sample_doc = collection.find_one({})
+    
+    type_info = {
+        "type": type_name,
+        "count": count,
+        "description": {
+            "EVChargingStation": "Trạm sạc xe điện",
+            "EVChargingSession": "Phiên sạc xe điện",
+            "Sensor": "Cảm biến",
+        }.get(type_name, ""),
+    }
+    
+    if sample_doc:
+        entity = _doc_to_ngsi_entity(sample_doc)
+        type_info["sample_attributes"] = list(entity.keys())
+    
+    return JSONResponse(content=type_info, media_type="application/json")
 
 @app.get(
     "/datasets",

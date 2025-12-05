@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { DatasetsPanel } from '../datasets/DatasetsPanel'
+import { NGSILDManagement } from './NGSILDManagement'
 import { ToastContainer, type Toast } from '../common/Toast'
 import { ConfirmationDialog } from '../common/ConfirmationDialog'
 import {
@@ -34,7 +35,7 @@ type User = {
 }
 
 type AdminPageProps = {
-  section: 'users' | 'datasets'
+  section: 'users' | 'datasets' | 'ngsi-ld'
 }
 
 export function AdminPage({ section }: AdminPageProps) {
@@ -238,6 +239,14 @@ export function AdminPage({ section }: AdminPageProps) {
     return (
       <div className="flex flex-col gap-4 sm:gap-6 min-w-0 w-full">
         <DatasetsPanel />
+      </div>
+    )
+  }
+
+  if (section === 'ngsi-ld') {
+    return (
+      <div className="flex flex-col gap-4 sm:gap-6 min-w-0 w-full">
+        <NGSILDManagement />
       </div>
     )
   }
