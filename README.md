@@ -32,13 +32,19 @@ Chi tiết mỗi phần xem thêm tại:
 
 ## 2. Giao diện ứng dụng
 
-### 2.1. Dashboard cho nhà quản lý
+### 2.1. Dashboard cho quản trị viên
+
+![Dashboard Quản trị viên](assets/screenshots/admin-dashboard.png)
+
+Giao diện quản trị viên với quản lý người dùng, dataset JSON-LD và hoạt động API.
+
+### 2.2. Dashboard cho nhà quản lý
 
 ![Dashboard Nhà quản lý](assets/screenshots/manager-dashboard.png)
 
 Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tích dữ liệu.
 
-### 2.2. Giao diện người dân
+### 2.3. Giao diện người dân
 
 ![Giao diện người dân](assets/screenshots/citizen-interface.png)
 
