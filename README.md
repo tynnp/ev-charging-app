@@ -46,7 +46,7 @@ Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tí
 
 ### 2.3. Giao diện người dân
 
-![Giao diện người dân](assets/screenshots/citizen-interface.png)
+![Dashboard Người dân](assets/screenshots/citizen-interface.png)
 
 Tìm kiếm, lọc và sử dụng các trạm sạc xe điện.
 
