@@ -6,6 +6,7 @@
 
 import { useEffect } from 'react'
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import './Toast.css'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -23,8 +24,14 @@ type ToastProps = {
 export function ToastItem({ toast, onClose }: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose(toast.id)
-    }, 5000)
+      const element = document.getElementById(`toast-${toast.id}`)
+      if (element) {
+        element.classList.add('toast-exit')
+        setTimeout(() => onClose(toast.id), 300)
+      } else {
+        onClose(toast.id)
+      }
+    }, 3000)
 
     return () => clearTimeout(timer)
   }, [toast.id, onClose])
@@ -36,27 +43,28 @@ export function ToastItem({ toast, onClose }: ToastProps) {
     info: Info,
   }
 
-  const styles = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-amber-50 border-amber-200 text-amber-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+  const iconStyles = {
+    success: 'text-green-500',
+    error: 'text-red-500',
+    warning: 'text-amber-500',
+    info: 'text-blue-500',
   }
 
   const Icon = icons[toast.type]
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg border-2 px-4 py-3 shadow-lg min-w-[300px] max-w-md animate-in slide-in-from-top-5 ${styles[toast.type]}`}
+      id={`toast-${toast.id}`}
+      className="toast-item flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg min-w-[300px] max-w-md bg-white text-black"
     >
-      <Icon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+      <Icon className={`h-5 w-5 flex-shrink-0 mt-0.5 ${iconStyles[toast.type]}`} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold break-words">{toast.message}</p>
       </div>
       <button
         type="button"
         onClick={() => onClose(toast.id)}
-        className="flex-shrink-0 rounded p-1 hover:bg-black/10 transition-colors"
+        className="flex-shrink-0 rounded p-1 hover:bg-gray-100 transition-colors duration-200"
         aria-label="Đóng"
       >
         <X className="h-4 w-4" />
