@@ -44,7 +44,7 @@ Giao diện quản trị viên với quản lý người dùng, dataset JSON-LD 
 
 Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tích dữ liệu.
 
-### 2.3. Giao diện người dân
+### 2.3. Dashboard cho người dân
 
 ![Dashboard Người dân](assets/screenshots/citizen-interface.png)
 
