@@ -416,7 +416,7 @@ export function NGSILDManagement() {
                 {entities.map((entity) => (
                   <div
                     key={entity.id}
-                    className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition"
+                    className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4 shadow-sm hover:shadow-md transition"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -434,22 +434,22 @@ export function NGSILDManagement() {
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                         <button
                           type="button"
                           onClick={() => loadEntityDetail(entity.id)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-[#124874]/40 hover:text-[#124874]"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-[#124874]/40 hover:text-[#124874]"
                         >
                           <Eye className="h-3 w-3" />
-                          Xem
+                          <span className="hidden sm:inline">Xem</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteClick(entity.id)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:border-red-400 hover:bg-red-50"
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:border-red-400 hover:bg-red-50"
                         >
                           <Trash2 className="h-3 w-3" />
-                          Xóa
+                          <span className="hidden sm:inline">Xóa</span>
                         </button>
                       </div>
                     </div>
@@ -457,25 +457,27 @@ export function NGSILDManagement() {
                 ))}
 
                 {entities.length > 0 && (
-                  <div className="flex justify-center gap-2 mt-4">
+                  <div className="flex justify-center gap-1.5 sm:gap-2 mt-4 px-2 sm:px-0">
                     <button
                       type="button"
                       onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                       disabled={currentPage === 1 || loading}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Trang trước
+                      <span className="hidden sm:inline">Trang trước</span>
+                      <span className="sm:hidden">←</span>
                     </button>
-                    <span className="px-3 py-2 text-sm text-slate-600 flex items-center">
+                    <span className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-600 flex items-center">
                       Trang {currentPage}
                     </span>
                     <button
                       type="button"
                       onClick={() => setCurrentPage((prev) => prev + 1)}
                       disabled={entities.length < pageSize || loading}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Trang sau
+                      <span className="hidden sm:inline">Trang sau</span>
+                      <span className="sm:hidden">→</span>
                     </button>
                   </div>
                 )}
@@ -620,8 +622,8 @@ export function NGSILDManagement() {
         )}
 
         {selectedEntity && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="relative w-full max-w-4xl max-h-[90vh] rounded-xl bg-white p-6 shadow-2xl overflow-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+            <div className="relative w-full max-w-4xl max-h-[90vh] rounded-xl bg-white p-4 sm:p-6 shadow-2xl overflow-auto m-2 sm:m-0">
               <button
                 type="button"
                 onClick={() => setSelectedEntity(null)}
@@ -630,23 +632,24 @@ export function NGSILDManagement() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Entity Details</h3>
-              <pre className="bg-slate-900 text-green-100 p-4 rounded-lg overflow-auto text-xs">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-4">Entity Details</h3>
+              <pre className="bg-slate-900 text-green-100 p-3 sm:p-4 rounded-lg overflow-auto text-xs max-h-[60vh]">
                 {JSON.stringify(selectedEntity, null, 2)}
               </pre>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={() => copyToClipboard(JSON.stringify(selectedEntity, null, 2))}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 order-2 sm:order-1"
                 >
                   <Copy className="h-4 w-4 inline mr-2" />
-                  Sao chép JSON
+                  <span className="hidden sm:inline">Sao chép JSON</span>
+                  <span className="sm:hidden">Sao chép</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedEntity(null)}
-                  className="rounded-lg bg-[#124874] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f3a5a]"
+                  className="rounded-lg bg-[#124874] px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f3a5a] order-1 sm:order-2"
                 >
                   Đóng
                 </button>
