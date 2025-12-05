@@ -515,18 +515,26 @@ def create_default_users() -> None:
             {
                 "username": "citizen",
                 "password": "citizen123",
-                "name": "Nguyễn Văn A",
+                "name": "Nguyễn Uyên Vy",
                 "email": "citizen1@example.org",
                 "role": "citizen",
-                "user_id": "citizen_user_1",  # Match with sessions.jsonld data
+                "user_id": "citizen_user_1",
+            },
+            {
+                "username": "citizen2",
+                "password": "citizen123",
+                "name": "Cao Võ Tuấn Kiệt",
+                "email": "citizen2@example.org",
+                "role": "citizen",
+                "user_id": "citizen_user_2",
             },
             {
                 "username": "manager",
                 "password": "manager123",
-                "name": "Nhà quản lý mẫu",
+                "name": "Nguyễn Ngọc Phú Tỷ",
                 "email": "manager@example.com",
                 "role": "manager",
-                "user_id": None,  # Manager doesn't need to match citizen data
+                "user_id": None,
             },
         ]
         

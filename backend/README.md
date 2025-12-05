@@ -379,17 +379,28 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
 
 **Tài khoản mặc định:**
 
-Khi server khởi động, hệ thống sẽ tự động tạo 2 tài khoản mặc định nếu chưa tồn tại:
+Khi server khởi động, hệ thống sẽ tự động tạo 3 tài khoản mặc định nếu chưa tồn tại:
 
-- **Người dân:**
+- **Người dân 1:**
   - Username: `citizen`
   - Password: `citizen123`
   - Role: `citizen`
+  - Tên: Nguyễn Uyên Vy
+  - Email: citizen1@example.org
+
+- **Người dân 2:**
+  - Username: `citizen2`
+  - Password: `citizen123`
+  - Role: `citizen`
+  - Tên: Cao Võ Tuấn Kiệt
+  - Email: citizen2@example.org
 
 - **Nhà quản lý:**
   - Username: `manager`
   - Password: `manager123`
   - Role: `manager`
+  - Tên: Nguyễn Ngọc Phú Tỷ
+  - Email: manager@example.com
 
 > **Lưu ý:** Các tài khoản mặc định chỉ được tạo một lần khi server khởi động lần đầu. Nếu đã tồn tại, hệ thống sẽ bỏ qua việc tạo lại.
 

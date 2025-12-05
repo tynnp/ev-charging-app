@@ -171,10 +171,11 @@ Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-com
 
 ## 5. Tài khoản mẫu & truy cập
 
-| Vai trò        | Tên đăng nhập | Mật khẩu     |
-|----------------|---------------|--------------|
-| Nhà quản lý    | `manager`     | `manager123` |
-| Người dân      | `citizen`     | `citizen123` |
+| Vai trò        | Tên đăng nhập | Mật khẩu     | Tên                 |
+|----------------|---------------|--------------|---------------------|
+| Nhà quản lý    | `manager`     | `manager123` | Nguyễn Ngọc Phú Tỷ  |
+| Người dân      | `citizen`     | `citizen123` | Nguyễn Uyên Vy      |
+| Người dân      | `citizen2`    | `citizen123` | Cao Võ Tuấn Kiệt    |
 
 Các tài khoản được tạo tự động khi backend khởi động lần đầu (`create_default_users`).
 
