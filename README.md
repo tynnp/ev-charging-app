@@ -1,6 +1,6 @@
 # EV Charging App
 
-Ứng dụng EV Charging App cung cấp cổng dữ liệu mở và bảng điều khiển dành cho **nhà quản lý** và **người dân** nhằm theo dõi, phân tích hoạt động các trạm sạc xe điện trong đô thị. Dự án được phát triển theo yêu cầu OLP 2025 Smart City với trọng tâm **Linked Open Data** (SOSA/SSN, NGSI-LD, FiWARE Smart Data Models).
+Ứng dụng EV Charging App cung cấp cổng dữ liệu mở và bảng điều khiển dành cho **quản trị viên**, **nhà quản lý** và **người dân** nhằm theo dõi, phân tích hoạt động các trạm sạc xe điện trong đô thị. Dự án được phát triển theo yêu cầu OLP 2025 Smart City với trọng tâm **Linked Open Data** (SOSA/SSN, NGSI-LD, FiWARE Smart Data Models).
 
 ## 1. Kiến trúc tổng quan
 
@@ -10,6 +10,7 @@
 │   ├─ NGSI-LD endpoints & WebSocket realtime
 │   └─ ETL dữ liệu mở từ ev-charging-open-data
 ├─ frontend/ (React 19 + TypeScript + Vite + Tailwind)
+│   ├─ Dashboard cho quản trị viên (quản lý người dùng, datasets, NGSI-LD APIs)
 │   ├─ Dashboard cho nhà quản lý (overview, realtime, bản đồ, thống kê)
 │   └─ Trải nghiệm người dân (tìm trạm, lịch sử, trạm đã lưu, so sánh)
 ├─ ev-charging-open-data/ (submodule dữ liệu JSON-LD – CC BY 4.0)
@@ -173,11 +174,31 @@ Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-com
 
 | Vai trò        | Tên đăng nhập | Mật khẩu     | Tên                 |
 |----------------|---------------|--------------|---------------------|
+| Quản trị viên  | `admin`       | `admin123`   | Quản trị viên       |
 | Nhà quản lý    | `manager`     | `manager123` | Nguyễn Ngọc Phú Tỷ  |
 | Người dân      | `citizen`     | `citizen123` | Nguyễn Uyên Vy      |
 | Người dân      | `citizen2`    | `citizen123` | Cao Võ Tuấn Kiệt    |
 
 Các tài khoản được tạo tự động khi backend khởi động lần đầu (`create_default_users`).
+
+### Quyền hạn theo vai trò
+
+- **Quản trị viên (admin)**:
+  - Quản lý người dùng: phân quyền, khóa/mở khóa, xóa người dùng
+  - Quản lý datasets: xem và tải các dataset JSON-LD
+  - Quản lý NGSI-LD APIs: xem, quản lý entities và types theo tiêu chuẩn ETSI ISG CIM
+
+- **Nhà quản lý (manager)**:
+  - Xem tổng quan hệ thống và analytics
+  - Theo dõi realtime sessions
+  - Quản lý bản đồ và tra cứu trạm sạc
+  - Xem thống kê chi tiết từng trạm
+
+- **Người dân (citizen)**:
+  - Tìm kiếm và lọc trạm sạc
+  - Xem lịch sử sạc cá nhân
+  - Quản lý danh sách trạm yêu thích
+  - So sánh các trạm sạc
 
 ## 6. Kiểm thử & chất lượng
 

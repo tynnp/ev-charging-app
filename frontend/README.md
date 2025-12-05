@@ -1,7 +1,8 @@
 # Frontend – EV Charging App
 
-Giao diện người dùng của dự án **EV Charging App** được xây dựng bằng **React 19 + TypeScript** trên nền **Vite** và Tailwind CSS. Ứng dụng phục vụ hai vai trò chính trong đề thi PMNM – OLP 2025:
+Giao diện người dùng của dự án **EV Charging App** được xây dựng bằng **React 19 + TypeScript** trên nền **Vite** và Tailwind CSS. Ứng dụng phục vụ ba vai trò chính:
 
+- **Quản trị viên**: quản lý người dùng (phân quyền, khóa/mở khóa, xóa), quản lý datasets, quản lý NGSI-LD APIs.
 - **Nhà quản lý**: theo dõi thống kê tổng quan, realtime sessions, bản đồ trạm sạc, phân tích từng trạm.
 - **Người dân**: tìm kiếm trạm sạc, xem lịch sử sử dụng, quản lý danh sách yêu thích, so sánh trạm và cập nhật thông tin cá nhân.
 
@@ -43,8 +44,10 @@ npm run dev
 
 Các tài khoản mặc định do backend khởi tạo:
 
+- Quản trị viên: `admin` / `admin123`
 - Nhà quản lý: `manager` / `manager123`
 - Người dân: `citizen` / `citizen123`
+- Người dân: `citizen2` / `citizen123`
 
 ## 4. Các script npm
 
@@ -69,9 +72,14 @@ frontend/
 │  ├─ components/
 │  │  ├─ layout/AppLayout.tsx      # Layout sidebar + header + nav
 │  │  ├─ auth/                     # Login, Profile, modal cập nhật
-│  │  ├─ pages/DashboardPage.tsx   # Dashboard manager (overview / realtime / map / stations)
+│  │  ├─ pages/
+│  │  │  ├─ DashboardPage.tsx      # Dashboard manager (overview / realtime / map / stations)
+│  │  │  ├─ AdminPage.tsx          # Dashboard admin (users / datasets / ngsi-ld)
+│  │  │  ├─ NGSILDManagement.tsx   # Quản lý NGSI-LD APIs (entities, types, docs)
+│  │  │  └─ CitizenPage.tsx        # Trang tìm trạm cho người dân
 │  │  ├─ citizen/                  # Trang dành cho người dân (find/history/favorites/compare)
 │  │  ├─ analytics/, stations/, datasets/
+│  │  ├─ common/                    # Toast notifications, ConfirmationDialog
 │  │  │                       # Thành phần con: biểu đồ, filters, danh sách, bảng dữ liệu
 │  ├─ types/ev.ts          # Định nghĩa kiểu dữ liệu trạm, session, analytics
 │  ├─ utils/               # Hàm gọi API, mapping label trạng thái/vehicle
@@ -91,7 +99,26 @@ frontend/
 - Hỗ trợ đăng ký tài khoản (citizen hoặc manager), đăng nhập bằng form data gửi lên `/auth/login`.
 - Tự động xoá token & reload nếu API trả về `401 Unauthorized`.
 
-### 6.2 Dashboard cho nhà quản lý
+### 6.2 Dashboard cho quản trị viên
+
+- **Quản lý người dùng**: 
+  - Liệt kê tất cả người dùng
+  - Cập nhật vai trò người dùng (citizen/manager/admin)
+  - Khóa/mở khóa tài khoản
+  - Xóa người dùng
+
+- **Datasets**: 
+  - Xem và tải các dataset JSON-LD (stations, observations, sessions)
+  - Preview nội dung dataset trước khi tải
+
+- **NGSI-LD APIs**:
+  - Tab Entities: xem, quản lý entities theo type (EVChargingStation, EVChargingSession, Sensor)
+  - Tab Types: xem thông tin về các entity types
+  - Tab API Documentation: danh sách đầy đủ các API endpoints NGSI-LD theo tiêu chuẩn ETSI ISG CIM
+  - Xem chi tiết entity (JSON viewer)
+  - Xóa entity với confirmation
+
+### 6.3 Dashboard cho nhà quản lý
 
 - **Tổng quan**: tổng phiên sạc, năng lượng, doanh thu, thuế, top trạm nhiều phiên.
 - **Doanh thu theo thời gian**: gọi `/analytics/revenue-timeline?period=day|week`, hiển thị biểu đồ.
@@ -99,7 +126,7 @@ frontend/
 - **Bản đồ & tra cứu**: MapLibre map với danh sách trạm tìm theo toạ độ/bán kính (`/stations/near`).
 - **Chi tiết trạm**: lấy dữ liệu từ `/stations/{id}`, `/analytics/stations/{id}`, `/stations/{id}/sessions`, `/stations/{id}/realtime`.
 
-### 6.3 Trải nghiệm người dân
+### 6.4 Trải nghiệm người dân
 
 - **Tìm trạm**: tìm nâng cao (`/stations/search`) hoặc theo vị trí hiện tại/bán kính.
 - **Lịch sử sạc**: `/citizens/{user_id}/sessions` & `/citizens/{user_id}/sessions/stats`.
@@ -107,7 +134,7 @@ frontend/
 - **So sánh trạm**: gọi `/citizen/compare` với nhiều `station_ids` để so sánh công suất, lượt dùng.
 - **Thông tin cá nhân**: cập nhật qua `/auth/me` (PATCH) thông qua modal ProfileSettings.
 
-### 6.4 Khả năng tuỳ biến giao diện
+### 6.5 Khả năng tuỳ biến giao diện
 
 - Sử dụng Tailwind CSS và component-based styling, dễ dàng đổi màu chủ đạo (`#124874` cho manager, `#CF373D` cho citizen).
 - Icons từ lucide-react, gradients và shadow để phù hợp UI hiện đại.

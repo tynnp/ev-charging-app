@@ -83,7 +83,6 @@ Chứa dữ liệu mẫu dưới dạng JSON-LD, tuân thủ chuẩn NGSI-LD và
 
 #### Thư mục `tests/`
 - `test_app_basic.py`: Các test case cho API endpoints
-- `conftest.py`: Cấu hình test fixtures và dữ liệu mẫu
 
 #### File cấu hình
 - `.env.example`: Mẫu cấu hình môi trường (sao chép thành `.env` để sử dụng)
@@ -232,30 +231,50 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env
 - `POST /auth/register`
   - Đăng ký tài khoản mới (yêu cầu xác minh OTP qua email).
   - Body: `UserRegister` (username, password, email, name, role).
+  - Role có thể là: `citizen`, `manager`, hoặc `admin` (admin thường được tạo bởi admin khác).
   - Trả về: `OTPInitiateResponse` với thời gian hết hạn OTP.
 
-- `POST /auth/verify`
+- `POST /auth/register/verify`
   - Xác nhận đăng ký bằng OTP.
   - Body: `UserRegisterVerify` (username, otp).
   - Trả về: `UserResponse` và access token nếu thành công.
 
 #### Đăng nhập
-- `POST /auth/token`
+- `POST /auth/login`
   - Đăng nhập bằng username/password.
   - Form data: `username`, `password`.
   - Trả về: `{ "access_token": "...", "token_type": "bearer", "user": {...} }`
 
 #### Quản lý tài khoản
-- `GET /users/me`
+- `GET /auth/me`
   - Lấy thông tin người dùng hiện tại.
   - Yêu cầu xác thực.
   - Trả về: `UserResponse`.
 
-- `PATCH /users/me`
+- `PATCH /auth/me`
   - Cập nhật thông tin cá nhân.
   - Yêu cầu xác thực.
   - Body: `UserUpdate` (name, email, phone_number).
   - Trả về: `UserResponse` đã cập nhật.
+
+#### Admin - Quản lý người dùng (Yêu cầu quyền admin)
+
+- `GET /admin/users?limit={limit}&offset={offset}`
+  - Liệt kê tất cả người dùng với phân trang.
+  - Trả về: `UserListResponse` (users, total).
+
+- `PATCH /admin/users/{user_id}/role`
+  - Cập nhật vai trò người dùng (citizen/manager/admin).
+  - Body: `UserUpdateRole` (role).
+  - Không thể thay đổi vai trò của chính mình.
+
+- `PATCH /admin/users/{user_id}/lock?is_locked={true|false}`
+  - Khóa hoặc mở khóa tài khoản người dùng.
+  - Không thể khóa tài khoản của chính mình.
+
+- `DELETE /admin/users/{user_id}`
+  - Xóa người dùng.
+  - Không thể xóa tài khoản của chính mình.
 
 #### Lưu trạm
 - `POST /favorites?station_id=<station_id>`
@@ -303,7 +322,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env
 
 - `GET /stations/{station_id}/sessions` Liệt kê các phiên sạc thuộc một trạm.
 
-### 8.3. Analytics
+### 8.4. Analytics
 
 - `GET /analytics/overview` Thống kê tổng quan toàn hệ thống:
     - Tổng số phiên sạc, tổng năng lượng (kWh), tổng doanh thu, tổng thuế.
@@ -316,9 +335,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env
     - Năng lượng trung bình một phiên.
     - Phân bổ theo `vehicle_type`.
 
-### 8.4. NGSI-LD
+### 8.5. NGSI-LD (Theo tiêu chuẩn ETSI ISG CIM)
 
-Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích với mô hình dữ liệu trong `ev-charging-open-data`:
+Các endpoint này cung cấp lớp API NGSI-LD đầy đủ theo tiêu chuẩn ETSI ISG CIM, tương thích với mô hình dữ liệu trong `ev-charging-open-data`:
+
+#### Entity Management
 
 - `POST /ngsi-ld/v1/entities`
   - Tạo hoặc upsert một entity NGSI-LD.
@@ -327,17 +348,45 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
     - `EVChargingSession`
     - `Sensor`
 
-- `GET /ngsi-ld/v1/entities?type=...&id=...` Liệt kê entity theo `type`, có thể filter theo `id`.
+- `GET /ngsi-ld/v1/entities?type=...&id=...` 
+  - Liệt kê entity theo `type`, có thể filter theo `id`.
+  - Hỗ trợ phân trang: `limit`, `offset`.
 
-- `GET /ngsi-ld/v1/entities/{entity_id}` Lấy chi tiết một entity theo `id`.
+- `GET /ngsi-ld/v1/entities/{entity_id}` 
+  - Lấy chi tiết một entity theo `id`.
+
+- `DELETE /ngsi-ld/v1/entities/{entity_id}` 
+  - Xóa một entity (yêu cầu quyền admin).
+
+#### Attribute Management
+
+- `GET /ngsi-ld/v1/entities/{entity_id}/attrs`
+  - Lấy tất cả attributes của entity.
+
+- `GET /ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}`
+  - Lấy một attribute cụ thể của entity.
 
 - `PATCH /ngsi-ld/v1/entities/{entity_id}/attrs`
-  - Cập nhật một số thuộc tính của `EVChargingStation`.
+  - Cập nhật nhiều attributes của entity.
   - Logic cập nhật tái sử dụng hàm xử lý realtime (`apply_realtime_event`) để:
     - Ghi thay đổi vào MongoDB.
     - Broadcast payload cập nhật qua WebSocket.
 
-### 8.5. Datasets (phục vụ open data)
+- `PATCH /ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}`
+  - Cập nhật một attribute cụ thể.
+
+- `POST /ngsi-ld/v1/entities/{entity_id}/attrs`
+  - Thêm attributes mới vào entity.
+
+#### Type Management
+
+- `GET /ngsi-ld/v1/types`
+  - Liệt kê tất cả entity types với số lượng entities mỗi type.
+
+- `GET /ngsi-ld/v1/types/{type_name}`
+  - Lấy thông tin chi tiết về một entity type (mô tả, số lượng, attributes mẫu).
+
+### 8.6. Datasets (phục vụ open data)
 
 - `GET /datasets` Trả về danh sách các dataset mà backend công bố:
     - Dataset trạm sạc (`stations.jsonld`).
@@ -352,7 +401,7 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
 
 > **Lưu ý:** Các dataset được đóng gói dưới dạng JSON-LD `Dataset` có `mainEntity`. Khi cần nạp lại vào NGSI-LD broker, hãy: (1) tách `@context` và mảng entity trong `mainEntity`; (2) gửi từng entity qua `POST /ngsi-ld/v1/entities` hoặc batch `POST /ngsi-ld/v1/entityOperations/upsert`; (3) cung cấp context qua body hoặc header `Link` theo chuẩn NGSI-LD.
 
-### 8.6. Realtime WebSocket
+### 8.7. Realtime WebSocket
 
 `GET /ws/realtime` (WebSocket)
   - Kênh realtime để client (ví dụ frontend) đăng ký nhận sự kiện:
@@ -363,7 +412,7 @@ Các endpoint này cung cấp lớp API NGSI-LD đơn giản, tương thích v�
     - Áp dụng từng event vào DB.
     - Gửi JSON qua tất cả kết nối WebSocket đang mở.
 
-### 8.7. Authentication
+### 8.8. Authentication
 
 - `POST /auth/register`: Đăng ký tài khoản mới
   - Body: `{ "username": "...", "password": "...", "email": "...", "name": "...", "role": "citizen" | "manager" }`
@@ -402,9 +451,16 @@ Khi server khởi động, hệ thống sẽ tự động tạo 3 tài khoản m
   - Tên: Nguyễn Ngọc Phú Tỷ
   - Email: manager@example.com
 
+- **Quản trị viên:**
+  - Username: `admin`
+  - Password: `admin123`
+  - Role: `admin`
+  - Tên: Quản trị viên
+  - Email: admin@example.com
+
 > **Lưu ý:** Các tài khoản mặc định chỉ được tạo một lần khi server khởi động lần đầu. Nếu đã tồn tại, hệ thống sẽ bỏ qua việc tạo lại.
 
-### 8.8. Citizens & Session history
+### 8.9. Citizens & Session history
 
 - `GET /citizens/{user_id}`: Lấy thông tin hồ sơ người dùng (tên, email, số điện thoại) đã được ETL từ `sessions.jsonld`.
 - `GET /citizens/{user_id}/sessions`: Liệt kê các phiên sạc của công dân, hỗ trợ filter theo `station_id`, `start_date`, `end_date`, `limit`, `offset`. Kết quả được sắp xếp mới nhất trước.
@@ -450,7 +506,7 @@ Test cover:
 - Hàm tiện ích `_haversine_km` và `get_property_value`.
 - Một số endpoint `/stations`, `/stations/near`, `/analytics/overview`, và các endpoint công dân `/citizens/...` với collection giả lập.
 
-## 10. Thư mục `ev-charging-open-data`
+## 11. Thư mục `ev-charging-open-data`
 
 Thư mục `ev-charging-open-data` **không phải** là phần logic chính của backend mà là một **repo dữ liệu mở** được clone riêng từ kho `tynnp/ev-charging-open-data`, dùng làm nguồn dữ liệu mẫu (xem thêm mục *2.1. Clone repo dữ liệu mở*). Thư mục này đã được thêm vào `.gitignore`, nên sẽ **không xuất hiện trong các commit**; mỗi người phát triển cần tự clone về khi thiết lập môi trường.
 
@@ -462,7 +518,7 @@ Thư mục `ev-charging-open-data` **không phải** là phần logic chính c�
   - Giữ nguyên cấu trúc và giấy phép trong thư mục này.
   - Ghi công nguồn dữ liệu theo hướng dẫn trong `ev-charging-open-data/README.md`.
 
-## 11. Giấy phép
+## 12. Giấy phép
 
 - Mã nguồn backend (`backend/app`, `backend/tests`, v.v.) được phát hành theo giấy phép **MIT** (xem file `LICENSE` ở root dự án, và dòng `SPDX-License-Identifier: MIT` trong từng tệp Python).
 - Bộ dữ liệu trong `ev-charging-open-data/` phát hành theo **Creative Commons Attribution 4.0 International (CC BY 4.0)**; khi tái sử dụng cần ghi nguồn theo gợi ý trong `ev-charging-open-data/README.md` và giữ nguyên file `LICENSE`.
