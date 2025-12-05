@@ -57,7 +57,6 @@ backend/
 │
 ├── .dockerignore                # Bỏ qua file khi build Docker
 ├── .env.example                 # Mẫu cấu hình môi trường
-├── .gitignore                   # Bỏ qua file trong git
 ├── Dockerfile                   # Cấu hình Docker cho backend
 ├── README.md                    # Tài liệu này
 ├── docker-entrypoint.sh         # Script khởi tạo Docker

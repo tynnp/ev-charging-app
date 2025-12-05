@@ -50,25 +50,16 @@ Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tí
 
 Tìm kiếm, lọc và sử dụng các trạm sạc xe điện.
 
-## 3. Dữ liệu và giấy phép
+## 3. Chuẩn bị môi trường
 
-| Tài nguyên                         | Giấy phép | Ghi chú |
-|-----------------------------------|-----------|--------|
-| Mã nguồn (backend, frontend)      | MIT       | Xem file [`LICENSE`](LICENSE) |
-| Dữ liệu JSON-LD (stations, sessions, sensors, citizens) | CC BY 4.0 | Từ repo [`tynnp/ev-charging-open-data`](https://github.com/tynnp/ev-charging-open-data) |
-
-Ứng dụng hỗ trợ tải về bộ dữ liệu JSON-LD qua các endpoint `/datasets/*.jsonld`, đảm bảo tuân thủ yêu cầu FAIR/5-star open data.
-
-## 4. Chuẩn bị môi trường
-
-### 4.1. Yêu cầu chung
+### 3.1. Yêu cầu chung
 
 - **Python 3.11+** và `pip`
 - **Node.js 20+** và `npm`
 - **MongoDB** đang chạy tại `mongodb://localhost:27017` (có thể cấu hình lại)
 - Git để clone và quản lý submodule dữ liệu
 
-### 4.2. Thiết lập backend
+### 3.2. Thiết lập backend
 
 ```bash
 cd backend
@@ -92,7 +83,7 @@ Backend cung cấp REST, NGSI-LD, WebSocket realtime và bộ test cơ bản (`p
 
 > **Lưu ý:** chức năng đăng ký người dùng yêu cầu gửi OTP qua email. Bạn phải cung cấp thông tin SMTP hợp lệ trong file `.env` (xem `backend/env.example`) trước khi chạy server.
 
-### 4.3. Thiết lập frontend
+### 3.3. Thiết lập frontend
 
 ```bash
 cd frontend
@@ -103,7 +94,7 @@ npm run dev           # mặc định http://localhost:5173
 
 Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích hợp bản đồ. Chi tiết cấu trúc và tính năng tại [`frontend/README.md`](frontend/README.md).
 
-### 4.4. Triển khai bằng Docker
+### 3.4. Triển khai bằng Docker
 
 Dự án đã được Docker hóa sẵn, hỗ trợ chạy trên cả Windows và Unix/Linux. Bạn có thể sử dụng các file script có sẵn để khởi động nhanh ứng dụng:
 
@@ -176,7 +167,7 @@ Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản h�
 
 Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-compose.yml`.
 
-## 5. Tài khoản mẫu & truy cập
+## 4. Tài khoản mẫu & truy cập
 
 | Vai trò        | Tên đăng nhập | Mật khẩu     | Tên                 |
 |----------------|---------------|--------------|---------------------|
@@ -187,7 +178,7 @@ Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-com
 
 Các tài khoản được tạo tự động khi backend khởi động lần đầu (`create_default_users`).
 
-### Quyền hạn theo vai trò
+## 5. Quyền hạn theo vai trò
 
 - **Quản trị viên (admin)**:
   - Quản lý người dùng: phân quyền, khóa/mở khóa, xóa người dùng
@@ -216,9 +207,18 @@ Các tài khoản được tạo tự động khi backend khởi động lần �
 
 1. **Mã nguồn công khai**: GitHub `tynnp/ev-charging-app`
 2. **Giấy phép OSI**: MIT (mã nguồn) + CC BY 4.0 (dữ liệu)
-3. **Build instructions**: mô tả ở README backend/frontend và mục 3 ở đây
+3. **Build instructions**: mô tả ở README backend/frontend và mục 8 ở đây
 
-## 8. Đóng góp & phát triển tiếp
+## 8. Dữ liệu và giấy phép
+
+| Tài nguyên                         | Giấy phép | Ghi chú |
+|-----------------------------------|-----------|--------|
+| Mã nguồn (backend, frontend)      | MIT       | Xem file [`LICENSE`](LICENSE) |
+| Dữ liệu JSON-LD (stations, sessions, sensors, citizens) | CC BY 4.0 | Từ repo [`tynnp/ev-charging-open-data`](https://github.com/tynnp/ev-charging-open-data) |
+
+Ứng dụng hỗ trợ tải về bộ dữ liệu JSON-LD qua các endpoint `/datasets/*.jsonld`, đảm bảo tuân thủ yêu cầu FAIR/5-star open data.
+
+## 9. Đóng góp & tiếp tục phát triển
 
 - Tuân thủ style code (PEP8 cho Python, ESLint + Prettier conventions cho frontend)
 - Tạo tính năng mới cần cập nhật tài liệu (README, DEPENDENCIES)

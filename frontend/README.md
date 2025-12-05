@@ -62,33 +62,28 @@ Các tài khoản mặc định do backend khởi tạo:
 
 ```text
 frontend/
-├─ public/                 # Tài nguyên tĩnh (favicon, manifest, ...)
-├─ src/
-│  ├─ App.tsx              # Entry chính, điều hướng giữa các trang/role
-│  ├─ main.tsx             # Mount React, bọc AuthProvider
-│  ├─ config.ts            # Hằng số API_BASE_URL, user mặc định
-│  ├─ contexts/AuthContext.tsx
-│  │                       # Quản lý token JWT, login/register/logout
-│  ├─ components/
-│  │  ├─ layout/AppLayout.tsx      # Layout sidebar + header + nav
-│  │  ├─ auth/                     # Login, Profile, modal cập nhật
-│  │  ├─ pages/
-│  │  │  ├─ DashboardPage.tsx      # Dashboard manager (overview / realtime / map / stations)
-│  │  │  ├─ AdminPage.tsx          # Dashboard admin (users / datasets / ngsi-ld)
-│  │  │  ├─ NGSILDManagement.tsx   # Quản lý NGSI-LD APIs (entities, types, docs)
-│  │  │  └─ CitizenPage.tsx        # Trang tìm trạm cho người dân
-│  │  ├─ citizen/                  # Trang dành cho người dân (find/history/favorites/compare)
-│  │  ├─ analytics/, stations/, datasets/
-│  │  ├─ common/                    # Toast notifications, ConfirmationDialog
-│  │  │                       # Thành phần con: biểu đồ, filters, danh sách, bảng dữ liệu
-│  ├─ types/ev.ts          # Định nghĩa kiểu dữ liệu trạm, session, analytics
-│  ├─ utils/               # Hàm gọi API, mapping label trạng thái/vehicle
-│  ├─ mapConfig.ts         # Cấu hình MapLibre (style vector)
-│  ├─ App.css & index.css  # Style toàn cục + Tailwind directives
-├─ env.example             # Mẫu biến môi trường
-├─ tailwind.config.js      # Cấu hình Tailwind
-├─ vite.config.ts          # Cấu hình Vite + plugin React
-└─ eslint.config.js        # ESLint flat config
+├─ .dockerignore        # Bỏ qua file khi build Docker
+├─ .env.example         # Mẫu biến môi trường
+├─ .eslintrc.js         # Cấu hình ESLint
+├─ Dockerfile           # Cấu hình build Docker image
+├─ README.md            # Tài liệu này
+├─ index.html           # File HTML chính
+├─ nginx.conf           # Cấu hình Nginx cho production
+├─ package.json         # Danh sách dependencies và scripts
+├─ postcss.config.js    # Cấu hình PostCSS
+├─ tailwind.config.js   # Cấu hình Tailwind CSS
+├─ tsconfig.json        # Cấu hình TypeScript chung
+└─ src/
+   ├─ App.tsx           # Component gốc của ứng dụng
+   ├─ main.tsx          # Điểm vào chính
+   ├─ config.ts         # Cấu hình ứng dụng
+   ├─ contexts/         # React contexts
+   ├─ components/       # Các component React
+   ├─ types/            # Định nghĩa TypeScript
+   ├─ utils/            # Tiện ích
+   ├─ mapConfig.ts      # Cấu hình bản đồ
+   ├─ App.css           # CSS chính
+   └─ index.css         # CSS toàn cục
 ```
 
 ## 6. Luồng và tính năng nổi bật
@@ -126,7 +121,7 @@ frontend/
 - **Bản đồ & tra cứu**: MapLibre map với danh sách trạm tìm theo toạ độ/bán kính (`/stations/near`).
 - **Chi tiết trạm**: lấy dữ liệu từ `/stations/{id}`, `/analytics/stations/{id}`, `/stations/{id}/sessions`, `/stations/{id}/realtime`.
 
-### 6.4 Trải nghiệm người dân
+### 6.4 Dashboard cho người dùng
 
 - **Tìm trạm**: tìm nâng cao (`/stations/search`) hoặc theo vị trí hiện tại/bán kính.
 - **Lịch sử sạc**: `/citizens/{user_id}/sessions` & `/citizens/{user_id}/sessions/stats`.
@@ -139,13 +134,38 @@ frontend/
 - Sử dụng Tailwind CSS và component-based styling, dễ dàng đổi màu chủ đạo (`#124874` cho manager, `#CF373D` cho citizen).
 - Icons từ lucide-react, gradients và shadow để phù hợp UI hiện đại.
 
-## 7. API & môi trường
+## 7. Thiết kế Responsive
+
+Ứng dụng được thiết kế hoạt động trên mọi thiết bị từ mobile đến desktop:
+
+### 7.1 Breakpoints
+- **Mobile**: < 640px
+- **Tablet**: 640px - 1024px
+- **Desktop**: > 1024px
+
+### 7.2 Tính năng Responsive
+- **Điều hướng**:
+  - Thanh sidebar ẩn/hiện trên mobile
+  - Menu hamburger cho màn hình nhỏ
+  - Bottom navigation bar trên mobile
+
+- **Bố cục**:
+  - Grid và Flexbox linh hoạt
+  - Card và bảng cuộn ngang khi cần
+  - Khoảng cách và padding điều chỉnh theo kích thước màn hình
+
+- **Tương tác**:
+  - Nút và input đủ lớn để dễ thao tác trên mobile
+  - Hỗ trợ thao tác vuốt (swipe) trên mobile
+  - Tối ưu hiệu suất trên thiết bị di động
+
+## 8. API & môi trường
 
 - **REST**: toàn bộ endpoint xem chi tiết tại backend README (`/stations`, `/analytics`, `/citizen/...`, `/datasets`, `/auth/...`).
 - **WebSocket**: `/ws/realtime` phát sự kiện `station_update` và `session_upsert`; frontend tự xử lý và cập nhật UI.
 - **Biến môi trường**: `VITE_API_BASE_URL` (bắt buộc). Nếu backend chạy bằng HTTPS, WebSocket sẽ tự chuyển sang `wss://`.
 
-## 8. Build & triển khai
+## 9. Build & triển khai
 
 ```bash
 # Build production (output vào thư mục dist/)
@@ -158,19 +178,19 @@ npm run preview
 - Triển khai static: Copy nội dung `dist/` lên máy chủ tĩnh (Nginx, Netlify, Vercel, ...).
 - Cần cấu hình reverse proxy để route các request `/auth`, `/stations`, ... tới backend FastAPI tương ứng.
 
-## 9. Kiểm thử & chất lượng mã
+## 10. Kiểm thử & chất lượng mã
 
 - Dự án sử dụng ESLint (flat config) với rule cho React 19 và TypeScript.
 - Có thể bổ sung testing (Vitest/React Testing Library) trong tương lai; hiện tại chưa cung cấp test tự động cho frontend.
 
-## 10. Tài liệu tham khảo nội bộ
+## 11. Tài liệu tham khảo nội bộ
 
 - Backend README: mô tả ETL dữ liệu mở, endpoint REST/WebSocket, tài khoản mặc định.
 - Kho dữ liệu `ev-charging-open-data`: JSON-LD theo chuẩn NGSI-LD/SOSA, giấy phép CC BY 4.0.
 
 ---
 
-## 11. Bản quyền
+## 12. Bản quyền
 
 - Mã nguồn phát hành theo giấy phép MIT (xem file `LICENSE` ở root dự án).
 - Icons và dữ liệu sử dụng theo giấy phép riêng của từng thư viện/nguồn dữ liệu. Hãy ghi công phù hợp khi tái sử dụng.

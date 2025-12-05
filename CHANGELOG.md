@@ -54,3 +54,25 @@ Cải tiến giao diện người dùng và trải nghiệm:
 ### Sửa lỗi
 - Sửa lỗi hiển thị trên một số thiết bị di động
 - Cập nhật thông báo lỗi rõ ràng và thân thiện hơn
+
+## [v1.2.0] - 2025-12-05
+
+### Added
+- **Admin Dashboard**:
+  - Quản lý người dùng: xem, cập nhật vai trò, khóa/mở tài khoản
+  - Quản lý datasets: xem và tải các bộ dữ liệu JSON-LD
+  - Quản lý NGSI-LD: xem và quản lý entities, types, API documentation
+
+- **Phân quyền chi tiết**:
+  - Thêm vai trò admin với toàn quyền hệ thống
+  - Phân quyền chi tiết cho từng tính năng
+
+- **UI/UX**:
+  - Giao diện quản trị với bảng điều khiển trực quan
+  - Toast notifications cho các thao tác
+  - Xác nhận trước khi thực hiện các thao tác quan trọng
+
+### Changed
+- Cập nhật AuthContext để hỗ trợ phân quyền mới
+- Tối ưu hiệu năng cho các bảng dữ liệu
+- Cải thiện phản hồi lỗi và thông báo người dùng
