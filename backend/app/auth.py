@@ -89,9 +89,37 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
         email=user.get("email"),
         name=user.get("name"),
         role=user.get("role", "citizen"),
+        is_locked=user.get("is_locked", False),
     )
 
 async def get_current_active_user(
     current_user: UserResponse = Depends(get_current_user),
 ) -> UserResponse:
+    users_collection = get_users_collection()
+    user_doc = users_collection.find_one({"_id": current_user.id})
+    if not user_doc:
+        user_doc = users_collection.find_one({"username": current_user.username})
+    
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy người dùng",
+        )
+    
+    if user_doc.get("is_locked", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản đã bị khóa",
+        )
+    
+    return current_user
+
+async def get_current_admin(
+    current_user: UserResponse = Depends(get_current_active_user),
+) -> UserResponse:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ admin mới có quyền truy cập",
+        )
     return current_user

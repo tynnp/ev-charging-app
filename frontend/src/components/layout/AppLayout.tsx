@@ -20,10 +20,12 @@ import {
   UserCircle,
   Menu,
   X,
+  Users,
+  Database,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
-type UserRole = 'manager' | 'citizen'
+type UserRole = 'manager' | 'citizen' | 'admin'
 
 type NavItem = {
   id: string
@@ -121,6 +123,8 @@ export function AppLayout({
                     {item.id.includes('compare') && <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     {item.id.includes('route') && <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     {item.id.includes('profile') && <UserCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
+                    {item.id.includes('admin-users') && <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
+                    {item.id.includes('admin-datasets') && <Database className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />}
                     <span className="truncate">{item.label}</span>
                   </button>
                 </li>
@@ -154,7 +158,7 @@ export function AppLayout({
                       {user.name || user.username}
                     </div>
                     <div className="text-xs text-slate-500 truncate">
-                      {role === 'manager' ? 'Nhà quản lý' : 'Người dân'}
+                      {role === 'admin' ? 'Quản trị viên' : role === 'manager' ? 'Nhà quản lý' : 'Người dân'}
                     </div>
                   </div>
                 </div>

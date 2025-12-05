@@ -108,7 +108,7 @@ class UserRegister(BaseModel):
     password: str
     email: EmailStr
     name: Optional[str] = None
-    role: str = "citizen"  # "citizen" or "manager"
+    role: str = "citizen"  # "citizen", "manager", or "admin"
 
 class UserRegisterVerify(BaseModel):
     username: str
@@ -128,6 +128,14 @@ class UserResponse(BaseModel):
     email: Optional[str] = None
     name: Optional[str] = None
     role: str
+    is_locked: Optional[bool] = False
+
+class UserUpdateRole(BaseModel):
+    role: str  # "citizen", "manager", or "admin"
+
+class UserListResponse(BaseModel):
+    users: List[UserResponse]
+    total: int
 
 class Token(BaseModel):
     access_token: str

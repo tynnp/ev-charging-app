@@ -21,7 +21,6 @@ import { AnalyticsOverviewPanel } from '../analytics/AnalyticsOverviewPanel'
 import { StationFilters } from '../stations/StationFilters'
 import { StationList } from '../stations/StationList'
 import { StationDetails } from '../stations/StationDetails'
-import { DatasetsPanel } from '../datasets/DatasetsPanel'
 import {
   AlertTriangle,
   Zap,
@@ -708,7 +707,6 @@ export function DashboardPage({ section }: DashboardPageProps) {
             stationNameLookup={stationNameLookup}
           />
           </section>
-          <DatasetsPanel />
         </>
       ) : null}
 
