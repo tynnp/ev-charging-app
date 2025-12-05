@@ -314,7 +314,10 @@ def update_current_user_info(
     current_user: UserResponse = Depends(get_current_active_user),
 ) -> UserResponse:
     users_collection = get_users_collection()
+    
     user_doc = users_collection.find_one({"_id": current_user.id})
+    if not user_doc:
+        user_doc = users_collection.find_one({"username": current_user.username})
     
     if not user_doc:
         raise HTTPException(
@@ -334,12 +337,12 @@ def update_current_user_info(
         return current_user
     
     updates["updated_at"] = datetime.now()
-    users_collection.update_one({"_id": current_user.id}, {"$set": updates})
+    users_collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
     
     # Fetch updated user
-    updated_doc = users_collection.find_one({"_id": current_user.id})
+    updated_doc = users_collection.find_one({"_id": user_doc["_id"]})
     return UserResponse(
-        id=str(updated_doc.get("_id", current_user.id)),
+        id=str(updated_doc.get("_id", user_doc["_id"])),
         username=updated_doc.get("username", current_user.username),
         email=updated_doc.get("email"),
         name=updated_doc.get("name"),
