@@ -1,7 +1,8 @@
 # Frontend – EV Charging App
 
-Giao diện người dùng của dự án **EV Charging App** được xây dựng bằng **React 19 + TypeScript** trên nền **Vite** và Tailwind CSS. Ứng dụng phục vụ hai vai trò chính trong đề thi PMNM – OLP 2025:
+Giao diện người dùng của dự án **EV Charging App** được xây dựng bằng **React 19 + TypeScript** trên nền **Vite** và Tailwind CSS. Ứng dụng phục vụ ba vai trò chính:
 
+- **Quản trị viên**: quản lý người dùng (phân quyền, khóa/mở khóa, xóa), quản lý datasets, quản lý NGSI-LD APIs.
 - **Nhà quản lý**: theo dõi thống kê tổng quan, realtime sessions, bản đồ trạm sạc, phân tích từng trạm.
 - **Người dân**: tìm kiếm trạm sạc, xem lịch sử sử dụng, quản lý danh sách yêu thích, so sánh trạm và cập nhật thông tin cá nhân.
 
@@ -43,8 +44,10 @@ npm run dev
 
 Các tài khoản mặc định do backend khởi tạo:
 
+- Quản trị viên: `admin` / `admin123`
 - Nhà quản lý: `manager` / `manager123`
 - Người dân: `citizen` / `citizen123`
+- Người dân: `citizen2` / `citizen123`
 
 ## 4. Các script npm
 
@@ -59,28 +62,28 @@ Các tài khoản mặc định do backend khởi tạo:
 
 ```text
 frontend/
-├─ public/                 # Tài nguyên tĩnh (favicon, manifest, ...)
-├─ src/
-│  ├─ App.tsx              # Entry chính, điều hướng giữa các trang/role
-│  ├─ main.tsx             # Mount React, bọc AuthProvider
-│  ├─ config.ts            # Hằng số API_BASE_URL, user mặc định
-│  ├─ contexts/AuthContext.tsx
-│  │                       # Quản lý token JWT, login/register/logout
-│  ├─ components/
-│  │  ├─ layout/AppLayout.tsx      # Layout sidebar + header + nav
-│  │  ├─ auth/                     # Login, Profile, modal cập nhật
-│  │  ├─ pages/DashboardPage.tsx   # Dashboard manager (overview / realtime / map / stations)
-│  │  ├─ citizen/                  # Trang dành cho người dân (find/history/favorites/compare)
-│  │  ├─ analytics/, stations/, datasets/
-│  │  │                       # Thành phần con: biểu đồ, filters, danh sách, bảng dữ liệu
-│  ├─ types/ev.ts          # Định nghĩa kiểu dữ liệu trạm, session, analytics
-│  ├─ utils/               # Hàm gọi API, mapping label trạng thái/vehicle
-│  ├─ mapConfig.ts         # Cấu hình MapLibre (style vector)
-│  ├─ App.css & index.css  # Style toàn cục + Tailwind directives
-├─ env.example             # Mẫu biến môi trường
-├─ tailwind.config.js      # Cấu hình Tailwind
-├─ vite.config.ts          # Cấu hình Vite + plugin React
-└─ eslint.config.js        # ESLint flat config
+├─ .dockerignore        # Bỏ qua file khi build Docker
+├─ .env.example         # Mẫu biến môi trường
+├─ .eslintrc.js         # Cấu hình ESLint
+├─ Dockerfile           # Cấu hình build Docker image
+├─ README.md            # Tài liệu này
+├─ index.html           # File HTML chính
+├─ nginx.conf           # Cấu hình Nginx cho production
+├─ package.json         # Danh sách dependencies và scripts
+├─ postcss.config.js    # Cấu hình PostCSS
+├─ tailwind.config.js   # Cấu hình Tailwind CSS
+├─ tsconfig.json        # Cấu hình TypeScript chung
+└─ src/
+   ├─ App.tsx           # Component gốc của ứng dụng
+   ├─ main.tsx          # Điểm vào chính
+   ├─ config.ts         # Cấu hình ứng dụng
+   ├─ contexts/         # React contexts
+   ├─ components/       # Các component React
+   ├─ types/            # Định nghĩa TypeScript
+   ├─ utils/            # Tiện ích
+   ├─ mapConfig.ts      # Cấu hình bản đồ
+   ├─ App.css           # CSS chính
+   └─ index.css         # CSS toàn cục
 ```
 
 ## 6. Luồng và tính năng nổi bật
@@ -91,7 +94,26 @@ frontend/
 - Hỗ trợ đăng ký tài khoản (citizen hoặc manager), đăng nhập bằng form data gửi lên `/auth/login`.
 - Tự động xoá token & reload nếu API trả về `401 Unauthorized`.
 
-### 6.2 Dashboard cho nhà quản lý
+### 6.2 Dashboard cho quản trị viên
+
+- **Quản lý người dùng**: 
+  - Liệt kê tất cả người dùng
+  - Cập nhật vai trò người dùng (citizen/manager/admin)
+  - Khóa/mở khóa tài khoản
+  - Xóa người dùng
+
+- **Datasets**: 
+  - Xem và tải các dataset JSON-LD (stations, observations, sessions)
+  - Preview nội dung dataset trước khi tải
+
+- **NGSI-LD APIs**:
+  - Tab Entities: xem, quản lý entities theo type (EVChargingStation, EVChargingSession, Sensor)
+  - Tab Types: xem thông tin về các entity types
+  - Tab API Documentation: danh sách đầy đủ các API endpoints NGSI-LD theo tiêu chuẩn ETSI ISG CIM
+  - Xem chi tiết entity (JSON viewer)
+  - Xóa entity với confirmation
+
+### 6.3 Dashboard cho nhà quản lý
 
 - **Tổng quan**: tổng phiên sạc, năng lượng, doanh thu, thuế, top trạm nhiều phiên.
 - **Doanh thu theo thời gian**: gọi `/analytics/revenue-timeline?period=day|week`, hiển thị biểu đồ.
@@ -99,7 +121,7 @@ frontend/
 - **Bản đồ & tra cứu**: MapLibre map với danh sách trạm tìm theo toạ độ/bán kính (`/stations/near`).
 - **Chi tiết trạm**: lấy dữ liệu từ `/stations/{id}`, `/analytics/stations/{id}`, `/stations/{id}/sessions`, `/stations/{id}/realtime`.
 
-### 6.3 Trải nghiệm người dân
+### 6.4 Dashboard cho người dùng
 
 - **Tìm trạm**: tìm nâng cao (`/stations/search`) hoặc theo vị trí hiện tại/bán kính.
 - **Lịch sử sạc**: `/citizens/{user_id}/sessions` & `/citizens/{user_id}/sessions/stats`.
@@ -107,18 +129,43 @@ frontend/
 - **So sánh trạm**: gọi `/citizen/compare` với nhiều `station_ids` để so sánh công suất, lượt dùng.
 - **Thông tin cá nhân**: cập nhật qua `/auth/me` (PATCH) thông qua modal ProfileSettings.
 
-### 6.4 Khả năng tuỳ biến giao diện
+### 6.5 Khả năng tuỳ biến giao diện
 
 - Sử dụng Tailwind CSS và component-based styling, dễ dàng đổi màu chủ đạo (`#124874` cho manager, `#CF373D` cho citizen).
 - Icons từ lucide-react, gradients và shadow để phù hợp UI hiện đại.
 
-## 7. API & môi trường
+## 7. Thiết kế Responsive
+
+Ứng dụng được thiết kế hoạt động trên mọi thiết bị từ mobile đến desktop:
+
+### 7.1 Breakpoints
+- **Mobile**: < 640px
+- **Tablet**: 640px - 1024px
+- **Desktop**: > 1024px
+
+### 7.2 Tính năng Responsive
+- **Điều hướng**:
+  - Thanh sidebar ẩn/hiện trên mobile
+  - Menu hamburger cho màn hình nhỏ
+  - Bottom navigation bar trên mobile
+
+- **Bố cục**:
+  - Grid và Flexbox linh hoạt
+  - Card và bảng cuộn ngang khi cần
+  - Khoảng cách và padding điều chỉnh theo kích thước màn hình
+
+- **Tương tác**:
+  - Nút và input đủ lớn để dễ thao tác trên mobile
+  - Hỗ trợ thao tác vuốt (swipe) trên mobile
+  - Tối ưu hiệu suất trên thiết bị di động
+
+## 8. API & môi trường
 
 - **REST**: toàn bộ endpoint xem chi tiết tại backend README (`/stations`, `/analytics`, `/citizen/...`, `/datasets`, `/auth/...`).
 - **WebSocket**: `/ws/realtime` phát sự kiện `station_update` và `session_upsert`; frontend tự xử lý và cập nhật UI.
 - **Biến môi trường**: `VITE_API_BASE_URL` (bắt buộc). Nếu backend chạy bằng HTTPS, WebSocket sẽ tự chuyển sang `wss://`.
 
-## 8. Build & triển khai
+## 9. Build & triển khai
 
 ```bash
 # Build production (output vào thư mục dist/)
@@ -131,19 +178,19 @@ npm run preview
 - Triển khai static: Copy nội dung `dist/` lên máy chủ tĩnh (Nginx, Netlify, Vercel, ...).
 - Cần cấu hình reverse proxy để route các request `/auth`, `/stations`, ... tới backend FastAPI tương ứng.
 
-## 9. Kiểm thử & chất lượng mã
+## 10. Kiểm thử & chất lượng mã
 
 - Dự án sử dụng ESLint (flat config) với rule cho React 19 và TypeScript.
 - Có thể bổ sung testing (Vitest/React Testing Library) trong tương lai; hiện tại chưa cung cấp test tự động cho frontend.
 
-## 10. Tài liệu tham khảo nội bộ
+## 11. Tài liệu tham khảo nội bộ
 
 - Backend README: mô tả ETL dữ liệu mở, endpoint REST/WebSocket, tài khoản mặc định.
 - Kho dữ liệu `ev-charging-open-data`: JSON-LD theo chuẩn NGSI-LD/SOSA, giấy phép CC BY 4.0.
 
 ---
 
-## 11. Bản quyền
+## 12. Bản quyền
 
 - Mã nguồn phát hành theo giấy phép MIT (xem file `LICENSE` ở root dự án).
 - Icons và dữ liệu sử dụng theo giấy phép riêng của từng thư viện/nguồn dữ liệu. Hãy ghi công phù hợp khi tái sử dụng.

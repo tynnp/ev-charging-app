@@ -1,6 +1,6 @@
 # EV Charging App
 
-Ứng dụng EV Charging App cung cấp cổng dữ liệu mở và bảng điều khiển dành cho **nhà quản lý** và **người dân** nhằm theo dõi, phân tích hoạt động các trạm sạc xe điện trong đô thị. Dự án được phát triển theo yêu cầu OLP 2025 Smart City với trọng tâm **Linked Open Data** (SOSA/SSN, NGSI-LD, FiWARE Smart Data Models).
+Ứng dụng EV Charging App cung cấp cổng dữ liệu mở và bảng điều khiển dành cho **quản trị viên**, **nhà quản lý** và **người dân** nhằm theo dõi, phân tích hoạt động các trạm sạc xe điện trong đô thị. Dự án được phát triển theo yêu cầu OLP 2025 Smart City với trọng tâm **Linked Open Data** (SOSA/SSN, NGSI-LD, FiWARE Smart Data Models).
 
 ## 1. Kiến trúc tổng quan
 
@@ -10,6 +10,7 @@
 │   ├─ NGSI-LD endpoints & WebSocket realtime
 │   └─ ETL dữ liệu mở từ ev-charging-open-data
 ├─ frontend/ (React 19 + TypeScript + Vite + Tailwind)
+│   ├─ Dashboard cho quản trị viên (quản lý người dùng, datasets, NGSI-LD APIs)
 │   ├─ Dashboard cho nhà quản lý (overview, realtime, bản đồ, thống kê)
 │   └─ Trải nghiệm người dân (tìm trạm, lịch sử, trạm đã lưu, so sánh)
 ├─ ev-charging-open-data/ (submodule dữ liệu JSON-LD – CC BY 4.0)
@@ -31,37 +32,34 @@ Chi tiết mỗi phần xem thêm tại:
 
 ## 2. Giao diện ứng dụng
 
-### 2.1. Dashboard cho nhà quản lý
+### 2.1. Dashboard cho quản trị viên
+
+![Dashboard Quản trị viên](assets/screenshots/admin-dashboard.png)
+
+Giao diện quản trị viên với quản lý người dùng, dataset JSON-LD và hoạt động API.
+
+### 2.2. Dashboard cho nhà quản lý
 
 ![Dashboard Nhà quản lý](assets/screenshots/manager-dashboard.png)
 
 Giao diện quản lý hệ thống trạm sạc với tổng quan và phân tích dữ liệu.
 
-### 2.2. Giao diện người dân
+### 2.3. Dashboard cho người dân
 
-![Giao diện người dân](assets/screenshots/citizen-interface.png)
+![Dashboard Người dân](assets/screenshots/citizen-interface.png)
 
 Tìm kiếm, lọc và sử dụng các trạm sạc xe điện.
 
-## 3. Dữ liệu và giấy phép
+## 3. Chuẩn bị môi trường
 
-| Tài nguyên                         | Giấy phép | Ghi chú |
-|-----------------------------------|-----------|--------|
-| Mã nguồn (backend, frontend)      | MIT       | Xem file [`LICENSE`](LICENSE) |
-| Dữ liệu JSON-LD (stations, sessions, sensors, citizens) | CC BY 4.0 | Từ repo [`tynnp/ev-charging-open-data`](https://github.com/tynnp/ev-charging-open-data) |
-
-Ứng dụng hỗ trợ tải về bộ dữ liệu JSON-LD qua các endpoint `/datasets/*.jsonld`, đảm bảo tuân thủ yêu cầu FAIR/5-star open data.
-
-## 4. Chuẩn bị môi trường
-
-### 4.1. Yêu cầu chung
+### 3.1. Yêu cầu chung
 
 - **Python 3.11+** và `pip`
 - **Node.js 20+** và `npm`
 - **MongoDB** đang chạy tại `mongodb://localhost:27017` (có thể cấu hình lại)
 - Git để clone và quản lý submodule dữ liệu
 
-### 4.2. Thiết lập backend
+### 3.2. Thiết lập backend
 
 ```bash
 cd backend
@@ -85,7 +83,7 @@ Backend cung cấp REST, NGSI-LD, WebSocket realtime và bộ test cơ bản (`p
 
 > **Lưu ý:** chức năng đăng ký người dùng yêu cầu gửi OTP qua email. Bạn phải cung cấp thông tin SMTP hợp lệ trong file `.env` (xem `backend/env.example`) trước khi chạy server.
 
-### 4.3. Thiết lập frontend
+### 3.3. Thiết lập frontend
 
 ```bash
 cd frontend
@@ -96,7 +94,7 @@ npm run dev           # mặc định http://localhost:5173
 
 Frontend hỗ trợ phân quyền theo role, realtime qua WebSocket và tích hợp bản đồ. Chi tiết cấu trúc và tính năng tại [`frontend/README.md`](frontend/README.md).
 
-### 4.4. Triển khai bằng Docker
+### 3.4. Triển khai bằng Docker
 
 Dự án đã được Docker hóa sẵn, hỗ trợ chạy trên cả Windows và Unix/Linux. Bạn có thể sử dụng các file script có sẵn để khởi động nhanh ứng dụng:
 
@@ -169,14 +167,35 @@ Yêu cầu: Docker Desktop (Windows/macOS) hoặc Engine (Linux) phiên bản h�
 
 Các file cấu hình Docker nằm trong `backend/`, `frontend/` và `docker-compose.yml`.
 
-## 5. Tài khoản mẫu & truy cập
+## 4. Tài khoản mẫu & truy cập
 
-| Vai trò        | Tên đăng nhập | Mật khẩu     |
-|----------------|---------------|--------------|
-| Nhà quản lý    | `manager`     | `manager123` |
-| Người dân      | `citizen`     | `citizen123` |
+| Vai trò        | Tên đăng nhập | Mật khẩu     | Tên                 |
+|----------------|---------------|--------------|---------------------|
+| Quản trị viên  | `admin`       | `admin123`   | Quản trị viên       |
+| Nhà quản lý    | `manager`     | `manager123` | Nguyễn Ngọc Phú Tỷ  |
+| Người dân      | `citizen`     | `citizen123` | Nguyễn Uyên Vy      |
+| Người dân      | `citizen2`    | `citizen123` | Cao Võ Tuấn Kiệt    |
 
 Các tài khoản được tạo tự động khi backend khởi động lần đầu (`create_default_users`).
+
+## 5. Quyền hạn theo vai trò
+
+- **Quản trị viên (admin)**:
+  - Quản lý người dùng: phân quyền, khóa/mở khóa, xóa người dùng
+  - Quản lý datasets: xem và tải các dataset JSON-LD
+  - Quản lý NGSI-LD APIs: xem, quản lý entities và types theo tiêu chuẩn ETSI ISG CIM
+
+- **Nhà quản lý (manager)**:
+  - Xem tổng quan hệ thống và analytics
+  - Theo dõi realtime sessions
+  - Quản lý bản đồ và tra cứu trạm sạc
+  - Xem thống kê chi tiết từng trạm
+
+- **Người dân (citizen)**:
+  - Tìm kiếm và lọc trạm sạc
+  - Xem lịch sử sạc cá nhân
+  - Quản lý danh sách trạm yêu thích
+  - So sánh các trạm sạc
 
 ## 6. Kiểm thử & chất lượng
 
@@ -188,9 +207,18 @@ Các tài khoản được tạo tự động khi backend khởi động lần �
 
 1. **Mã nguồn công khai**: GitHub `tynnp/ev-charging-app`
 2. **Giấy phép OSI**: MIT (mã nguồn) + CC BY 4.0 (dữ liệu)
-3. **Build instructions**: mô tả ở README backend/frontend và mục 3 ở đây
+3. **Build instructions**: mô tả ở README backend/frontend và mục 8 ở đây
 
-## 8. Đóng góp & phát triển tiếp
+## 8. Dữ liệu và giấy phép
+
+| Tài nguyên                         | Giấy phép | Ghi chú |
+|-----------------------------------|-----------|--------|
+| Mã nguồn (backend, frontend)      | MIT       | Xem file [`LICENSE`](LICENSE) |
+| Dữ liệu JSON-LD (stations, sessions, sensors, citizens) | CC BY 4.0 | Từ repo [`tynnp/ev-charging-open-data`](https://github.com/tynnp/ev-charging-open-data) |
+
+Ứng dụng hỗ trợ tải về bộ dữ liệu JSON-LD qua các endpoint `/datasets/*.jsonld`, đảm bảo tuân thủ yêu cầu FAIR/5-star open data.
+
+## 9. Đóng góp & tiếp tục phát triển
 
 - Tuân thủ style code (PEP8 cho Python, ESLint + Prettier conventions cho frontend)
 - Tạo tính năng mới cần cập nhật tài liệu (README, DEPENDENCIES)

@@ -13,7 +13,8 @@ type User = {
   username: string
   email?: string
   name?: string
-  role: 'citizen' | 'manager'
+  role: 'citizen' | 'manager' | 'admin'
+  is_locked?: boolean
 }
 
 type RegisterResponse = {
@@ -30,7 +31,7 @@ type AuthContextType = {
     password: string,
     email?: string,
     name?: string,
-    role?: 'citizen' | 'manager'
+    role?: 'citizen' | 'manager' | 'admin'
   ) => Promise<RegisterResponse>
   verifyRegistration: (username: string, otp: string, password: string) => Promise<void>
   logout: () => void
@@ -124,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     email?: string,
     name?: string,
-    role: 'citizen' | 'manager' = 'citizen'
+    role: 'citizen' | 'manager' | 'admin' = 'citizen'
   ): Promise<RegisterResponse> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {

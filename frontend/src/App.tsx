@@ -12,6 +12,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './components/auth/LoginPage'
 import { DashboardPage } from './components/pages/DashboardPage'
 import { CitizenPage } from './components/pages/CitizenPage'
+import { AdminPage } from './components/pages/AdminPage'
 import { CitizenHistoryPage } from './components/citizen/CitizenHistoryPage'
 import { FavoritesPage } from './components/citizen/FavoritesPage'
 import { ComparisonPage } from './components/citizen/ComparisonPage'
@@ -31,15 +32,23 @@ type CitizenNavId =
   | 'citizen-compare'
   | 'citizen-profile'
 
+type AdminNavId =
+  | 'admin-users'
+  | 'admin-datasets'
+  | 'admin-ngsi-ld'
+  | 'admin-profile'
+
 function App() {
   const { user, isLoading } = useAuth()
-  const [role, setRole] = useState<'manager' | 'citizen'>('manager')
-  const [activeNavId, setActiveNavId] = useState<ManagerNavId | CitizenNavId>('manager-overview')
+  const [role, setRole] = useState<'manager' | 'citizen' | 'admin'>('manager')
+  const [activeNavId, setActiveNavId] = useState<ManagerNavId | CitizenNavId | AdminNavId>('manager-overview')
 
   useEffect(() => {
     if (user) {
       setRole(user.role)
-      if (user.role === 'manager') {
+      if (user.role === 'admin') {
+        setActiveNavId('admin-users')
+      } else if (user.role === 'manager') {
         setActiveNavId('manager-overview')
       } else {
         setActiveNavId('citizen-find')
@@ -75,14 +84,38 @@ function App() {
     { id: 'citizen-profile', label: 'Thông tin cá nhân' },
   ] satisfies { id: CitizenNavId; label: string }[]
 
-  const navItems = role === 'manager' ? managerNavItems : citizenNavItems
+  const adminNavItems = [
+    { id: 'admin-users', label: 'Quản lý người dùng' },
+    { id: 'admin-datasets', label: 'Datasets' },
+    { id: 'admin-ngsi-ld', label: 'NGSI-LD APIs' },
+    { id: 'admin-profile', label: 'Thông tin cá nhân' },
+  ] satisfies { id: AdminNavId; label: string }[]
+
+  const navItems =
+    role === 'admin'
+      ? adminNavItems
+      : role === 'manager'
+        ? managerNavItems
+        : citizenNavItems
 
   const normalizedActiveNavId = navItems.some((item) => item.id === activeNavId)
     ? activeNavId
     : navItems[0]?.id ?? activeNavId
 
   let content
-  if (role === 'manager') {
+  if (role === 'admin') {
+    if (normalizedActiveNavId === 'admin-profile') {
+      content = <ProfilePage />
+    } else {
+      let section: 'users' | 'datasets' | 'ngsi-ld' = 'users'
+      if (normalizedActiveNavId === 'admin-datasets') {
+        section = 'datasets'
+      } else if (normalizedActiveNavId === 'admin-ngsi-ld') {
+        section = 'ngsi-ld'
+      }
+      content = <AdminPage section={section} />
+    }
+  } else if (role === 'manager') {
     if (normalizedActiveNavId === 'manager-profile') {
       content = <ProfilePage />
     } else {
@@ -118,7 +151,7 @@ function App() {
       navItems={navItems}
       activeItemId={normalizedActiveNavId}
       onSelectNavItem={(id) => {
-        setActiveNavId(id as ManagerNavId | CitizenNavId)
+        setActiveNavId(id as ManagerNavId | CitizenNavId | AdminNavId)
       }}
     >
       {content}

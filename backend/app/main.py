@@ -18,6 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import secrets
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from .db import (
     get_citizens_collection,
@@ -46,6 +48,8 @@ from .models import (
     UserRegisterVerify,
     UserResponse,
     UserUpdate,
+    UserUpdateRole,
+    UserListResponse,
     Token,
     OTPInitiateResponse,
 )
@@ -54,6 +58,7 @@ from .auth import (
     create_access_token,
     get_password_hash,
     get_current_active_user,
+    get_current_admin,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from .email import send_otp_email
@@ -63,6 +68,23 @@ logger = logging.getLogger(__name__)
 
 def _normalize_email(email: str) -> str:
     return email.strip().lower()
+
+def _find_user_by_id(users_collection, user_id: str) -> dict | None:
+    """Find user by ID, trying both ObjectId and string formats"""
+
+    try:
+        user_doc = users_collection.find_one({"_id": ObjectId(user_id)})
+        if user_doc:
+            return user_doc
+    except (InvalidId, ValueError):
+        pass
+    
+    user_doc = users_collection.find_one({"_id": user_id})
+    if user_doc:
+        return user_doc
+    
+    user_doc = users_collection.find_one({"username": user_id})
+    return user_doc
 
 def _ensure_email_available(email: str, username: str) -> None:
     normalized_email = _normalize_email(email)
@@ -152,6 +174,7 @@ def _finalize_registration(pending: dict) -> UserResponse:
         "email_normalized": pending.get("email_normalized") or _normalize_email(pending.get("email", "")),
         "name": pending.get("name"),
         "role": pending.get("role", "citizen"),
+        "is_locked": False,
         "created_at": datetime.utcnow(),
     }
 
@@ -164,6 +187,7 @@ def _finalize_registration(pending: dict) -> UserResponse:
         email=user_doc.get("email"),
         name=user_doc.get("name"),
         role=user_doc["role"],
+        is_locked=user_doc.get("is_locked", False),
     )
 
 app = FastAPI()
@@ -227,10 +251,10 @@ def register(user_data: UserRegister) -> OTPInitiateResponse:
             detail="Tên đăng nhập đã được đăng ký",
         )
 
-    if user_data.role not in ["citizen", "manager"]:
+    if user_data.role not in ["citizen", "manager", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vai trò phải là 'citizen' hoặc 'manager'",
+            detail="Vai trò phải là 'citizen', 'manager' hoặc 'admin'",
         )
 
     _ensure_email_available(user_data.email, user_data.username)
@@ -289,6 +313,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
             email=user.get("email"),
             name=user.get("name"),
             role=user.get("role", "citizen"),
+            is_locked=user.get("is_locked", False),
         ),
     )
 
@@ -314,7 +339,10 @@ def update_current_user_info(
     current_user: UserResponse = Depends(get_current_active_user),
 ) -> UserResponse:
     users_collection = get_users_collection()
+    
     user_doc = users_collection.find_one({"_id": current_user.id})
+    if not user_doc:
+        user_doc = users_collection.find_one({"username": current_user.username})
     
     if not user_doc:
         raise HTTPException(
@@ -334,16 +362,17 @@ def update_current_user_info(
         return current_user
     
     updates["updated_at"] = datetime.now()
-    users_collection.update_one({"_id": current_user.id}, {"$set": updates})
+    users_collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
     
     # Fetch updated user
-    updated_doc = users_collection.find_one({"_id": current_user.id})
+    updated_doc = users_collection.find_one({"_id": user_doc["_id"]})
     return UserResponse(
-        id=str(updated_doc.get("_id", current_user.id)),
+        id=str(updated_doc.get("_id", user_doc["_id"])),
         username=updated_doc.get("username", current_user.username),
         email=updated_doc.get("email"),
         name=updated_doc.get("name"),
         role=updated_doc.get("role", current_user.role),
+        is_locked=updated_doc.get("is_locked", False),
     )
 
 def load_realtime_events() -> List[Dict[str, Any]]:
@@ -512,18 +541,34 @@ def create_default_users() -> None:
             {
                 "username": "citizen",
                 "password": "citizen123",
-                "name": "Nguyễn Văn A",
+                "name": "Nguyễn Uyên Vy",
                 "email": "citizen1@example.org",
                 "role": "citizen",
-                "user_id": "citizen_user_1",  # Match with sessions.jsonld data
+                "user_id": "citizen_user_1",
+            },
+            {
+                "username": "citizen2",
+                "password": "citizen123",
+                "name": "Cao Võ Tuấn Kiệt",
+                "email": "citizen2@example.org",
+                "role": "citizen",
+                "user_id": "citizen_user_2",
             },
             {
                 "username": "manager",
                 "password": "manager123",
-                "name": "Nhà quản lý mẫu",
+                "name": "Nguyễn Ngọc Phú Tỷ",
                 "email": "manager@example.com",
                 "role": "manager",
-                "user_id": None,  # Manager doesn't need to match citizen data
+                "user_id": None,
+            },
+            {
+                "username": "admin",
+                "password": "admin123",
+                "name": "Quản trị viên",
+                "email": "admin@example.com",
+                "role": "admin",
+                "user_id": None,
             },
         ]
         
@@ -537,6 +582,7 @@ def create_default_users() -> None:
                     "email": user_data["email"],
                     "name": user_data["name"],
                     "role": user_data["role"],
+                    "is_locked": False,
                     "created_at": datetime.now(),
                 }
                 # Set _id to match citizen_user_1 for citizen account to align with session data
@@ -1150,6 +1196,82 @@ def ngsi_get_entity(entity_id: str) -> JSONResponse:
 
     raise HTTPException(status_code=404, detail="Không tìm thấy entity")
 
+@app.delete(
+    "/ngsi-ld/v1/entities/{entity_id}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Delete a NGSI-LD entity",
+)
+def ngsi_delete_entity(
+    entity_id: str,
+    current_user: UserResponse = Depends(get_current_admin),
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    deleted = False
+    for collection in collections:
+        result = collection.delete_one({"_id": entity_id})
+        if result.deleted_count > 0:
+            deleted = True
+            break
+    
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+    
+    return JSONResponse(
+        content={"message": "Entity đã được xóa"},
+        media_type="application/json",
+    )
+
+@app.get(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get all attributes of a NGSI-LD entity",
+)
+def ngsi_get_entity_attrs(entity_id: str) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            entity = _doc_to_ngsi_entity(doc)
+            attrs = {k: v for k, v in entity.items() if k not in ["id", "type", "@context"]}
+            return JSONResponse(content=attrs, media_type="application/ld+json")
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.get(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get a specific attribute of a NGSI-LD entity",
+)
+def ngsi_get_entity_attr(entity_id: str, attr_name: str) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            entity = _doc_to_ngsi_entity(doc)
+            if attr_name not in entity:
+                raise HTTPException(status_code=404, detail=f"Không tìm thấy attribute '{attr_name}'")
+            return JSONResponse(
+                content={attr_name: entity[attr_name]},
+                media_type="application/ld+json",
+            )
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
 @app.patch(
     "/ngsi-ld/v1/entities/{entity_id}/attrs",
     response_class=JSONResponse,
@@ -1176,6 +1298,141 @@ async def ngsi_update_entity_attrs(
         raise HTTPException(status_code=404, detail="Không tìm thấy entity")
     entity = _doc_to_ngsi_entity(doc)
     return JSONResponse(content=entity, media_type="application/ld+json")
+
+@app.patch(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs/{attr_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Update a specific attribute of a NGSI-LD entity",
+)
+async def ngsi_update_entity_attr(
+    entity_id: str,
+    attr_name: str,
+    attr_value: Dict[str, Any],
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            event = {
+                "operation": "update",
+                "entity": {
+                    "id": entity_id,
+                    "type": doc.get("type", "EVChargingStation"),
+                    attr_name: attr_value,
+                },
+            }
+            await apply_realtime_event(event)
+            
+            updated_doc = collection.find_one({"_id": entity_id})
+            entity = _doc_to_ngsi_entity(updated_doc)
+            return JSONResponse(
+                content={attr_name: entity.get(attr_name)},
+                media_type="application/ld+json",
+            )
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.post(
+    "/ngsi-ld/v1/entities/{entity_id}/attrs",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Append new attributes to a NGSI-LD entity",
+)
+async def ngsi_append_entity_attrs(
+    entity_id: str,
+    attrs: Dict[str, Any],
+) -> JSONResponse:
+    collections = [
+        get_stations_collection(),
+        get_sessions_collection(),
+        get_sensors_collection(),
+    ]
+    
+    for collection in collections:
+        doc = collection.find_one({"_id": entity_id})
+        if doc:
+            event = {
+                "operation": "update",
+                "entity": {
+                    "id": entity_id,
+                    "type": doc.get("type", "EVChargingStation"),
+                    **attrs,
+                },
+            }
+            await apply_realtime_event(event)
+            
+            updated_doc = collection.find_one({"_id": entity_id})
+            entity = _doc_to_ngsi_entity(updated_doc)
+            return JSONResponse(content=entity, media_type="application/ld+json")
+    
+    raise HTTPException(status_code=404, detail="Không tìm thấy entity")
+
+@app.get(
+    "/ngsi-ld/v1/types",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="List all entity types",
+)
+def ngsi_list_types() -> JSONResponse:
+    types_info = [
+        {
+            "type": "EVChargingStation",
+            "description": "Trạm sạc xe điện",
+            "count": get_stations_collection().count_documents({}),
+        },
+        {
+            "type": "EVChargingSession",
+            "description": "Phiên sạc xe điện",
+            "count": get_sessions_collection().count_documents({}),
+        },
+        {
+            "type": "Sensor",
+            "description": "Cảm biến",
+            "count": get_sensors_collection().count_documents({}),
+        },
+    ]
+    return JSONResponse(content=types_info, media_type="application/json")
+
+@app.get(
+    "/ngsi-ld/v1/types/{type_name}",
+    response_class=JSONResponse,
+    tags=["NGSI-LD"],
+    summary="Get information about an entity type",
+)
+def ngsi_get_type(type_name: str) -> JSONResponse:
+    if type_name == "EVChargingStation":
+        collection = get_stations_collection()
+    elif type_name == "EVChargingSession":
+        collection = get_sessions_collection()
+    elif type_name == "Sensor":
+        collection = get_sensors_collection()
+    else:
+        raise HTTPException(status_code=404, detail="Loại entity không được hỗ trợ")
+    
+    count = collection.count_documents({})
+    sample_doc = collection.find_one({})
+    
+    type_info = {
+        "type": type_name,
+        "count": count,
+        "description": {
+            "EVChargingStation": "Trạm sạc xe điện",
+            "EVChargingSession": "Phiên sạc xe điện",
+            "Sensor": "Cảm biến",
+        }.get(type_name, ""),
+    }
+    
+    if sample_doc:
+        entity = _doc_to_ngsi_entity(sample_doc)
+        type_info["sample_attributes"] = list(entity.keys())
+    
+    return JSONResponse(content=type_info, media_type="application/json")
 
 @app.get(
     "/datasets",
@@ -1468,3 +1725,143 @@ def compare_stations(
         "stations": comparison,
         "count": len(comparison),
     }
+
+@app.get(
+    "/admin/users",
+    response_model=UserListResponse,
+    tags=["Admin"],
+    summary="List all users (admin only)",
+)
+def list_users(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: UserResponse = Depends(get_current_admin),
+) -> UserListResponse:
+    users_collection = get_users_collection()
+    cursor = users_collection.find({}).skip(offset).limit(limit)
+    total = users_collection.count_documents({})
+    
+    users = []
+    for doc in cursor:
+        users.append(UserResponse(
+            id=str(doc.get("_id", "")),
+            username=doc.get("username", ""),
+            email=doc.get("email"),
+            name=doc.get("name"),
+            role=doc.get("role", "citizen"),
+            is_locked=doc.get("is_locked", False),
+        ))
+    
+    return UserListResponse(users=users, total=total)
+
+@app.patch(
+    "/admin/users/{user_id}/role",
+    response_model=UserResponse,
+    tags=["Admin"],
+    summary="Update user role (admin only)",
+)
+def update_user_role(
+    user_id: str,
+    role_update: UserUpdateRole,
+    current_user: UserResponse = Depends(get_current_admin),
+) -> UserResponse:
+    if role_update.role not in ["citizen", "manager", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vai trò phải là 'citizen', 'manager' hoặc 'admin'",
+        )
+    
+    users_collection = get_users_collection()
+    user_doc = _find_user_by_id(users_collection, user_id)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy người dùng",
+        )
+    
+    if str(user_doc.get("_id", "")) == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể thay đổi vai trò của chính mình",
+        )
+    
+    users_collection.update_one(
+        {"_id": user_doc["_id"]},
+        {"$set": {"role": role_update.role, "updated_at": datetime.utcnow()}},
+    )
+    
+    updated_doc = users_collection.find_one({"_id": user_doc["_id"]})
+    return UserResponse(
+        id=str(updated_doc.get("_id", "")),
+        username=updated_doc.get("username", ""),
+        email=updated_doc.get("email"),
+        name=updated_doc.get("name"),
+        role=updated_doc.get("role", "citizen"),
+        is_locked=updated_doc.get("is_locked", False),
+    )
+
+@app.patch(
+    "/admin/users/{user_id}/lock",
+    response_model=UserResponse,
+    tags=["Admin"],
+    summary="Lock or unlock user (admin only)",
+)
+def toggle_user_lock(
+    user_id: str,
+    is_locked: bool = Query(..., description="True to lock, False to unlock"),
+    current_user: UserResponse = Depends(get_current_admin),
+) -> UserResponse:
+    users_collection = get_users_collection()
+    user_doc = _find_user_by_id(users_collection, user_id)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy người dùng",
+        )
+    
+    if str(user_doc.get("_id", "")) == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể khóa tài khoản của chính mình",
+        )
+    
+    users_collection.update_one(
+        {"_id": user_doc["_id"]},
+        {"$set": {"is_locked": is_locked, "updated_at": datetime.utcnow()}},
+    )
+    
+    updated_doc = users_collection.find_one({"_id": user_doc["_id"]})
+    return UserResponse(
+        id=str(updated_doc.get("_id", "")),
+        username=updated_doc.get("username", ""),
+        email=updated_doc.get("email"),
+        name=updated_doc.get("name"),
+        role=updated_doc.get("role", "citizen"),
+        is_locked=updated_doc.get("is_locked", False),
+    )
+
+@app.delete(
+    "/admin/users/{user_id}",
+    tags=["Admin"],
+    summary="Delete user (admin only)",
+)
+def delete_user(
+    user_id: str,
+    current_user: UserResponse = Depends(get_current_admin),
+) -> Dict[str, Any]:
+    users_collection = get_users_collection()
+    user_doc = _find_user_by_id(users_collection, user_id)
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy người dùng",
+        )
+    
+    if str(user_doc.get("_id", "")) == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể xóa tài khoản của chính mình",
+        )
+    
+    users_collection.delete_one({"_id": user_doc["_id"]})
+    return {"message": "Đã xóa người dùng thành công"}
